@@ -33,8 +33,7 @@
 *.dylib
 
 # Executables
-parser
-codegen
+run
 *.exe
 *.out
 *.app

@@ -24,7 +24,7 @@ int lex(void){
          */
 
          current = input_buffer;
-         if(!fgets(input_buffer, sizeof(input_buffer), stdin)){
+         if(!gets(input_buffer)){
             *current = '\0' ;
 
             return EOI;
