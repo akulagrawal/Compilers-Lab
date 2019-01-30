@@ -12,7 +12,7 @@ statements()
     expression();
 
     if( match( SEMI ) )
-	advance();
+	    advance();
     else
         fprintf( stderr, "%d: Inserting missing semicolon\n", yylineno );
 
@@ -31,10 +31,11 @@ expression()
 expr_prime()
 {
     /* expression' -> PLUS term expression'
+     *              | MINUS term expression'
      *              | epsilon
      */
 
-    if( match( PLUS ) )
+    if( match( PLUS ) || match( MINUS ) )
     {
         advance();
         term();
@@ -44,23 +45,45 @@ expr_prime()
 
 term()
 {
-    /* term -> factor term' */
+    /* term -> mul_factor term' */
 
-    factor();
+    mul_factor();
     term_prime();
 }
 
 term_prime()
 {
-    /* term' -> TIMES factor term'
+    /* term' -> TIMES mul_factor term'
      *       |   epsilon
      */
 
     if( match( TIMES ) )
     {
         advance();
-        factor();
+        mul_factor();
         term_prime();
+    }
+}
+
+mul_factor()
+{
+    /* mul_factor   ->    factor div_factor   */
+
+    factor();
+    div_factor();
+}
+
+div_factor()
+{
+    /* div_factor  -> / factor div_factor
+     *              | epsilon
+     */
+
+    if( match( DIV ) )
+    {
+        advance();
+        factor();
+        div_factor();
     }
 }
 
