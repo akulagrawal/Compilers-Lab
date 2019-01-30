@@ -4,6 +4,7 @@
 char    *factor     ( void );
 char    *term       ( void );
 char    *expression ( void );
+char    *mul_factor ( void );
 
 extern char *newname( void       );
 extern void freename( char *name );
@@ -30,18 +31,25 @@ statements()
 char    *expression()
 {
     /* expression -> term expression'
-     * expression' -> PLUS term expression' |  epsilon
+     * expression' -> PLUS term expression' | MINUS term expression' |  epsilon
      */
 
     char  *tempvar, *tempvar2;
 
     tempvar = term();
-    while( match( PLUS ) )
+    int plus_match = 0;
+    while( (plus_match = match( PLUS )) || match( MINUS ))
     {
         advance();
         tempvar2 = term();
-        printf("    %s += %s\n", tempvar, tempvar2 );
+        if (plus_match)
+            printf("    %s += %s\n", tempvar, tempvar2 );
+        else
+            printf("    %s -= %s\n", tempvar, tempvar2 );
+
         freename( tempvar2 );
+        
+        plus_match = 0;
     }
 
     return tempvar;
@@ -49,14 +57,38 @@ char    *expression()
 
 char    *term()
 {
+    /* term -> mul_factor term'
+     * term' -> TIMES mul_factor term' |  epsilon
+     */
+
     char  *tempvar, *tempvar2 ;
 
-    tempvar = factor();
+    tempvar = mul_factor();
     while( match( TIMES ) )
     {
         advance();
-        tempvar2 = factor();
+        tempvar2 = mul_factor();
         printf("    %s *= %s\n", tempvar, tempvar2 );
+        freename( tempvar2 );
+    }
+
+    return tempvar;
+}
+
+char    *mul_factor()
+{
+    /* mul_factor -> factor div_factor
+     * div_factor -> DIV factor div_factor |  epsilon
+     */
+
+    char  *tempvar, *tempvar2 ;
+
+    tempvar = factor();
+    while( match( DIV ) )
+    {
+        advance();
+        tempvar2 = factor();
+        printf("    %s /= %s\n", tempvar, tempvar2 );
         freename( tempvar2 );
     }
 
@@ -65,6 +97,7 @@ char    *term()
 
 char    *factor()
 {
+    /* factor -> NUM_OR_ID | LP expression RP */
     char *tempvar;
 
     if( match(NUM_OR_ID) )

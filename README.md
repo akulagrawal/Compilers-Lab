@@ -5,8 +5,10 @@
 * Please don't include your name in commit message by mistake
 * Please feel free to edit this list
 
-To compile:
-make
+To compile parser:	make parser
+To execute parser:	./parser
 
-To execute:
-./run
+To compile code generation:	make codegen
+To execute code generation:	./codegen
+
+To clean executables:		make clean
