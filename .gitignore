@@ -34,6 +34,7 @@
 
 # Executables
 run
+a.out
 *.exe
 *.out
 *.app
