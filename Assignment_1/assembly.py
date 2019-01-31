@@ -50,8 +50,12 @@ class Processor:
         self.busy_registers.remove(register_name)
         self.free_registers.append(register_name)
 
-    @staticmethod
-    def assign(operand1, operand2):
+    # Deallocate all busy registers.
+    def return_all_registers(self):
+        for register_name in self.busy_registers:
+            self.return_register(register_name)
+
+    def assign(self, operand1, operand2):
         # Load into accumulator.
         if operand2 in virtual_registers:
             print("; Assigning to " + memory_map[operand1] + " the value at " + memory_map[operand2])
@@ -63,10 +67,6 @@ class Processor:
         # Store into memory location,
         print("STA " + memory_map[operand1])
 
-    @staticmethod
-    def is_assignment(tokenlist):
-        return tokenlist[1] == "="
-
     # Add 8-bit operands.
     def add(self, operand1, operand2):
         # Load into accumulator.
@@ -74,7 +74,7 @@ class Processor:
 
         # Add to accumulator, using a free register if not immediate data.
         if operand2 in virtual_registers:
-            print("; Adding " + memory_map[operand1] + " and " + memory_map[operand2])
+            print("; Adding " + memory_map[operand1] + " and the value at " + memory_map[operand2])
             free_register = self.get_free_register()
             print("MOV " + free_register + ", " + "A")
             print("LDA " + memory_map[operand2])
@@ -87,15 +87,11 @@ class Processor:
         # Store into memory location.
         print("STA " + memory_map[operand1])
 
-    @staticmethod
-    def is_addition(tokenlist):
-        return tokenlist[1] == "+="
-
     # Subtract with 8-bit operands.
     def sub(self, operand1, operand2):
         # Load into accumulator.
         if operand2 in virtual_registers:
-            print("; Subtracting " + memory_map[operand1] + " and " + memory_map[operand2])
+            print("; Subtracting " + memory_map[operand1] + " by the value at " + memory_map[operand2])
             print("LDA " + memory_map[operand2])
         else:
             print("; Subtracting " + memory_map[operand1] + " by " + to_hex(operand2))
@@ -111,15 +107,11 @@ class Processor:
         # Store into memory location.
         print("STA " + memory_map[operand1])
 
-    @staticmethod
-    def is_subtraction(tokenlist):
-        return tokenlist[1] == "-="
-
     # Multiply 4-bit operands.
     def mul(self, operand1, operand2):
         # Load into accumulator.
         if operand2 in virtual_registers:
-            print("; Multiplying " + memory_map[operand1] + " and " + memory_map[operand2])
+            print("; Multiplying " + memory_map[operand1] + " and the value at " + memory_map[operand2])
             print("LDA " + memory_map[operand2])
         else:
             print("; Multiplying " + memory_map[operand1] + " and " + to_hex(operand2))
@@ -130,6 +122,7 @@ class Processor:
         print("CPI 0H")
         print("JNZ " + "NZINP" + str(self.curr_loop))
         print("STA " + memory_map[operand1])
+        print("JMP " + "MULTEND" + str(self.curr_loop))
 
         # If the second operand isn't zero, continue.
         print("NZINP" + str(self.curr_loop) + ": NOP")
@@ -144,11 +137,15 @@ class Processor:
         operand1_register = self.get_free_register()
         print("MOV " + operand1_register + ", " + "A")
 
+        # Load the running sum into another register, initially with value of operand1.
+        runningsum_register = self.get_free_register()
+        print("MOV " + runningsum_register + ", " + "A")
+
         # Addition loop - multiplication by repeated addition.
         print("LOOP" + str(self.curr_loop) + ": NOP")
-        print("LDA " + memory_map[operand1])
+        print("MOV " + "A" + ", " + runningsum_register)
         print("ADD " + operand1_register)
-        print("STA " + memory_map[operand1])
+        print("MOV " + runningsum_register + ", " + "A")
 
         # Check the value of the second operand, after decrementing.
         print("DCR " + operand2_register)
@@ -157,15 +154,21 @@ class Processor:
         # Loop while the second operand is still non-zero.
         print("JNZ " + "LOOP" + str(self.curr_loop))
 
-    @staticmethod
-    def is_multiplication(tokenlist):
-        return tokenlist[1] == "*="
+        # Store in memory.
+        print("MOV " + "A" + ", " + runningsum_register)
+        print("STA " + memory_map[operand1])
+
+        # Ending label.
+        print("MULTEND" + str(self.curr_loop) + ": NOP")
+
+        # Free registers.
+        self.return_all_registers()
 
     # Divides the value of operand1 by operand2, both 8 bits, storing the quotient in operand1.
     def div(self, operand1, operand2):
         # Load into accumulator.
         if operand2 in virtual_registers:
-            print("; Dividing " + memory_map[operand1] + " by " + memory_map[operand2])
+            print("; Dividing " + memory_map[operand1] + " by the value at " + memory_map[operand2])
             print("LDA " + memory_map[operand2])
         else:
             print("; Dividing " + memory_map[operand1] + " by " + to_hex(operand2))
@@ -176,17 +179,76 @@ class Processor:
         print("CPI 0H")
         print("JNZ " + "NZINP" + str(self.curr_loop))
         print("HLT")
+        print("JMP " + "DIVEND" + str(self.curr_loop))
 
         # If the second operand isn't zero, continue.
         print("NZINP" + str(self.curr_loop) + ": NOP")
 
-        # Division loop - division by repeated subtraction.
-        print("LOOP" + str(self.curr_loop) + ": NOP")
+        # Move second operand into a register.
+        operand2_register = self.get_free_register()
+        print("MOV " + operand2_register + ", " + "A")
+
+        # Load first operand and move to a free register.
         print("LDA " + memory_map[operand1])
-        print("ADD " + operand1_register)
+        operand1_register = self.get_free_register()
+        print("MOV " + operand1_register + ", " + "A")
+
+        # Initialize quotient to 0.
+        print("MVI A, 0H")
+        quotient_register = self.get_free_register()
+        print("MOV " + quotient_register + ", " + "A")
+
+        # Subtraction loop - division by repeated subtraction.
+        print("LOOP" + str(self.curr_loop) + ": NOP")
+        print("MOV " + "A" + ", " + operand1_register)
+
+        # Check the value of the first operand, compared to the second operand.
+        print("CMP " + operand2_register)
+        print("JC " + "LOOPEND" + str(self.curr_loop))
+
+        # Subtraction is alright - first operand is big enough.
+        print("SUB " + operand2_register)
+        print("MOV " + operand1_register + ", " + "A")
+
+        # Increment quotient.
+        print("INR " + quotient_register)
+        print("MOV " + "A" + ", " + operand1_register)
+
+        # Loop while the second operand is still non-zero.
+        print("CMP " + operand2_register)
+        print("JNC " + "LOOP" + str(self.curr_loop))
+
+        # Ending label.
+        print("LOOPEND" + str(self.curr_loop) + ": NOP")
+
+        # Store in memory.
+        print("MOV " + "A" + ", " + quotient_register)
         print("STA " + memory_map[operand1])
 
+        # Ending label.
+        print("DIVEND" + str(self.curr_loop) + ": NOP")
 
+        # Free registers.
+        self.return_all_registers()
+
+
+# Instruction Class.
+class Instruction:
+    @staticmethod
+    def is_assignment(tokenlist):
+        return tokenlist[1] == "="
+
+    @staticmethod
+    def is_addition(tokenlist):
+        return tokenlist[1] == "+="
+
+    @staticmethod
+    def is_subtraction(tokenlist):
+        return tokenlist[1] == "-="
+
+    @staticmethod
+    def is_multiplication(tokenlist):
+        return tokenlist[1] == "*="
 
     @staticmethod
     def is_division(tokenlist):
@@ -194,8 +256,7 @@ class Processor:
 
 
 if __name__ == "__main__":
-
-    # Create processor object.
+    # Create Processor instance.
     processor = Processor()
 
     with open(IR_file_path, "r") as f:
@@ -207,17 +268,17 @@ if __name__ == "__main__":
             tokens = line.split()
 
             # Check operation.
-            if processor.is_assignment(tokens):
+            if Instruction.is_assignment(tokens):
                 processor.assign(tokens[0], tokens[2])
 
-            elif processor.is_addition(tokens):
+            elif Instruction.is_addition(tokens):
                 processor.add(tokens[0], tokens[2])
 
-            elif processor.is_subtraction(tokens):
+            elif Instruction.is_subtraction(tokens):
                 processor.sub(tokens[0], tokens[2])
 
-            elif processor.is_multiplication(tokens):
+            elif Instruction.is_multiplication(tokens):
                 processor.mul(tokens[0], tokens[2])
 
-            elif processor.is_division(tokens):
+            elif Instruction.is_division(tokens):
                 processor.div(tokens[0], tokens[2])
