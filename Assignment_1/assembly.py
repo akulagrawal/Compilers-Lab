@@ -54,8 +54,10 @@ class Processor:
     def assign(operand1, operand2):
         # Load into accumulator.
         if operand2 in virtual_registers:
+            print("; Assigning to " + memory_map[operand1] + " the value at " + memory_map[operand2])
             print("LDA " + memory_map[operand2])
         else:
+            print("; Assigning to " + memory_map[operand1] + " the value " + to_hex(operand2))
             print("MVI " + "A" + ", " + to_hex(operand2))
 
         # Store into memory location,
@@ -72,12 +74,14 @@ class Processor:
 
         # Add to accumulator, using a free register if not immediate data.
         if operand2 in virtual_registers:
+            print("; Adding " + memory_map[operand1] + " and " + memory_map[operand2])
             free_register = self.get_free_register()
             print("MOV " + free_register + ", " + "A")
             print("LDA " + memory_map[operand2])
             print("ADD " + free_register)
             self.return_register(free_register)
         else:
+            print("; Adding " + memory_map[operand1] + " and " + to_hex(operand2))
             print("ADI " + to_hex(operand2))
 
         # Store into memory location.
@@ -91,8 +95,10 @@ class Processor:
     def sub(self, operand1, operand2):
         # Load into accumulator.
         if operand2 in virtual_registers:
+            print("; Subtracting " + memory_map[operand1] + " and " + memory_map[operand2])
             print("LDA " + memory_map[operand2])
         else:
+            print("; Subtracting " + memory_map[operand1] + " by " + to_hex(operand2))
             print("MVI " + to_hex(operand2))
 
         # Subtract from accumulator, using a free register.
@@ -113,8 +119,10 @@ class Processor:
     def mul(self, operand1, operand2):
         # Load into accumulator.
         if operand2 in virtual_registers:
+            print("; Multiplying " + memory_map[operand1] + " and " + memory_map[operand2])
             print("LDA " + memory_map[operand2])
         else:
+            print("; Multiplying " + memory_map[operand1] + " and " + to_hex(operand2))
             print("MVI " + "A" + ", " + to_hex(operand2))
 
         # Check if second operand is 0.
@@ -152,6 +160,33 @@ class Processor:
     @staticmethod
     def is_multiplication(tokenlist):
         return tokenlist[1] == "*="
+
+    # Divides the value of operand1 by operand2, both 8 bits, storing the quotient in operand1.
+    def div(self, operand1, operand2):
+        # Load into accumulator.
+        if operand2 in virtual_registers:
+            print("; Dividing " + memory_map[operand1] + " by " + memory_map[operand2])
+            print("LDA " + memory_map[operand2])
+        else:
+            print("; Dividing " + memory_map[operand1] + " by " + to_hex(operand2))
+            print("MVI " + "A" + ", " + to_hex(operand2))
+
+        # Check if second operand is 0. Halt if it is.
+        self.curr_loop += 1
+        print("CPI 0H")
+        print("JNZ " + "NZINP" + str(self.curr_loop))
+        print("HLT")
+
+        # If the second operand isn't zero, continue.
+        print("NZINP" + str(self.curr_loop) + ": NOP")
+
+        # Division loop - division by repeated subtraction.
+        print("LOOP" + str(self.curr_loop) + ": NOP")
+        print("LDA " + memory_map[operand1])
+        print("ADD " + operand1_register)
+        print("STA " + memory_map[operand1])
+
+
 
     @staticmethod
     def is_division(tokenlist):
