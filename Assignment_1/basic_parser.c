@@ -8,6 +8,7 @@ stmt →    if comp_expr then stmt endif
 		| while comp_expr do stmt endwhile
 		| begin begin'
 		| id := comp_expr ; 
+		| id := comp_expr ; stmt
 		| comp_expr ;
 		| comp_expr; stmt
 
@@ -94,9 +95,21 @@ statements()
 	{
 		advance();
 		if( match( PLUS ) || match( MINUS ) )
+		{
 			expr_prime();
+			if( match( SEMI ) )
+				advance();
+			else
+				ERROR("Inserting missing semicolon");
+		}
 		else if( match( LT ) || match( GT ) || match( EQ ) )
+		{
 			c_expression();
+			if( match( SEMI ) )
+				advance();
+			else
+				ERROR("Inserting missing semicolon");
+		}
 		else if( match( COLON ) )
 		{
 			advance();
@@ -114,6 +127,9 @@ statements()
 		}
 		else
 			ERROR("Invalid Operator");
+
+		if( !match( ENDIF ) && !match( ENDWHILE ) && !match( END ) && !match( EOI ) )
+			statements();			/* Do another statement. */
 	}
 	else
 	{	
