@@ -3,14 +3,20 @@ Assembly Code Generation
 30th January, 2019
 '''
 
+# sys package for command-line arguments
+import sys
+
 # The maximum number of 8-bit variables (ie, memory locations) we will use.
 max_variables = 1000
 
 # Memory start location
 memory_start = 8000
 
-# Path for the IR code text file that has to be translated.
-IR_file_path = "IR4.txt"
+# Path for the IR code text file that has to be translated - default is IR.txt in the same directory.
+try:
+    IR_file_path = sys.argv[1]
+except IndexError:
+    IR_file_path = "IR.txt"
 
 # Define virtual registers, real memory locations and the mapping between them.
 virtual_registers = ["_t" + str(num) for num in range(max_variables)]
