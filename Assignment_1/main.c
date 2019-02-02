@@ -1,4 +1,7 @@
+#include "lex.h"
+
 main ()
 {
-	statements ();
+	while( !match( EOI ) )
+		statements ();
 }

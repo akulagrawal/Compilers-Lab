@@ -21,7 +21,16 @@
 #define NUM        20   /* NUM                          */
 #define ID         21   /* ID                           */
 
+#define ENDIF      22   /* endif                        */
+#define ENDWHILE   23   /* endwhile                     */
 
 extern char *yytext;		/* in lex.c			*/
 extern int yyleng;
 extern yylineno;
+
+#define ERROR(error_msg) { \
+    fprintf( stderr, "%d: ", yylineno ); \
+    fprintf( stderr, error_msg);   \
+    fprintf( stderr, "\n");   \
+    exit(0);    \
+}

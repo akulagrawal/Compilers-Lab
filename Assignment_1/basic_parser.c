@@ -4,14 +4,14 @@
 #include "lex.h"
 
 /*
-stmt →    if comp_expr then stmt
-		| while comp_expr do stmt
+stmt →    if comp_expr then stmt endif
+		| while comp_expr do stmt endwhile
 		| begin begin'
 		| id := comp_expr ; 
 		| comp_expr ;
 		| comp_expr; stmt
 
-begin' →  end stmt
+begin' →  end
 		| stmt begin'
 
 comp_expr →  expr c_expr
@@ -41,8 +41,8 @@ factor →  ( expr )
 statements()
 {
     /*
-	statements →  if comp_expression then statements
-	 *			| while comp_expression do statements
+	statements →  if comp_expression then statements endif
+	 *			| while comp_expression do statements endwhile
 	 *			| begin begin_prime
 	 *			| id COLON EQUAL comp_expression SEMI
 	 *			| comp_expression SEMI
@@ -53,25 +53,37 @@ statements()
 	{
 		advance();
 		comp_expression();
-		if( !match( THEN ) )
-			fprintf( stderr, "%d: Inserting missing 'then'\n", yylineno );
-		else
+		if( match( THEN ) )
 		{
 			advance();
 			statements();
 		}
+		else
+			ERROR("Inserting missing 'then'");
+		if( !match( ENDIF ) )
+		{
+			ERROR("Inserting missing 'endif'");
+		}
+		else
+			advance();
 	}
 	else if( match( WHILE ) )
 	{
 		advance();
 		comp_expression();
-		if( !match( DO ) )
-			fprintf( stderr, "%d: Inserting missing 'do'\n", yylineno );
-		else
+		if( match( DO ) )
 		{
 			advance();
 			statements();
 		}
+		else
+			ERROR("Inserting missing 'do'");
+		if( !match( ENDWHILE ) )
+		{
+			ERROR("Inserting missing 'endwhile'");
+		}
+		else
+			advance();
 	}
 	else if( match( BEGIN ))
 	{
@@ -83,11 +95,11 @@ statements()
     	comp_expression();
 
 	    if( match( SEMI ) )
-		advance();
+			advance();
 	    else
-	       fprintf( stderr, "%d: Inserting missing semicolon\n", yylineno );
+	       ERROR("Inserting missing semicolon");
 	
-	    if( !match(EOI) )
+	    if( !match( ENDIF ) && !match( ENDWHILE ) && !match( END ) && !match(EOI) )
 	        statements();			/* Do another statement. */
 	}	
 }
@@ -117,15 +129,12 @@ c_expression()
 
 begin_prime()
 {
-    /* begin' → end statements
+    /* begin' → end
 	 *		|  statements begin_prime
      */
 
 	if(match ( END ) )
-	{
 		advance();
-		statements();
-	}
 	else
 	{
 		statements();
@@ -193,10 +202,10 @@ factor()
         if( match(RP) )
             advance();
         else
-            fprintf( stderr, "%d: Mismatched parenthesis\n", yylineno);
+            ERROR("Mismatched parenthesis");
     }
     else if( match( NUM ) || match ( ID ) || match( NUM_OR_ID ) )
         advance();
     else
-		printf( stderr, "%d Number or identifier expected\n", yylineno );
+		ERROR("Number or identifier expected");	
 }

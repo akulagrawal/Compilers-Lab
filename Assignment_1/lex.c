@@ -84,10 +84,16 @@ int lex(void){
                   return DO;
     	 	      else if(strncmp(yytext, "begin", 5) == 0)
     	 	    	   return BEGIN;
+    	     	   else if(strncmp(yytext, "endif", 5) == 0)
+    	        	   return ENDIF;
+    	     	   else if(strncmp(yytext, "endwhile", 8) == 0)
+    	        	   return ENDWHILE;
     	     	   else if(strncmp(yytext, "end", 3) == 0)
     	        	   return END;
-		         else
-    	            return NUM_OR_ID;
+		         else if(!isalpha(*yytext))
+                  return NUM;
+               else
+    	            return ID;
             }
             break;
          }
