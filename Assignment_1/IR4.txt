@@ -4,10 +4,12 @@ _t1 = 0
 _t2 = _t0
 _t2 < 10
 
-while _t2
-    _t0 += 1
-    _t1 += _t0
+ifF _t0
+    while _t2
+        _t0 += 1
+        _t1 += _t0
 
-    _t2 = _t0
-    _t2 < 10
-endwhile
+        _t2 = _t0
+        _t2 < 10
+    endwhile
+endif

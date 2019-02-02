@@ -13,7 +13,7 @@ memory_start = 8000
 IR_file_path = "IR4.txt"
 
 # Define virtual registers, real memory locations and the mapping between them.
-virtual_registers = ["_t" + chr(num + ord('0')) for num in range(max_variables)]
+virtual_registers = ["_t" + str(num) for num in range(max_variables)]
 memory_locations = [str(8000 + num) + 'H' for num in range(max_variables)]
 memory_map = dict(zip(virtual_registers, memory_locations))
 
