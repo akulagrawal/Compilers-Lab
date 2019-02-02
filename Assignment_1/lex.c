@@ -74,21 +74,21 @@ int lex(void){
                   ++current;
                yyleng = current - yytext;
                               
- 	         	if(strncmp (yytext, "if", 2) == 0)
+ 	         	if( MATCH_STR( "if" ) )
     	        	   return IF;
-		         else if(strncmp(yytext, "then", 4) == 0)
+		         else if( MATCH_STR( "then" ) )
     		         return THEN;
-   		      else if(strncmp(yytext, "while", 5) == 0)
+		         else if( MATCH_STR( "while" ) )
    		 	  	   return WHILE;
-  			      else if(strncmp(yytext, "do", 2) == 0)
+		         else if( MATCH_STR( "do" ) )
                   return DO;
-    	 	      else if(strncmp(yytext, "begin", 5) == 0)
+		         else if( MATCH_STR( "begin" ) )
     	 	    	   return BEGIN;
-    	     	   else if(strncmp(yytext, "endif", 5) == 0)
+		         else if( MATCH_STR( "endif" ) )
     	        	   return ENDIF;
-    	     	   else if(strncmp(yytext, "endwhile", 8) == 0)
+		         else if( MATCH_STR( "endwhile" ) )
     	        	   return ENDWHILE;
-    	     	   else if(strncmp(yytext, "end", 3) == 0)
+		         else if( MATCH_STR( "end" ) )
     	        	   return END;
 		         else if(!isalpha(*yytext))
                   return NUM;

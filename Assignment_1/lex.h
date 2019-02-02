@@ -34,3 +34,6 @@ extern yylineno;
     fprintf( stderr, "\n");   \
     exit(0);    \
 }
+
+#define MATCH_STR(str)  \
+    strncmp (yytext, str, yyleng) == 0
