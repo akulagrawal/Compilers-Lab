@@ -15,8 +15,11 @@
 #define BEGIN      13   /* begin                        */
 #define END        14   /* end                          */
 #define EQ         15   /* =                            */
-#define LS_THAN    16   /* <                            */
-#define GR_THAN    17   /* >                            */
+#define LT         16   /* <                            */
+#define GT         17   /* >                            */
+#define COLON      18   /* :                            */
+#define NUM        20   /* NUM                          */
+#define ID         21   /* ID                           */
 
 
 extern char *yytext;		/* in lex.c			*/
