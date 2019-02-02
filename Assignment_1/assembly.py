@@ -10,7 +10,7 @@ max_variables = 1000
 memory_start = 8000
 
 # Path for the IR code text file that has to be translated.
-IR_file_path = "IR3.txt"
+IR_file_path = "IR4.txt"
 
 # Define virtual registers, real memory locations and the mapping between them.
 virtual_registers = ["_t" + chr(num + ord('0')) for num in range(max_variables)]
@@ -33,6 +33,7 @@ class Processor:
         self.curr_loop = 0
         self.curr_comparison = 0
         self.curr_if = 0
+        self.curr_while = 0
 
     # Assign a free register.
     def get_free_register(self):
@@ -462,6 +463,30 @@ class Processor:
     def endif(self, if_num):
         print("ENDIF" + str(if_num) + ": NOP")
 
+    # While loop, with condition.
+    def whileloop(self, condition):
+        self.curr_while += 1
+
+        print("WHILECHECK" + str(self.curr_while) + ": NOP")
+        print("; Checking while condition at " + memory_map[condition] + " is true")
+
+        # Load into accumulator.
+        print("LDA " + memory_map[condition])
+
+        # Check if zero.
+        print("CPI 00H")
+        print("JNZ WHILEBRANCH" + str(self.curr_while))
+
+        # Jump to the end of the 'if' statements.
+        print("JMP ENDWHILE" + str(self.curr_while))
+
+        # Branch statements.
+        print("WHILEBRANCH" + str(self.curr_while) + ": NOP")
+
+    # Endwhile for the corresponding while.
+    def endwhile(self, while_num):
+        print("JMP WHILECHECK" + str(while_num))
+        print("ENDWHILE" + str(while_num) + ": NOP")
 
 # Instruction Class.
 class Instruction:
@@ -529,6 +554,10 @@ class Instruction:
     def is_endif(tokenlist):
         return tokenlist[0] == "endif"
 
+    @staticmethod
+    def is_endwhile(tokenlist):
+        return tokenlist[0] == "endwhile"
+
 
 if __name__ == "__main__":
     # Create Processor instance.
@@ -538,8 +567,9 @@ if __name__ == "__main__":
         # Read all lines from the file.
         lines = f.readlines()
 
-        # Number of 'if' statements unmatched.
+        # Number of 'if' and 'while' statements still open/unmatched.
         unmatched_ifs = []
+        unmatched_whiles = []
 
         # Parse line-by-line.
         for index, line in enumerate(lines):
@@ -576,7 +606,22 @@ if __name__ == "__main__":
 
             # Conditional statement - while.
             elif Instruction.is_while(tokens):
-                pass
+                # Extract conditional variable.
+                conditional_var = tokens[1]
+
+                # Generate the assembly - adding labels.
+                processor.whileloop(conditional_var)
+
+                # Add to list of unmatched ifs.
+                unmatched_whiles.append(processor.curr_while)
+
+                # Read remaining statements.
+                continue
+
+            # Conditional statement - endif.
+            elif Instruction.is_endwhile(tokens):
+                matching_while = unmatched_whiles.pop()
+                processor.endwhile(matching_while)
 
             # Assignment.
             elif Instruction.is_assignment(tokens):
