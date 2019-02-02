@@ -12,12 +12,12 @@ statements()
     expression();
 
     if( match( SEMI ) )
-	    advance();
+    advance();
     else
         fprintf( stderr, "%d: Inserting missing semicolon\n", yylineno );
 
     if( !match(EOI) )
-        statements();			/* Do another statement. */
+        statements();           /* Do another statement. */
 }
 
 expression()
@@ -31,7 +31,6 @@ expression()
 expr_prime()
 {
     /* expression' -> PLUS term expression'
-     *              | MINUS term expression'
      *              | epsilon
      */
 
@@ -45,45 +44,23 @@ expr_prime()
 
 term()
 {
-    /* term -> mul_factor term' */
+    /* term -> factor term' */
 
-    mul_factor();
+    factor();
     term_prime();
 }
 
 term_prime()
 {
-    /* term' -> TIMES mul_factor term'
+    /* term' -> TIMES factor term'
      *       |   epsilon
      */
 
-    if( match( TIMES ) )
-    {
-        advance();
-        mul_factor();
-        term_prime();
-    }
-}
-
-mul_factor()
-{
-    /* mul_factor -> factor div_factor */
-
-    factor();
-    div_factor();
-}
-
-div_factor()
-{
-    /* div_factor -> DIV factor div_factor
-     *            |  epsilon
-     */
-
-    if( match( DIV ) )
+    if( match( TIMES ) || match( DIV ) )
     {
         advance();
         factor();
-        div_factor();
+        term_prime();
     }
 }
 
@@ -106,5 +83,5 @@ factor()
             fprintf( stderr, "%d: Mismatched parenthesis\n", yylineno);
     }
     else
-	fprintf( stderr, "%d Number or identifier expected\n", yylineno );
+    fprintf( stderr, "%d Number or identifier expected\n", yylineno );
 }
