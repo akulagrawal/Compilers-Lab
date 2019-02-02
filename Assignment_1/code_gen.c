@@ -4,6 +4,7 @@
 char    *factor     ( void );
 char    *term       ( void );
 char    *expression ( void );
+char    *full_expression ( void );
 
 extern char *newname( void       );
 extern void freename( char *name );
@@ -16,7 +17,7 @@ statements()
 
     while( !match(EOI) )
     {
-        tempvar = expression();
+        tempvar = full_expression();
 
         if( match( SEMI ) )
             advance();
@@ -27,20 +28,52 @@ statements()
     }
 }
 
+char    *full_expression()
+{
+    /* full_expression -> expression full_expression'
+     * full_expression' -> LT/Gt/EQ expression full_expression' |  epsilon
+     */
+
+    char  *tempvar, *tempvar2;
+
+    tempvar = expression();
+    while( match( LT ) || match( GT ) || match( EQ ) )
+    {
+        char op;
+        if( match( LT ) )
+            op = '<';
+        if( match( GT ) )
+            op = '>';
+        if( match( EQ ) )
+            op = '=';
+        advance();
+        tempvar2 = expression();
+        printf("    %s %c %s\n", tempvar, op, tempvar2 );
+        freename( tempvar2 );
+    }
+
+    return tempvar;
+}
+
 char    *expression()
 {
     /* expression -> term expression'
-     * expression' -> PLUS term expression' |  epsilon
+     * expression' -> PLUS/MINUS term expression' |  epsilon
      */
 
     char  *tempvar, *tempvar2;
 
     tempvar = term();
-    while( match( PLUS ) )
+    while( match( PLUS ) || match( MINUS ) )
     {
+        char op;
+        if( match( PLUS ) )
+            op = '+';
+        if( match( MINUS ) )
+            op = '-';
         advance();
         tempvar2 = term();
-        printf("    %s += %s\n", tempvar, tempvar2 );
+        printf("    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
     }
 
@@ -52,11 +85,16 @@ char    *term()
     char  *tempvar, *tempvar2 ;
 
     tempvar = factor();
-    while( match( TIMES ) )
+    while( match( TIMES ) || match( DIV ) )
     {
+        char op;
+        if( match( TIMES ) )
+            op = '*';
+        if( match( DIV ) )
+            op = '/';
         advance();
         tempvar2 = factor();
-        printf("    %s *= %s\n", tempvar, tempvar2 );
+        printf("    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
     }
 
