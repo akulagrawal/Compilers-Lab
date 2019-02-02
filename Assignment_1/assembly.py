@@ -538,12 +538,12 @@ if __name__ == "__main__":
         # Read all lines from the file.
         lines = f.readlines()
 
-        # Number of 'if' statements present.
-        if_num = 0
+        # Number of 'if' statements unmatched.
         unmatched_ifs = []
 
         # Parse line-by-line.
         for index, line in enumerate(lines):
+
             # Ignore empty lines
             if len(line) <= 1:
                 continue

@@ -5,5 +5,7 @@ ifF _t0
     ifF _t1
         _t2 = 5
     endif
+
+    _t3 = 6
 endif
 
