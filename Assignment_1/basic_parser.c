@@ -90,6 +90,31 @@ statements()
 		advance();
 		begin_prime();
 	}
+	else if( match( ID ) )
+	{
+		advance();
+		if( match( PLUS ) || match( MINUS ) )
+			expr_prime();
+		else if( match( LT ) || match( GT ) || match( EQ ) )
+			c_expression();
+		else if( match( COLON ) )
+		{
+			advance();
+			if( match( EQ ) )
+			{
+				advance();
+				comp_expression();
+				if( match( SEMI ) )
+					advance();
+				else
+	       			ERROR("Inserting missing semicolon");
+			}
+			else
+				ERROR("Inserting missing 'equal'")
+		}
+		else
+			ERROR("Invalid Operator");
+	}
 	else
 	{	
     	comp_expression();
@@ -99,7 +124,7 @@ statements()
 	    else
 	       ERROR("Inserting missing semicolon");
 	
-	    if( !match( ENDIF ) && !match( ENDWHILE ) && !match( END ) && !match(EOI) )
+	    if( !match( ENDIF ) && !match( ENDWHILE ) && !match( END ) && !match( EOI ) )
 	        statements();			/* Do another statement. */
 	}	
 }
@@ -204,7 +229,7 @@ factor()
         else
             ERROR("Mismatched parenthesis");
     }
-    else if( match( NUM ) || match ( ID ) || match( NUM_OR_ID ) )
+    else if( match( NUM ) || match ( ID ) )
         advance();
     else
 		ERROR("Number or identifier expected");	
