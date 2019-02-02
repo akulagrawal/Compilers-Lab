@@ -55,6 +55,7 @@ class Processor:
         for register_name in self.busy_registers:
             self.return_register(register_name)
 
+    # Assign the second operand to the first.
     def assign(self, operand1, operand2):
         # Load into accumulator.
         if operand2 in virtual_registers:
@@ -67,7 +68,7 @@ class Processor:
         # Store into memory location,
         print("STA " + memory_map[operand1])
 
-    # Add 8-bit operands.
+    # Add 8-bit operands, storing in the first operand.
     def add(self, operand1, operand2):
         # Load into accumulator.
         print("LDA " + memory_map[operand1])
@@ -231,6 +232,61 @@ class Processor:
         # Free registers.
         self.return_all_registers()
 
+    # Logical OR of two 8-bit operands.
+    def logical_or(self, operand1, operand2):
+        # Load into accumulator.
+        print("LDA " + memory_map[operand1])
+
+        # Load second operand, using a free register if not immediate data, and perform the OR.
+        if operand2 in virtual_registers:
+            print("; Logical OR with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
+            free_register = self.get_free_register()
+            print("MOV " + free_register + ", " + "A")
+            print("LDA " + memory_map[operand2])
+            print("ORA " + free_register)
+            self.return_register(free_register)
+        else:
+            print("; Logical OR with " + memory_map[operand1] + " and " + to_hex(operand2))
+            print("OR " + to_hex(operand2))
+
+        # Store into memory location.
+        print("STA " + memory_map[operand1])
+
+    # Logical AND of two 8-bit operands.
+    def logical_and(self, operand1, operand2):
+        # Load into accumulator.
+        print("LDA " + memory_map[operand1])
+
+        # Load second operand, using a free register if not immediate data, and perform the AND.
+        if operand2 in virtual_registers:
+            print("; Logical AND with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
+            free_register = self.get_free_register()
+            print("MOV " + free_register + ", " + "A")
+            print("LDA " + memory_map[operand2])
+            print("ANA " + free_register)
+            self.return_register(free_register)
+        else:
+            print("; Logical AND with " + memory_map[operand1] + " and " + to_hex(operand2))
+            print("ANI " + to_hex(operand2))
+
+        # Store into memory location.
+        print("STA " + memory_map[operand1])
+
+    # Assigns the Logical NOT of the second operand to the first operand.
+    def logical_not(self, operand1, operand2):
+        # Load second operand into accumulator, and perform the XOR for a NOT.
+        if operand2 in virtual_registers:
+            print("; Assigning " + memory_map[operand1] + " to the logical NOT of the value at " + memory_map[operand2])
+            print("LDA " + memory_map[operand2])
+            print("XRI " + "0FFH")
+        else:
+            print("; Assigning " + memory_map[operand1] + " to the logical NOT of " + to_hex(operand2))
+            print("MVI " + to_hex(operand2))
+            print("XRI " + "0FFH")
+
+        # Store into memory location.
+        print("STA " + memory_map[operand1])
+
 
 # Instruction Class.
 class Instruction:
@@ -254,6 +310,18 @@ class Instruction:
     def is_division(tokenlist):
         return tokenlist[1] == "/="
 
+    @staticmethod
+    def is_logical_or(tokenlist):
+        return tokenlist[1] == "|="
+
+    @staticmethod
+    def is_logical_and(tokenlist):
+        return tokenlist[1] == "&="
+
+    @staticmethod
+    def is_logical_not(tokenlist):
+        return tokenlist[1] == "!="
+
 
 if __name__ == "__main__":
     # Create Processor instance.
@@ -267,18 +335,35 @@ if __name__ == "__main__":
             # Extract tokens.
             tokens = line.split()
 
-            # Check operation.
+            # Check operation, based on tokens.
+            # Assignment.
             if Instruction.is_assignment(tokens):
                 processor.assign(tokens[0], tokens[2])
 
+            # Addition.
             elif Instruction.is_addition(tokens):
                 processor.add(tokens[0], tokens[2])
 
+            # Subtraction.
             elif Instruction.is_subtraction(tokens):
                 processor.sub(tokens[0], tokens[2])
 
+            # Multiplication.
             elif Instruction.is_multiplication(tokens):
                 processor.mul(tokens[0], tokens[2])
 
+            # Division.
             elif Instruction.is_division(tokens):
                 processor.div(tokens[0], tokens[2])
+
+            # Logical OR.
+            elif Instruction.is_logical_or(tokens):
+                processor.logical_or(tokens[0], tokens[2])
+
+            # Logical AND.
+            elif Instruction.is_logical_and(tokens):
+                processor.logical_and(tokens[0], tokens[2])
+
+            # Logical NOT.
+            elif Instruction.is_logical_not(tokens):
+                processor.logical_not(tokens[0], tokens[2])
