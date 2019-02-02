@@ -31,6 +31,7 @@ class Processor:
         self.free_registers = self.registers.copy()
         self.busy_registers = []
         self.curr_loop = 0
+        self.curr_comparison = 0
 
     # Assign a free register.
     def get_free_register(self):
@@ -70,23 +71,30 @@ class Processor:
 
     # Add 8-bit operands, storing in the first operand.
     def add(self, operand1, operand2):
+        # Load second operand.
+        if operand2 in virtual_registers:
+            print("; Adding " + memory_map[operand1] + " and the value at " + memory_map[operand2])
+            print("LDA " + memory_map[operand2])
+
+        else:
+            print("; Adding " + memory_map[operand1] + " and " + to_hex(operand2))
+            print("MVI " + "A" + ", " + to_hex(operand2))
+
+        # Use a free register to store
+        register = self.get_free_register()
+        print("MOV " + register + ", " + "A")
+
         # Load into accumulator.
         print("LDA " + memory_map[operand1])
 
-        # Add to accumulator, using a free register if not immediate data.
-        if operand2 in virtual_registers:
-            print("; Adding " + memory_map[operand1] + " and the value at " + memory_map[operand2])
-            free_register = self.get_free_register()
-            print("MOV " + free_register + ", " + "A")
-            print("LDA " + memory_map[operand2])
-            print("ADD " + free_register)
-            self.return_register(free_register)
-        else:
-            print("; Adding " + memory_map[operand1] + " and " + to_hex(operand2))
-            print("ADI " + to_hex(operand2))
+        # Perform addition.
+        print("ADD " + register)
 
-        # Store into memory location.
+        # Store back into memory location.
         print("STA " + memory_map[operand1])
+
+        # Return back register
+        self.return_register(register)
 
     # Subtract with 8-bit operands.
     def sub(self, operand1, operand2):
@@ -96,14 +104,14 @@ class Processor:
             print("LDA " + memory_map[operand2])
         else:
             print("; Subtracting " + memory_map[operand1] + " by " + to_hex(operand2))
-            print("MVI " + to_hex(operand2))
+            print("MVI " + "A" + ", " + to_hex(operand2))
 
-        # Subtract from accumulator, using a free register.
-        free_register = self.get_free_register()
-        print("MOV " + free_register + ", " + "A")
+        # Subtract from accumulator, using a free register to store.
+        register = self.get_free_register()
+        print("MOV " + register + ", " + "A")
         print("LDA " + memory_map[operand1])
-        print("SUB " + free_register)
-        self.return_register(free_register)
+        print("SUB " + register)
+        self.return_register(register)
 
         # Store into memory location.
         print("STA " + memory_map[operand1])
@@ -240,11 +248,11 @@ class Processor:
         # Load second operand, using a free register if not immediate data, and perform the OR.
         if operand2 in virtual_registers:
             print("; Logical OR with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
-            free_register = self.get_free_register()
-            print("MOV " + free_register + ", " + "A")
+            register = self.get_free_register()
+            print("MOV " + register + ", " + "A")
             print("LDA " + memory_map[operand2])
-            print("ORA " + free_register)
-            self.return_register(free_register)
+            print("ORA " + register)
+            self.return_register(register)
         else:
             print("; Logical OR with " + memory_map[operand1] + " and " + to_hex(operand2))
             print("OR " + to_hex(operand2))
@@ -260,11 +268,11 @@ class Processor:
         # Load second operand, using a free register if not immediate data, and perform the AND.
         if operand2 in virtual_registers:
             print("; Logical AND with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
-            free_register = self.get_free_register()
-            print("MOV " + free_register + ", " + "A")
+            register = self.get_free_register()
+            print("MOV " + register + ", " + "A")
             print("LDA " + memory_map[operand2])
-            print("ANA " + free_register)
-            self.return_register(free_register)
+            print("ANA " + register)
+            self.return_register(register)
         else:
             print("; Logical AND with " + memory_map[operand1] + " and " + to_hex(operand2))
             print("ANI " + to_hex(operand2))
@@ -286,6 +294,130 @@ class Processor:
 
         # Store into memory location.
         print("STA " + memory_map[operand1])
+
+    # If operand1 < operand2 (value at operand2 if memory location), stores FF in operand1, otherwise stores 00H.
+    def lesser_than(self, operand1, operand2):
+        # Load second operand.
+        if operand2 in virtual_registers:
+            print("; Lesser-than with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
+            print("LDA " + memory_map[operand2])
+
+        else:
+            print("; Lesser-than with " + memory_map[operand1] + " and " + to_hex(operand2))
+            print("MVI " + "A" + ", " + to_hex(operand2))
+
+        # Use a free register to store.
+        register = self.get_free_register()
+        print("MOV " + register + ", " + "A")
+
+        # Load first operand into accumulator.
+        print("LDA " + memory_map[operand1])
+
+        # Perform comparison.
+        self.curr_comparison += 1
+        print("CMP " + register)
+        print("JC SETONE" + str(self.curr_comparison))
+        print("JNC SETZERO" + str(self.curr_comparison))
+
+        # Set accumulator value to FFH if true.
+        print("SETONE" + str(self.curr_comparison) + ": NOP")
+        print("MVI " + "A" + ", " + "FFH")
+        print("JMP COMPEND" + str(self.curr_comparison))
+
+        # Set accumulator value to 00H if false.
+        print("SETZERO" + str(self.curr_comparison) + ": NOP")
+        print("MVI " + "A" + ", " + "00H")
+        print("JMP COMPEND" + str(self.curr_comparison))
+
+        # Store into memory location.
+        print("COMPEND" + str(self.curr_comparison) + ": NOP")
+        print("STA " + memory_map[operand1])
+
+        # Return back register.
+        self.return_register(register)
+
+    # If operand1 > operand2 (value at operand2 if memory location), stores FF in operand1, otherwise stores 00H.
+    def greater_than(self, operand1, operand2):
+        # Load second operand.
+        if operand2 in virtual_registers:
+            print("; Greater-than with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
+            print("LDA " + memory_map[operand2])
+
+        else:
+            print("; Greater-than with " + memory_map[operand1] + " and " + to_hex(operand2))
+            print("MVI " + "A" + ", " + to_hex(operand2))
+
+        # Use a free register to store.
+        register = self.get_free_register()
+        print("MOV " + register + ", " + "A")
+
+        # Load first operand into accumulator.
+        print("LDA " + memory_map[operand1])
+
+        # Perform comparison.
+        self.curr_comparison += 1
+        print("CMP " + register)
+        print("JC SETZERO" + str(self.curr_comparison))
+        print("JZ SETZERO" + str(self.curr_comparison))
+        print("JMP SETONE" + str(self.curr_comparison))
+
+        # Set accumulator value to FFH if true.
+        print("SETONE" + str(self.curr_comparison) + ": NOP")
+        print("MVI " + "A" + ", " + "FFH")
+        print("JMP COMPEND" + str(self.curr_comparison))
+
+        # Set accumulator value to 00H if false.
+        print("SETZERO" + str(self.curr_comparison) + ": NOP")
+        print("MVI " + "A" + ", " + "00H")
+        print("JMP COMPEND" + str(self.curr_comparison))
+
+        # Store into memory location.
+        print("COMPEND" + str(self.curr_comparison) + ": NOP")
+        print("STA " + memory_map[operand1])
+
+        # Return back register.
+        self.return_register(register)
+
+    # If operand1 == operand2 (value at operand2 if memory location), stores FF in operand1, otherwise stores 00H.
+    def equals(self, operand1, operand2):
+        # Load second operand.
+        if operand2 in virtual_registers:
+            print("; Greater-than with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
+            print("LDA " + memory_map[operand2])
+
+        else:
+            print("; Greater-than with " + memory_map[operand1] + " and " + to_hex(operand2))
+            print("MVI " + "A" + ", " + to_hex(operand2))
+
+        # Use a free register to store.
+        register = self.get_free_register()
+        print("MOV " + register + ", " + "A")
+
+        # Load first operand into accumulator.
+        print("LDA " + memory_map[operand1])
+
+        # Perform comparison.
+        self.curr_comparison += 1
+        print("CMP " + register)
+        print("JZ SETONE" + str(self.curr_comparison))
+        print("JMP SETZERO" + str(self.curr_comparison))
+
+        # Set accumulator value to FFH if true.
+        print("SETONE" + str(self.curr_comparison) + ": NOP")
+        print("MVI " + "A" + ", " + "FFH")
+        print("JMP COMPEND" + str(self.curr_comparison))
+
+        # Set accumulator value to 00H if false.
+        print("SETZERO" + str(self.curr_comparison) + ": NOP")
+        print("MVI " + "A" + ", " + "00H")
+        print("JMP COMPEND" + str(self.curr_comparison))
+
+        # Store into memory location.
+        print("COMPEND" + str(self.curr_comparison) + ": NOP")
+        print("STA " + memory_map[operand1])
+
+        # Return back register.
+        self.return_register(register)
 
 
 # Instruction Class.
@@ -321,6 +453,18 @@ class Instruction:
     @staticmethod
     def is_logical_not(tokenlist):
         return tokenlist[1] == "!="
+
+    @staticmethod
+    def is_lesser_than(tokenlist):
+        return tokenlist[1] == "<"
+
+    @staticmethod
+    def is_greater_than(tokenlist):
+        return tokenlist[1] == ">"
+
+    @staticmethod
+    def is_equals(tokenlist):
+        return tokenlist[1] == "=="
 
 
 if __name__ == "__main__":
@@ -367,3 +511,15 @@ if __name__ == "__main__":
             # Logical NOT.
             elif Instruction.is_logical_not(tokens):
                 processor.logical_not(tokens[0], tokens[2])
+
+            # Lesser-Than.
+            elif Instruction.is_lesser_than(tokens):
+                processor.lesser_than(tokens[0], tokens[2])
+
+            # Greater-Than.
+            elif Instruction.is_greater_than(tokens):
+                processor.greater_than(tokens[0], tokens[2])
+
+            # Equals.
+            elif Instruction.is_equals(tokens):
+                processor.equals(tokens[0], tokens[2])
