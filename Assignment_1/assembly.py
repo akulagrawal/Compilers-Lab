@@ -4,13 +4,13 @@ Assembly Code Generation
 '''
 
 # The maximum number of 8-bit variables (ie, memory locations) we will use.
-max_variables = 100
+max_variables = 1000
 
 # Memory start location
 memory_start = 8000
 
 # Path for the IR code text file that has to be translated.
-IR_file_path = "IR.txt"
+IR_file_path = "IR3.txt"
 
 # Define virtual registers, real memory locations and the mapping between them.
 virtual_registers = ["_t" + chr(num + ord('0')) for num in range(max_variables)]
@@ -32,6 +32,7 @@ class Processor:
         self.busy_registers = []
         self.curr_loop = 0
         self.curr_comparison = 0
+        self.curr_if = 0
 
     # Assign a free register.
     def get_free_register(self):
@@ -382,11 +383,11 @@ class Processor:
     def equals(self, operand1, operand2):
         # Load second operand.
         if operand2 in virtual_registers:
-            print("; Greater-than with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
+            print("; Equality check with " + memory_map[operand1] + " and the value at " + memory_map[operand2])
             print("LDA " + memory_map[operand2])
 
         else:
-            print("; Greater-than with " + memory_map[operand1] + " and " + to_hex(operand2))
+            print("; Equality check with " + memory_map[operand1] + " and " + to_hex(operand2))
             print("MVI " + "A" + ", " + to_hex(operand2))
 
         # Use a free register to store.
@@ -418,6 +419,48 @@ class Processor:
 
         # Return back register.
         self.return_register(register)
+
+    # If condition is true.
+    def ifT(self, condition):
+        self.curr_if += 1
+
+        print("; Checking if value at " + memory_map[condition] + " is true")
+
+        # Load into accumulator.
+        print("LDA " + memory_map[condition])
+
+        # Check if zero.
+        print("CPI 00H")
+        print("JNZ IFBRANCH" + str(self.curr_if))
+
+        # Jump to the end of the 'if' statements.
+        print("JMP ENDIF" + str(self.curr_if))
+
+        # Branch statements.
+        print("IFBRANCH" + str(self.curr_if) + ": NOP")
+
+    # If condition is false.
+    def ifF(self, condition):
+        self.curr_if += 1
+
+        print("; Checking if value at " + memory_map[condition] + " is false")
+
+        # Load into accumulator.
+        print("LDA " + memory_map[condition])
+
+        # Check if zero.
+        print("CPI 00H")
+        print("JZ IFBRANCH" + str(self.curr_if))
+
+        # Jump to the end of the 'if' statements.
+        print("JMP ENDIF" + str(self.curr_if))
+
+        # Branch statements.
+        print("IFBRANCH" + str(self.curr_if) + ": NOP")
+
+    # Endif for the corresponding if.
+    def endif(self, if_num):
+        print("ENDIF" + str(if_num) + ": NOP")
 
 
 # Instruction Class.
@@ -466,6 +509,26 @@ class Instruction:
     def is_equals(tokenlist):
         return tokenlist[1] == "=="
 
+    @staticmethod
+    def is_ifT(tokenlist):
+        return tokenlist[0] == "ifT"
+
+    @staticmethod
+    def is_ifF(tokenlist):
+        return tokenlist[0] == "ifF"
+
+    @staticmethod
+    def is_if(tokenlist):
+        return Instruction.is_ifT(tokenlist) or Instruction.is_ifF(tokenlist)
+
+    @staticmethod
+    def is_while(tokenlist):
+        return tokenlist[0] == "while"
+
+    @staticmethod
+    def is_endif(tokenlist):
+        return tokenlist[0] == "endif"
+
 
 if __name__ == "__main__":
     # Create Processor instance.
@@ -475,13 +538,48 @@ if __name__ == "__main__":
         # Read all lines from the file.
         lines = f.readlines()
 
-        for line in lines:
+        # Number of 'if' statements present.
+        if_num = 0
+        unmatched_ifs = []
+
+        # Parse line-by-line.
+        for index, line in enumerate(lines):
+            # Ignore empty lines
+            if len(line) <= 1:
+                continue
+
             # Extract tokens.
             tokens = line.split()
 
             # Check operation, based on tokens.
+            # Conditional statement - if.
+            if Instruction.is_if(tokens):
+                # Extract conditional variable.
+                conditional_var = tokens[1]
+
+                # Generate the assembly, depending on the type of if.
+                if Instruction.is_ifT(tokens):
+                    processor.ifT(conditional_var)
+                else:
+                    processor.ifF(conditional_var)
+
+                # Add to list of unmatched ifs.
+                unmatched_ifs.append(processor.curr_if)
+
+                # Read remaining statements.
+                continue
+
+            # Conditional statement - endif.
+            elif Instruction.is_endif(tokens):
+                matching_if = unmatched_ifs.pop()
+                processor.endif(matching_if)
+
+            # Conditional statement - while.
+            elif Instruction.is_while(tokens):
+                pass
+
             # Assignment.
-            if Instruction.is_assignment(tokens):
+            elif Instruction.is_assignment(tokens):
                 processor.assign(tokens[0], tokens[2])
 
             # Addition.
