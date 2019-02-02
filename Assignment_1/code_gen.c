@@ -4,7 +4,6 @@
 char    *factor     ( void );
 char    *term       ( void );
 char    *expression ( void );
-char    *mul_factor ( void );
 
 extern char *newname( void       );
 extern void freename( char *name );
@@ -80,6 +79,8 @@ char    *term()
         else
             printf("    %s /= %s\n", tempvar, tempvar2 );
         freename( tempvar2 );
+
+        times_match = 0;
     }
 
     return tempvar;
