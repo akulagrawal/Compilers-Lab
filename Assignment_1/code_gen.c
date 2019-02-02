@@ -70,7 +70,7 @@ char    *term()
 
     tempvar = factor();
     int times_match = 0;
-    while( match( TIMES ) || match( DIV ) )
+    while( (times_match = match( TIMES )) || match( DIV ) )
     {
         advance();
         tempvar2 = factor();
