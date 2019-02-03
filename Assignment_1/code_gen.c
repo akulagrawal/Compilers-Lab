@@ -31,7 +31,7 @@ statements()
             else
                 fprintf( stderr, "%d: Inserting missing endif\n", yylineno );
         }
-        if( match( ENDIF ) ) {}
+        if( match( ENDIF ) ) {return;}
         if( match( WHILE ) )
         {
             advance();
@@ -46,7 +46,18 @@ statements()
             else
                 fprintf( stderr, "%d: Inserting missing endwhile\n", yylineno );
         }
-        if( match( ENDWHILE ) ) {}
+        if( match( ENDWHILE ) ) {return;}
+        if( match( BEGIN ) )
+        {
+            advance();
+            printf("\n");
+            statements();
+            if( match( END ) )
+                printf("\n");
+            else
+                fprintf( stderr, "%d: Inserting missing end\n", yylineno );
+        }
+        if( match( END ) ) {return;}
         tempvar = full_expression();
 
         if( match( SEMI ) )
