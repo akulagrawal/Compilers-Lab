@@ -21,7 +21,7 @@ statements()
         {
             advance();
             tempvar = full_expression();
-            printf("if(%s)\n", tempvar);
+            printf("if %s\n", tempvar);
             if( !match(THEN) )
                 fprintf( stderr, "%d: Inserting missing then\n", yylineno );
             advance();
@@ -32,6 +32,21 @@ statements()
                 fprintf( stderr, "%d: Inserting missing endif\n", yylineno );
         }
         if( match( ENDIF ) ) {}
+        if( match( WHILE ) )
+        {
+            advance();
+            tempvar = full_expression();
+            printf("while %s\n", tempvar);
+            if( !match(DO) )
+                fprintf( stderr, "%d: Inserting missing do\n", yylineno );
+            advance();
+            statements();
+            if( match( ENDWHILE ) )
+                printf("endwhile\n");
+            else
+                fprintf( stderr, "%d: Inserting missing endwhile\n", yylineno );
+        }
+        if( match( ENDWHILE ) ) {}
         tempvar = full_expression();
 
         if( match( SEMI ) )
