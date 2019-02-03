@@ -26,8 +26,10 @@ statements()
                 fprintf( stderr, "%d: Inserting missing then\n", yylineno );
             advance();
             statements();
-            if( match( ENDIF ) )
+            if( match( ENDIF ) ){
+                advance();
                 printf("endif\n");
+            }
             else
                 fprintf( stderr, "%d: Inserting missing endif\n", yylineno );
         }
@@ -41,8 +43,10 @@ statements()
                 fprintf( stderr, "%d: Inserting missing do\n", yylineno );
             advance();
             statements();
-            if( match( ENDWHILE ) )
+            if( match( ENDWHILE ) ){
+                advance();
                 printf("endwhile\n");
+            }
             else
                 fprintf( stderr, "%d: Inserting missing endwhile\n", yylineno );
         }
@@ -52,8 +56,10 @@ statements()
             advance();
             printf("\n");
             statements();
-            if( match( END ) )
+            if( match( END ) ){
+                advance();
                 printf("\n");
+            }
             else
                 fprintf( stderr, "%d: Inserting missing end\n", yylineno );
         }
