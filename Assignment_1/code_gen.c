@@ -86,7 +86,7 @@ char    *full_expression()
         if( match( GT ) )
             op = '>';
         if( match( EQ ) )
-            op = '=';
+            op = '==';
         advance();
         tempvar2 = expression();
         printf("    %s %c %s\n", tempvar, op, tempvar2 );
