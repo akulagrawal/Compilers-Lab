@@ -86,16 +86,18 @@ char    *full_expression()
     tempvar = expression();
     while( match( LT ) || match( GT ) || match( EQ ) )
     {
-        char op;
+        char op, op2;
         if( match( LT ) )
             op = '<';
         if( match( GT ) )
             op = '>';
-        if( match( EQ ) )
-            op = '==';
+        if( match( EQ ) ){
+            op = '=';
+            op2 = '=';
+        }
         advance();
         tempvar2 = expression();
-        printf("    %s %c %s\n", tempvar, op, tempvar2 );
+        printf("    %s %c%c %s\n", tempvar, op, op2, tempvar2 );
         freename( tempvar2 );
     }
 
