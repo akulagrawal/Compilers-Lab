@@ -1,9 +1,16 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stddef.h>
 #include "lex.h"
 
 char    *factor     ( void );
 char    *term       ( void );
 char    *expression ( void );
+char    *full_expression ( void );
+
+extern FILE *inter;
 
 extern char *newname( void       );
 extern void freename( char *name );
@@ -13,10 +20,56 @@ statements()
     /*  statements -> expression SEMI  |  expression SEMI statements  */
 
     char *tempvar;
+    // inter = fopen("inter.txt", "w");
 
     while( !match(EOI) )
     {
-        tempvar = expression();
+        if( match( IF ) )
+        {
+            advance();
+            tempvar = full_expression();
+            printf("if %s\n", tempvar);
+            if( !match(THEN) )
+                fprintf( stderr, "%d: Inserting missing then\n", yylineno );
+            advance();
+            statements();
+            if( match( ENDIF ) )
+                printf("endif\n");
+            else
+                fprintf( stderr, "%d: Inserting missing endif\n", yylineno );
+        }
+        if( match( ENDIF ) ) 
+        {
+            printf("endif\n");
+            return;
+        }
+        if( match( WHILE ) )
+        {
+            advance();
+            tempvar = full_expression();
+            printf("while %s\n", tempvar);
+            if( !match(DO) )
+                fprintf( stderr, "%d: Inserting missing do\n", yylineno );
+            advance();
+            statements();
+            if( match( ENDWHILE ) )
+                printf("endwhile\n");
+            else
+                fprintf( stderr, "%d: Inserting missing endwhile\n", yylineno );
+        }
+        if( match( ENDWHILE ) ) {return;}
+        if( match( BEGIN ) )
+        {
+            advance();
+            printf("\n");
+            statements();
+            if( match( END ) )
+                printf("\n");
+            else
+                fprintf( stderr, "%d: Inserting missing end\n", yylineno );
+        }
+        if( match( END ) ) {return;}
+        tempvar = full_expression();
 
         if( match( SEMI ) )
             advance();
@@ -27,20 +80,58 @@ statements()
     }
 }
 
+char    *full_expression()
+{
+    /* full_expression -> expression full_expression'
+     * full_expression' -> LT/Gt/EQ/EQCOMP expression full_expression' |  epsilon
+     */
+
+    char  *tempvar, *tempvar2;
+
+    tempvar = expression();
+    while( match( COLON ) || match( LT ) || match( GT ) || match( EQ ) )
+    {
+        char *op;
+        if( match( LT ) )
+            op = "<";
+        if( match( GT ) )
+            op = ">";
+        if( match( EQ ) )
+            op = "==";
+        if( match( COLON ) )
+        {
+            advance();
+            op = "=";
+        }
+            
+        advance();
+        tempvar2 = expression();
+        printf("    %s %s %s\n", tempvar, op, tempvar2 );
+        freename( tempvar2 );
+    }
+
+    return tempvar;
+}
+
 char    *expression()
 {
     /* expression -> term expression'
-     * expression' -> PLUS term expression' |  epsilon
+     * expression' -> PLUS/MINUS term expression' |  epsilon
      */
 
     char  *tempvar, *tempvar2;
 
     tempvar = term();
-    while( match( PLUS ) )
+    while( match( PLUS ) || match( MINUS ) )
     {
+        char op;
+        if( match( PLUS ) )
+            op = '+';
+        if( match( MINUS ) )
+            op = '-';
         advance();
         tempvar2 = term();
-        printf("    %s += %s\n", tempvar, tempvar2 );
+        printf("    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
     }
 
@@ -52,11 +143,16 @@ char    *term()
     char  *tempvar, *tempvar2 ;
 
     tempvar = factor();
-    while( match( TIMES ) )
+    while( match( TIMES ) || match( DIV ) )
     {
+        char op;
+        if( match( TIMES ) )
+            op = '*';
+        if( match( DIV ) )
+            op = '/';
         advance();
         tempvar2 = factor();
-        printf("    %s *= %s\n", tempvar, tempvar2 );
+        printf("    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
     }
 
@@ -69,17 +165,28 @@ char    *factor()
 
     if( match(NUM_OR_ID) )
     {
-	/* Print the assignment instruction. The %0.*s conversion is a form of
-	 * %X.Ys, where X is the field width and Y is the maximum number of
-	 * characters that will be printed (even if the string is longer). I'm
-	 * using the %0.*s to print the string because it's not \0 terminated.
-	 * The field has a default width of 0, but it will grow the size needed
-	 * to print the string. The ".*" tells printf() to take the maximum-
-	 * number-of-characters count from the next argument (yyleng).
-	 */
+    /* Print the assignment instruction. The %0.*s conversion is a form of
+     * %X.Ys, where X is the field width and Y is the maximum number of
+     * characters that will be printed (even if the string is longer). I'm
+     * using the %0.*s to print the string because it's not \0 terminated.
+     * The field has a default width of 0, but it will grow the size needed
+     * to print the string. The ".*" tells printf() to take the maximum-
+     * number-of-characters count from the next argument (yyleng).
+     */
 
-        printf("    %s = %0.*s\n", tempvar = newname(), yyleng, yytext );
-        advance();
+        char * current = yytext;
+        if(*current == '1' || *current == '2' || *current == '3' || *current == '4' || *current == '5' ||
+           *current == '6' || *current == '7' || *current == '8' || *current == '9' || *current == '0')
+        {
+            printf("    %s = %0.*s\n", tempvar = newname(), yyleng, yytext );
+            advance();
+        }
+        else
+        {
+            printf("    %s = $%0.*s\n", tempvar = newname(), yyleng, yytext );
+            advance();
+        }
+        
     }
     else if( match(LP) )
     {
@@ -91,7 +198,7 @@ char    *factor()
             fprintf(stderr, "%d: Mismatched parenthesis\n", yylineno );
     }
     else
-	fprintf( stderr, "%d: Number or identifier expected\n", yylineno );
+    fprintf( stderr, "%d: Number or identifier expected\n", yylineno );
 
     return tempvar;
 }

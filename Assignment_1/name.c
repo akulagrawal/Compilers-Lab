@@ -1,4 +1,8 @@
-char  *Names[] = { "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7" };   
+#include <stdio.h>
+#include <stdlib.h>
+#include "lex.h"
+
+char  *Names[] = { "_t0", "_t1", "_t2", "_t3", "_t4", "_t5", "_t6", "_t7" };   
 char  **Namep  = Names;   
    
 char  *newname()   
