@@ -17,6 +17,21 @@ statements()
 
     while( !match(EOI) )
     {
+        if( match( IF ) )
+        {
+            advance();
+            tempvar = full_expression();
+            printf("if(%s)\n", tempvar);
+            if( !match(THEN) )
+                fprintf( stderr, "%d: Inserting missing then\n", yylineno );
+            advance();
+            statements();
+            if( match( ENDIF ) )
+                printf("endif\n");
+            else
+                fprintf( stderr, "%d: Inserting missing endif\n", yylineno );
+        }
+        if( match( ENDIF ) ) {}
         tempvar = full_expression();
 
         if( match( SEMI ) )

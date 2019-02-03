@@ -1,6 +1,7 @@
 #include "lex.h"
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 
 char* yytext = ""; /* Lexeme (not '\0'
@@ -52,6 +53,12 @@ int lex(void){
             return LP;
            case ')':
             return RP;
+           case '<':
+            return LT;
+           case '>':
+            return GT;
+           case '=':
+            return EQ;
            case '\n':
            case '\t':
            case ' ' :
@@ -63,6 +70,16 @@ int lex(void){
                while(isalnum(*current))
                   ++current;
                yyleng = current - yytext;
+               char sym[yyleng+1];
+               strncpy(sym, yytext, yyleng);
+               sym[yyleng] = '\0';
+               if( !strcmp(sym, "if") )
+                return IF;
+               if( !strcmp(sym, "then") )
+                return THEN;
+               if( !strcmp(sym, "endif") )
+                return ENDIF;
+              
                return NUM_OR_ID;
             }
             break;
