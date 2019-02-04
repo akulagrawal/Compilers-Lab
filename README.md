@@ -5,12 +5,12 @@
 * Don't include your name in commit messages.
 
 ## Parser
-To compile parser:	make parser  
-To execute parser:	./parser   
+To compile parser:	**make parser**    
+To execute parser:	**./parser**     
 
 ## Code Generation
-To compile code generation:	make codegen    
-To execute code generation:	./codegen  
+To compile code generator:	**make codegen**  
+To execute code generator:	**./codegen**   
 
 ## Clean
-To clean executables:		make clean  
+To clean executables:	**make clean** 
