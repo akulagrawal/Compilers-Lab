@@ -198,7 +198,7 @@ expr_prime()
      *              | epsilon
      */
 
-    if( match( PLUS ) )
+    if( match( PLUS ) || match( MINUS ) )
     {
         advance();
         term();
