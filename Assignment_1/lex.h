@@ -35,5 +35,6 @@ extern yylineno;
     exit(0);    \
 }
 
-#define MATCH_STR(str)  \
-    strncmp (yytext, str, yyleng) == 0
+#define MATCH_STR(str, size)  \
+    (strncmp (yytext, str, yyleng) == 0) && \
+    yyleng == size
