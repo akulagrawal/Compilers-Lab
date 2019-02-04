@@ -84,12 +84,12 @@ int lex(void){
                   return DO;
 		         else if( MATCH_STR( "begin" ) )
     	 	    	   return BEGIN;
+		         else if( MATCH_STR( "end" ) )
+    	        	   return END;
 		         else if( MATCH_STR( "endif" ) )
     	        	   return ENDIF;
 		         else if( MATCH_STR( "endwhile" ) )
     	        	   return ENDWHILE;
-		         else if( MATCH_STR( "end" ) )
-    	        	   return END;
 		         else if(!isalpha(*yytext))
                   return NUM;
                else
