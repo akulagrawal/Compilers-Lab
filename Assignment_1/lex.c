@@ -25,7 +25,7 @@ int lex(void){
          */
 
          current = input_buffer;
-         if(!gets(input_buffer)){
+         if(!fgets(input_buffer, sizeof(input_buffer), stdin)){
             *current = '\0' ;
 
             return EOI;
@@ -59,6 +59,8 @@ int lex(void){
             return GT;
            case '=':
             return EQ;
+           case ':':
+            return COLON;
            case '\n':
            case '\t':
            case ' ' :
@@ -66,7 +68,8 @@ int lex(void){
            default:
             if(!isalnum(*current))
                fprintf(stderr, "Not alphanumeric <%c>\n", *current);
-            else{
+            else
+            {
                while(isalnum(*current))
                   ++current;
                yyleng = current - yytext;
@@ -110,6 +113,8 @@ int match(int token){
 
    return token == Lookahead;
 }
+
+
 
 void advance(void){
 /* Advance the lookahead to the next

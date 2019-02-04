@@ -27,3 +27,14 @@
 extern char *yytext;		/* in lex.c			*/
 extern int yyleng;
 extern yylineno;
+
+#define ERROR(error_msg) { \
+    fprintf( stderr, "%d: ", yylineno ); \
+    fprintf( stderr, error_msg);   \
+    fprintf( stderr, "\n");   \
+    exit(0);    \
+}
+
+#define MATCH_STR(str, size)  \
+    (strncmp (yytext, str, yyleng) == 0) && \
+    yyleng == size
