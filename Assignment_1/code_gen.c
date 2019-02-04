@@ -40,19 +40,12 @@ char    *expression()
     char  *tempvar, *tempvar2;
 
     tempvar = term();
-    int plus_match = 0;
-    while( (plus_match = match( PLUS )) || match( MINUS ))
+    while( match( PLUS ) )
     {
         advance();
         tempvar2 = term();
-        if (plus_match)
-            printf("    %s += %s\n", tempvar, tempvar2 );
-        else
-            printf("    %s -= %s\n", tempvar, tempvar2 );
-
+        printf("    %s += %s\n", tempvar, tempvar2 );
         freename( tempvar2 );
-        
-        plus_match = 0;
     }
 
     return tempvar;
