@@ -10,7 +10,9 @@ extern void freename( char *name );
 
 statements()
 {
-    /*  statements -> expression SEMI  |  expression SEMI statements  */
+    /*  statements -> expression SEMI  
+     *               | expression SEMI statements  
+     */
 
     char *tempvar;
 
@@ -30,7 +32,9 @@ statements()
 char    *expression()
 {
     /* expression -> term expression'
-     * expression' -> PLUS term expression' |  epsilon
+     * expression' -> PLUS term expression' 
+     *              | MINUS term expression' 
+     *              | epsilon
      */
 
     char  *tempvar, *tempvar2;
@@ -49,15 +53,27 @@ char    *expression()
 
 char    *term()
 {
+    /* term -> factor term'
+     * term' -> TIMES factor term' 
+     *          | DIV factor term'
+     *          | epsilon
+     */
+
     char  *tempvar, *tempvar2 ;
 
     tempvar = factor();
-    while( match( TIMES ) )
+    int times_match = 0;
+    while( (times_match = match( TIMES )) || match( DIV ) )
     {
         advance();
         tempvar2 = factor();
-        printf("    %s *= %s\n", tempvar, tempvar2 );
+        if (times_match)
+            printf("    %s *= %s\n", tempvar, tempvar2 );
+        else
+            printf("    %s /= %s\n", tempvar, tempvar2 );
         freename( tempvar2 );
+
+        times_match = 0;
     }
 
     return tempvar;
@@ -65,6 +81,9 @@ char    *term()
 
 char    *factor()
 {
+    /* factor -> NUM_OR_ID 
+     *         | LP expression RP 
+     */
     char *tempvar;
 
     if( match(NUM_OR_ID) )

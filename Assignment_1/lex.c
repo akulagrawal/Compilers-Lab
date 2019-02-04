@@ -1,6 +1,7 @@
 #include "lex.h"
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 
 char* yytext = ""; /* Lexeme (not '\0'
@@ -52,6 +53,14 @@ int lex(void){
             return LP;
            case ')':
             return RP;
+  			  case '<':
+            return LT;
+           case '>':
+            return GT;
+           case '=':
+            return EQ;
+           case ':':
+            return COLON;
            case '\n':
            case '\t':
            case ' ' :
@@ -59,11 +68,32 @@ int lex(void){
            default:
             if(!isalnum(*current))
                fprintf(stderr, "Not alphanumeric <%c>\n", *current);
-            else{
+            else
+            {
                while(isalnum(*current))
                   ++current;
                yyleng = current - yytext;
-               return NUM_OR_ID;
+                              
+ 	         	if( MATCH_STR( "if", 2 ) )
+    	        	   return IF;
+		         else if( MATCH_STR( "then", 4 ) )
+    		         return THEN;
+		         else if( MATCH_STR( "while", 5 ) )
+   		 	  	   return WHILE;
+		         else if( MATCH_STR( "do", 2 ) )
+                  return DO;
+		         else if( MATCH_STR( "begin", 5 ) )
+    	 	    	   return BEGIN;
+		         else if( MATCH_STR( "end", 3 ) )
+    	        	   return END;
+		         else if( MATCH_STR( "endif", 5 ) )
+    	        	   return ENDIF;
+		         else if( MATCH_STR( "endwhile", 8 ) )
+    	        	   return ENDWHILE;
+		         else if(!isalpha(*yytext))
+                  return NUM;
+               else
+    	            return ID;
             }
             break;
          }
@@ -83,6 +113,8 @@ int match(int token){
 
    return token == Lookahead;
 }
+
+
 
 void advance(void){
 /* Advance the lookahead to the next

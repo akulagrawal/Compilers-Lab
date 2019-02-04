@@ -3,26 +3,189 @@
 #include <stdio.h>
 #include "lex.h"
 
+/*
+stmt →    if comp_expr then stmt endif
+		| while comp_expr do stmt endwhile
+		| begin begin'
+		| id := comp_expr ; 
+		| id := comp_expr ; stmt
+		| comp_expr ;
+		| comp_expr; stmt
+
+begin' →  end
+		| stmt begin'
+
+comp_expr →  expr c_expr
+
+c_expr  →  < expr c_expr
+		| > expr c_expr
+		| = expr c_expr
+		| epsilon
+
+expr →  term expr'
+
+expr' →  + term expr'
+		| - term expr'
+		| epsilon
+
+term →  factor term'
+
+term' →  * factor term'
+		| / factor term'
+		| epsilon
+
+factor →  ( expr )
+		| num_or_id
+*/
+
+
 statements()
 {
-    /*  statements -> expression SEMI
-     *             |  expression SEMI statements
+    /*
+	statements →  if comp_expression then statements endif
+	 *			| while comp_expression do statements endwhile
+	 *			| begin begin_prime
+	 *			| id COLON EQUAL comp_expression SEMI
+	 *			| comp_expression SEMI
+	 *			| comp_expression SEMI statements
+	 */
+	
+	if( match( IF ) )
+	{
+		advance();
+		comp_expression();
+		if( match( THEN ) )
+		{
+			advance();
+			statements();
+		}
+		else
+			ERROR("Inserting missing 'then'");
+		if( !match( ENDIF ) )
+		{
+			ERROR("Inserting missing 'endif'");
+		}
+		else
+			advance();
+	}
+	else if( match( WHILE ) )
+	{
+		advance();
+		comp_expression();
+		if( match( DO ) )
+		{
+			advance();
+			statements();
+		}
+		else
+			ERROR("Inserting missing 'do'");
+		if( !match( ENDWHILE ) )
+		{
+			ERROR("Inserting missing 'endwhile'");
+		}
+		else
+			advance();
+	}
+	else if( match( BEGIN ))
+	{
+		advance();
+		begin_prime();
+	}
+	else if( match( ID ) )
+	{
+		advance();
+		if( match( PLUS ) || match( MINUS ) )
+		{
+			expr_prime();
+			if( match( SEMI ) )
+				advance();
+			else
+				ERROR("Inserting missing semicolon");
+		}
+		else if( match( LT ) || match( GT ) || match( EQ ) )
+		{
+			c_expression();
+			if( match( SEMI ) )
+				advance();
+			else
+				ERROR("Inserting missing semicolon");
+		}
+		else if( match( COLON ) )
+		{
+			advance();
+			if( match( EQ ) )
+			{
+				advance();
+				comp_expression();
+				if( match( SEMI ) )
+					advance();
+				else
+	       			ERROR("Inserting missing semicolon");
+			}
+			else
+				ERROR("Inserting missing 'equal'")
+		}
+		else
+			ERROR("Invalid Operator");
+
+		if( !match( ENDIF ) && !match( ENDWHILE ) && !match( END ) && !match( EOI ) )
+			statements();			/* Do another statement. */
+	}
+	else
+	{	
+    	comp_expression();
+
+	    if( match( SEMI ) )
+			advance();
+	    else
+	       ERROR("Inserting missing semicolon");
+	
+	    if( !match( ENDIF ) && !match( ENDWHILE ) && !match( END ) && !match( EOI ) )
+	        statements();			/* Do another statement. */
+	}	
+}
+
+comp_expression()
+{
+	/* comp_expr →  expression c_expression	*/
+	expression();
+	c_expression();
+}
+
+c_expression()
+{
+	/* c_expression  →  < expression c_expression
+	 *			| > expression c_expression
+	 *			| = expression c_expression
+	 *			| epsilon
+	 */
+
+	if ( match (LT) || match(GT) || match(EQ) )
+	{
+		advance();
+		expression();
+		c_expression();
+	}
+}
+
+begin_prime()
+{
+    /* begin' → end
+	 *		|  statements begin_prime
      */
 
-    expression();
-
-    if( match( SEMI ) )
-	advance();
-    else
-        fprintf( stderr, "%d: Inserting missing semicolon\n", yylineno );
-
-    if( !match(EOI) )
-        statements();			/* Do another statement. */
+	if(match ( END ) )
+		advance();
+	else
+	{
+		statements();
+		begin_prime();
+	}
 }
 
 expression()
 {
-    /* expression -> term expression' */
+    /* expression → term expression' */
 
     term();
     expr_prime();
@@ -30,7 +193,8 @@ expression()
 
 expr_prime()
 {
-    /* expression' -> PLUS term expression'
+    /* expression' → PLUS term expression'
+	 *				| MINUS term expression'
      *              | epsilon
      */
 
@@ -44,7 +208,7 @@ expr_prime()
 
 term()
 {
-    /* term -> factor term' */
+    /* term → factor term' */
 
     factor();
     term_prime();
@@ -52,11 +216,12 @@ term()
 
 term_prime()
 {
-    /* term' -> TIMES factor term'
+    /* term' → TIMES factor term'
+	 *		 | DIV factor term'
      *       |   epsilon
      */
 
-    if( match( TIMES ) )
+    if( match( TIMES ) || match( DIV ) )
     {
         advance();
         factor();
@@ -66,22 +231,22 @@ term_prime()
 
 factor()
 {
-    /* factor   ->    NUM_OR_ID
-     *          |     LP expression RP
+    /* factor   →    LP expression RP
+     *  	       | NUM_OR_ID
      */
 
-    if( match(NUM_OR_ID) )
-        advance();
 
-    else if( match(LP) )
+    if( match( LP ) )
     {
         advance();
         expression();
         if( match(RP) )
             advance();
         else
-            fprintf( stderr, "%d: Mismatched parenthesis\n", yylineno);
+            ERROR("Mismatched parenthesis");
     }
+    else if( match( NUM ) || match ( ID ) )
+        advance();
     else
-	fprintf( stderr, "%d Number or identifier expected\n", yylineno );
+		ERROR("Number or identifier expected");	
 }
