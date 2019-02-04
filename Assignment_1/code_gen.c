@@ -38,12 +38,14 @@ statements()
             tempvar = full_expression();
             printf("ifT %s\n", tempvar);
             if( !match(THEN) )
-                fprintf( stderr, "%d: Inserting missing then\n", yylineno );
+                ERROR("Inserting missing then");
             advance();
             statements();
             if( match( ENDIF ) ){
                 if( countif <= 0 )
-                    fprintf( stderr, "%d: Unmatched endif\n", yylineno );
+                {
+                    ERROR("Unmatched endif");
+                }
                 else{
                     advance();
                     printf("endif\n");
@@ -51,7 +53,7 @@ statements()
                 }
             }
             else
-                fprintf( stderr, "%d: Inserting missing endif\n", yylineno );
+                ERROR("Inserting missing endif");
         }
         if( match( ENDIF ) ) {return;}
         if( match( WHILE ) )
@@ -61,12 +63,14 @@ statements()
             tempvar = full_expression();
             printf("while %s\n", tempvar);
             if( !match(DO) )
-                fprintf( stderr, "%d: Inserting missing do\n", yylineno );
+                ERROR("Inserting missing do");
             advance();
             statements();
             if( match( ENDWHILE ) ){
                 if( countwhile <= 0 )
-                    fprintf( stderr, "%d: Unmatched endwhile\n", yylineno );
+                {
+                    ERROR("Unmatched endwhile");
+                }
                 else{
                     advance();
                     printf("endwhile\n");
@@ -74,7 +78,7 @@ statements()
                 }
             }
             else
-                fprintf( stderr, "%d: Inserting missing endwhile\n", yylineno );
+                ERROR("Inserting missing endwhile");
         }
         if( match( ENDWHILE ) ) {return;}
         if( match( BEGIN ) )
@@ -85,7 +89,9 @@ statements()
             statements();
             if( match( END ) ){
                 if( countbegin <= 0 )
-                    fprintf( stderr, "%d: Unmatched end\n", yylineno );
+                {
+                    ERROR("Unmatched end");
+                }
                 else{
                     advance();
                     printf("\n");
@@ -93,7 +99,7 @@ statements()
                 }
             }
             else
-                fprintf( stderr, "%d: Inserting missing end\n", yylineno );
+                ERROR("Inserting missing end");
         }
         if( match( END ) ) {return;}
         if( match( ENDIF ) || match( ENDWHILE ) || match( END ) ) {return;}
@@ -112,7 +118,7 @@ statements()
             advance();
         }
         else
-            fprintf( stderr, "%d: Inserting missing semicolon\n", yylineno );
+            ERROR("Inserting missing semicolon");
 
         freename( tempvar );
     }
@@ -240,9 +246,7 @@ char    *factor()
      * number-of-characters count from the next argument (yyleng).
      */
 
-        char * current = yytext;
-        if(*current == '1' || *current == '2' || *current == '3' || *current == '4' || *current == '5' ||
-           *current == '6' || *current == '7' || *current == '8' || *current == '9' || *current == '0')
+        if( match( NUM ) )
         {
             printf("    %s = %0.*s\n", tempvar = newname(), yyleng, yytext );
             advance();
@@ -252,18 +256,13 @@ char    *factor()
             printf("    %s = $%0.*s\n", tempvar = newname(), yyleng, yytext );
             
             char *current = tempvar;
-
-
             for(; *current; ++current)
             {
                 lastreg[c++] = *current;
             }
             lastreg[c] = '\0';
-
             c=0;
-
             current = yytext;
-
             lastid[c++] = '$';
 
             while(c<=yyleng)
@@ -285,10 +284,10 @@ char    *factor()
         if( match(RP) )
             advance();
         else
-            fprintf(stderr, "%d: Mismatched parenthesis\n", yylineno );
+            ERROR("Mismatched parenthesis");
     }
     else
-	fprintf( stderr, "%d: Number or identifier expected\n", yylineno );
+	    ERROR("Number or identifier expected");
 
     return tempvar;
 }
