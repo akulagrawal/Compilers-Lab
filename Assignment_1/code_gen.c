@@ -10,6 +10,15 @@ char    *term       ( void );
 char    *expression ( void );
 char    *full_expression ( void );
 
+char lastid[50];
+char lastreg[50];
+
+char toassid[50];
+char toassreg[50];
+
+int flag = 0;
+int c=0;
+
 extern FILE *inter;
 
 extern char *newname( void       );
@@ -72,7 +81,15 @@ statements()
         tempvar = full_expression();
 
         if( match( SEMI ) )
+        {
+            if(flag)
+            {
+                flag = 0;
+                // printf("agaefa\n");
+                printf("    %s = %s\n", toassid, toassreg );
+            }
             advance();
+        }
         else
             fprintf( stderr, "%d: Inserting missing semicolon\n", yylineno );
 
@@ -101,6 +118,25 @@ char    *full_expression()
         if( match( COLON ) )
         {
             advance();
+
+            flag = 1;
+            char *current = lastreg;
+            for(;*current; ++current)
+            {
+                toassreg[c++] = *current;
+            }
+            toassreg[c++] = '\0';
+
+            c=0;
+            current = lastid;
+
+            for(;*current; ++current)
+            {
+                toassid[c++] = *current;
+            }
+            toassid[c++] = '\0';
+
+            c=0;
             op = "=";
         }
             
@@ -184,6 +220,30 @@ char    *factor()
         else
         {
             printf("    %s = $%0.*s\n", tempvar = newname(), yyleng, yytext );
+            
+            char *current = tempvar;
+
+
+            for(; *current; ++current)
+            {
+                lastreg[c++] = *current;
+            }
+            lastreg[c] = '\0';
+
+            c=0;
+
+            current = yytext;
+
+            lastid[c++] = '$';
+
+            while(c<=yyleng)
+            {
+                lastid[c++] = *current;
+                current++;
+            }
+            lastid[c] = '\0';  
+            c=0;          
+
             advance();
         }
         
