@@ -1,0 +1,11 @@
+_t0 = 0
+_t1 = 8
+
+ifF _t0
+    ifT _t1
+        _t2 = 5
+    endif
+
+    _t3 = 6
+endif
+
