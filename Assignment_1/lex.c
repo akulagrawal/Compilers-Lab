@@ -77,23 +77,25 @@ int lex(void){
                strncpy(sym, yytext, yyleng);
                sym[yyleng] = '\0';
                if( !strcmp(sym, "if") )
-                return IF;
-               if( !strcmp(sym, "then") )
-                return THEN;
-               if( !strcmp(sym, "endif") )
-                return ENDIF;
-               if( !strcmp(sym, "while") )
-                return WHILE;
-               if( !strcmp(sym, "do") )
-                return DO;
-               if( !strcmp(sym, "endwhile") )
-                return ENDWHILE;
-               if( !strcmp(sym, "begin") )
-                return BEGIN;
-               if( !strcmp(sym, "end") )
-                return END;
-
-               return NUM_OR_ID;
+                  return IF;
+               else if( !strcmp(sym, "then") )
+                  return THEN;
+               else if( !strcmp(sym, "endif") )
+                  return ENDIF;
+               else if( !strcmp(sym, "while") )
+                  return WHILE;
+               else if( !strcmp(sym, "do") )
+                  return DO;
+               else if( !strcmp(sym, "endwhile") )
+                  return ENDWHILE;
+               else if( !strcmp(sym, "begin") )
+                  return BEGIN;
+               else if( !strcmp(sym, "end") )
+                  return END;
+               else if( isalpha(*yytext) )
+                  return ID;
+               else
+                  return NUM;
             }
             break;
          }

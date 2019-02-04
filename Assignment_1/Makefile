@@ -22,7 +22,7 @@ $(P_EXEC): $(P_OBJ)
 $(C_EXEC): $(C_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $(C_OBJ)
 
-	python ASSEMBLER INPUT
+	# python $(ASSEMBLER) $(INPUT)
 
 clean:
 	rm -rf $(P_EXEC) $(C_EXEC)
