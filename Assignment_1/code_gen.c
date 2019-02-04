@@ -21,7 +21,7 @@ statements()
         {
             advance();
             tempvar = full_expression();
-            printf("if %s\n", tempvar);
+            printf("ifT %s\n", tempvar);
             if( !match(THEN) )
                 fprintf( stderr, "%d: Inserting missing then\n", yylineno );
             advance();
