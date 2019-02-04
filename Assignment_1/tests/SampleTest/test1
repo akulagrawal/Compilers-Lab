@@ -1,0 +1,10 @@
+i:=2;
+if i<4 then 
+	begin 
+	a:=3; 
+	b:=4; 
+		if b=4 then 
+			res:=1+a; 
+		endif 
+	end 
+endif
