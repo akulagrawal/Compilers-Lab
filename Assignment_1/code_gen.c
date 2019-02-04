@@ -190,7 +190,6 @@ char    *expression()
         tempvar2 = term();
         printf("    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
-        
     }
 
     return tempvar;
@@ -230,7 +229,7 @@ char    *factor()
      */
     char *tempvar;
 
-    if( match(NUM_OR_ID) )
+    if( match(NUM) || match(ID) )
     {
     /* Print the assignment instruction. The %0.*s conversion is a form of
      * %X.Ys, where X is the field width and Y is the maximum number of
