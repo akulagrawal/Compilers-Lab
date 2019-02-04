@@ -19,7 +19,8 @@ char toassreg[50];
 int flag = 0;
 int c=0;
 
-extern FILE *inter;
+
+FILE *fp;
 
 extern char *newname( void       );
 extern void freename( char *name );
@@ -29,7 +30,9 @@ statements()
     /*  statements -> expression SEMI  |  expression SEMI statements  */
 
     char *tempvar;
-    // inter = fopen("inter.txt", "w");
+
+    fp = fopen("inter.txt", "a");
+    // fprintf(fp, "hello \n");
 
     while( !match(EOI) )
     {
@@ -219,8 +222,7 @@ char    *factor()
         }
         else
         {
-            printf("    %s = $%0.*s\n", tempvar = newname(), yyleng, yytext );
-            
+            printf("    %s = $%0.*s\n", tempvar = newname(), yyleng, yytext );       
             char *current = tempvar;
 
 
