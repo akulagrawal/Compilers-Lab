@@ -45,7 +45,7 @@ with open(IR_file_path, "r") as f:
 
         newtokens.append(tokens)
 
-# Write to the
+# Write to the output file
 with open(IR_output_path, "w") as f:
     # Print the new tokens on one line.
     for tokens in newtokens:
