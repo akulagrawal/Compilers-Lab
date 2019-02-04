@@ -2,7 +2,7 @@ CXX = gcc
 PY = python3
 CXXFLAGS = -w
 
-PARSER_SRC = basic_parser.c lex.c main_parser.c
+PARSER_SRC = basic_parser.c lex.c main.c
 CODEGEN_SRC = code_gen.c lex.c name.c main.c
 
 RENAME_VAR = rename_vars.py
