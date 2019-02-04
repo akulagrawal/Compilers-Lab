@@ -8,6 +8,7 @@ CODEGEN_SRC = code_gen.c lex.c name.c main.c
 RENAME_VAR = rename_vars.py
 ASSEMBLER = assembly.py
 INPUT = IR.txt
+OUTPUT = assembly.txt
 
 # Parser
 ########################################################### 
@@ -36,7 +37,7 @@ $(EXEC_CODEGEN):	$(C_EXEC)
 
 $(RUN): $(EXEC_CODEGEN)
 	$(PY) $(RENAME_VAR) $(INPUT)
-	$(PY) $(ASSEMBLER)
+	$(PY) $(ASSEMBLER) > $(OUTPUT)
 
 clean:
-	rm -rf $(P_EXEC) $(C_EXEC)
+	rm -rf $(P_EXEC) $(C_EXEC) $(OUTPUT)
