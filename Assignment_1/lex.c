@@ -84,7 +84,7 @@ int lex(void){
                if( !strcmp(sym, "do") )
                 return DO;
                if( !strcmp(sym, "endwhile") )
-                return BEGIN;
+                return ENDWHILE;
                if( !strcmp(sym, "begin") )
                 return BEGIN;
                if( !strcmp(sym, "end") )

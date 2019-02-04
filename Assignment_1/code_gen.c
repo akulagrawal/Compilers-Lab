@@ -64,6 +64,7 @@ statements()
                 fprintf( stderr, "%d: Inserting missing end\n", yylineno );
         }
         if( match( END ) ) {return;}
+        if( match( ENDIF ) || match( ENDWHILE ) || match( END ) ) {return;}
         tempvar = full_expression();
 
         if( match( SEMI ) )
