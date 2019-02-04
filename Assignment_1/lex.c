@@ -25,7 +25,7 @@ int lex(void){
          */
 
          current = input_buffer;
-         if(!fgets(input_buffer, sizeof(input_buffer), stdin)){
+         if(!gets(input_buffer)){
             *current = '\0' ;
 
             return EOI;
@@ -53,7 +53,7 @@ int lex(void){
             return LP;
            case ')':
             return RP;
-           case '<':
+  			  case '<':
             return LT;
            case '>':
             return GT;
@@ -71,29 +71,30 @@ int lex(void){
             else
             {
                while(isalnum(*current))
+               {
                   ++current;
+               }
                yyleng = current - yytext;
-               char sym[yyleng+1];
-               strncpy(sym, yytext, yyleng);
-               sym[yyleng] = '\0';
-               if( !strcmp(sym, "if") )
-                return IF;
-               if( !strcmp(sym, "then") )
-                return THEN;
-               if( !strcmp(sym, "endif") )
-                return ENDIF;
-               if( !strcmp(sym, "while") )
-                return WHILE;
-               if( !strcmp(sym, "do") )
-                return DO;
-               if( !strcmp(sym, "endwhile") )
-                return ENDWHILE;
-               if( !strcmp(sym, "begin") )
-                return BEGIN;
-               if( !strcmp(sym, "end") )
-                return END;
+ 	         	if(strncmp (yytext, "if", 2) == 0)
+    	        	   return IF;
+		         else if(strncmp(yytext, "then", 4) == 0)
+    		         return THEN;
+   		      else if(strncmp(yytext, "while", 5) == 0)
+   		 	  	   return WHILE;
+  			      else if(strncmp(yytext, "do", 2) == 0)
+                  return DO;
+    	 	      else if(strncmp(yytext, "begin", 5) == 0)
+    	 	    	   return BEGIN;
+    	     	   else if(strncmp(yytext, "end", 3) == 0)
+    	        	   return END;
+                else if(strncmp(yytext, "endif", 5) == 0)
+                   return ENDIF;
+		         else
+             {
+                return NUM_OR_ID;
+                  // return NUM_OR_ID;              
+             }
 
-               return NUM_OR_ID;
             }
             break;
          }

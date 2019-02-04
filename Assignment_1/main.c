@@ -1,7 +1,10 @@
-#include "lex.h"
+#include <stdio.h>
+
+FILE *inter;
 
 main ()
 {
-	while( !match( EOI ) )
-		statements ();
+	inter = fopen("inter.txt", "w");
+	statements ();
+	fclose(inter);
 }

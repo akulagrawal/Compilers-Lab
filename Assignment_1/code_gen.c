@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stddef.h>
 #include "lex.h"
 
 char    *factor     ( void );
@@ -6,16 +10,28 @@ char    *term       ( void );
 char    *expression ( void );
 char    *full_expression ( void );
 
+char lastid[50];
+char lastreg[50];
+
+char toassid[50];
+char toassreg[50];
+
+int flag = 0;
+int c=0;
+
+FILE *fp;
+
 extern char *newname( void       );
 extern void freename( char *name );
 
 statements()
 {
-    /*  statements -> expression SEMI  
-     *               | expression SEMI statements  
-     */
+    /*  statements -> expression SEMI  |  expression SEMI statements  */
 
     char *tempvar;
+    fp = fopen("inter.txt", "a");
+    // fprintf(fp, "hello \n");
+
 
     while( !match(EOI) )
     {
@@ -23,32 +39,32 @@ statements()
         {
             advance();
             tempvar = full_expression();
-            printf("ifT %s\n", tempvar);
+            fprintf(fp,"if %s\n", tempvar);
             if( !match(THEN) )
                 fprintf( stderr, "%d: Inserting missing then\n", yylineno );
             advance();
             statements();
-            if( match( ENDIF ) ){
-                advance();
-                printf("endif\n");
-            }
+            if( match( ENDIF ) )
+                fprintf(fp,"endif\n");
             else
                 fprintf( stderr, "%d: Inserting missing endif\n", yylineno );
         }
-        if( match( ENDIF ) ) {return;}
+        if( match( ENDIF ) ) 
+        {
+            fprintf(fp,"endif\n");
+            return;
+        }
         if( match( WHILE ) )
         {
             advance();
             tempvar = full_expression();
-            printf("while %s\n", tempvar);
+            fprintf(fp,"while %s\n", tempvar);
             if( !match(DO) )
                 fprintf( stderr, "%d: Inserting missing do\n", yylineno );
             advance();
             statements();
-            if( match( ENDWHILE ) ){
-                advance();
-                printf("endwhile\n");
-            }
+            if( match( ENDWHILE ) )
+                fprintf(fp,"endwhile\n");
             else
                 fprintf( stderr, "%d: Inserting missing endwhile\n", yylineno );
         }
@@ -56,21 +72,27 @@ statements()
         if( match( BEGIN ) )
         {
             advance();
-            printf("\n");
+            fprintf(fp,"\n");
             statements();
-            if( match( END ) ){
-                advance();
-                printf("\n");
-            }
+            if( match( END ) )
+                fprintf(fp,"\n");
             else
                 fprintf( stderr, "%d: Inserting missing end\n", yylineno );
         }
         if( match( END ) ) {return;}
-        if( match( ENDIF ) || match( ENDWHILE ) || match( END ) ) {return;}
         tempvar = full_expression();
 
         if( match( SEMI ) )
+        {
+            if(flag)
+            {
+                flag = 0;
+                // printf("agaefa\n");
+                fprintf(fp,"    %s = %s\n", toassid, toassreg );
+            }
+            fclose(fp);
             advance();
+        }
         else
             fprintf( stderr, "%d: Inserting missing semicolon\n", yylineno );
 
@@ -81,26 +103,49 @@ statements()
 char    *full_expression()
 {
     /* full_expression -> expression full_expression'
-     * full_expression' -> LT/Gt/EQ expression full_expression' |  epsilon
+     * full_expression' -> LT/Gt/EQ/EQCOMP expression full_expression' |  epsilon
      */
 
     char  *tempvar, *tempvar2;
 
     tempvar = expression();
-    while( match( LT ) || match( GT ) || match( EQ ) )
+    while( match( COLON ) || match( LT ) || match( GT ) || match( EQ ) )
     {
-        char op, op2;
+        char *op;
         if( match( LT ) )
-            op = '<';
+            op = "<";
         if( match( GT ) )
-            op = '>';
-        if( match( EQ ) ){
-            op = '=';
-            op2 = '=';
+            op = ">";
+        if( match( EQ ) )
+            op = "==";
+        if( match( COLON ) )
+        {
+            advance();
+
+            flag = 1;
+            char *current = lastreg;
+            for(;*current; ++current)
+            {
+                toassreg[c++] = *current;
+            }
+            toassreg[c++] = '\0';
+
+            c=0;
+            current = lastid;
+
+            for(;*current; ++current)
+            {
+                toassid[c++] = *current;
+            }
+            toassid[c++] = '\0';
+
+            c=0;
+            op = "=";
         }
+            
         advance();
         tempvar2 = expression();
-        printf("    %s %c%c %s\n", tempvar, op, op2, tempvar2 );
+        fprintf(fp,"    %s %s %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
     }
 
@@ -125,10 +170,8 @@ char    *expression()
             op = '-';
         advance();
         tempvar2 = term();
-        printf("    %s %c= %s\n", tempvar, op, tempvar2 );
+        fprintf(fp,"    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
-        
-        plus_match = 0;
     }
 
     return tempvar;
@@ -136,12 +179,6 @@ char    *expression()
 
 char    *term()
 {
-    /* term -> factor term'
-     * term' -> TIMES factor term' 
-     *          | DIV factor term'
-     *          | epsilon
-     */
-
     char  *tempvar, *tempvar2 ;
 
     tempvar = factor();
@@ -154,10 +191,8 @@ char    *term()
             op = '/';
         advance();
         tempvar2 = factor();
-        printf("    %s %c= %s\n", tempvar, op, tempvar2 );
+        fprintf(fp,"    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
-
-        times_match = 0;
     }
 
     return tempvar;
@@ -165,24 +200,56 @@ char    *term()
 
 char    *factor()
 {
-    /* factor -> NUM_OR_ID 
-     *         | LP expression RP 
-     */
     char *tempvar;
 
     if( match(NUM_OR_ID) )
     {
-	/* Print the assignment instruction. The %0.*s conversion is a form of
-	 * %X.Ys, where X is the field width and Y is the maximum number of
-	 * characters that will be printed (even if the string is longer). I'm
-	 * using the %0.*s to print the string because it's not \0 terminated.
-	 * The field has a default width of 0, but it will grow the size needed
-	 * to print the string. The ".*" tells printf() to take the maximum-
-	 * number-of-characters count from the next argument (yyleng).
-	 */
+    /* Print the assignment instruction. The %0.*s conversion is a form of
+     * %X.Ys, where X is the field width and Y is the maximum number of
+     * characters that will be printed (even if the string is longer). I'm
+     * using the %0.*s to print the string because it's not \0 terminated.
+     * The field has a default width of 0, but it will grow the size needed
+     * to print the string. The ".*" tells printf() to take the maximum-
+     * number-of-characters count from the next argument (yyleng).
+     */
 
-        printf("    %s = %0.*s\n", tempvar = newname(), yyleng, yytext );
-        advance();
+        char * current = yytext;
+        if(*current == '1' || *current == '2' || *current == '3' || *current == '4' || *current == '5' ||
+           *current == '6' || *current == '7' || *current == '8' || *current == '9' || *current == '0')
+        {
+            fprintf(fp,"    %s = %0.*s\n", tempvar = newname(), yyleng, yytext );
+            advance();
+        }
+        else
+        {
+            fprintf(fp,"    %s = $%0.*s\n", tempvar = newname(), yyleng, yytext );
+            
+            char *current = tempvar;
+
+
+            for(; *current; ++current)
+            {
+                lastreg[c++] = *current;
+            }
+            lastreg[c] = '\0';
+
+            c=0;
+
+            current = yytext;
+
+            lastid[c++] = '$';
+
+            while(c<=yyleng)
+            {
+                lastid[c++] = *current;
+                current++;
+            }
+            lastid[c] = '\0';  
+            c=0;          
+
+            advance();
+        }
+        
     }
     else if( match(LP) )
     {
@@ -194,7 +261,7 @@ char    *factor()
             fprintf(stderr, "%d: Mismatched parenthesis\n", yylineno );
     }
     else
-	fprintf( stderr, "%d: Number or identifier expected\n", yylineno );
+    fprintf( stderr, "%d: Number or identifier expected\n", yylineno );
 
     return tempvar;
 }

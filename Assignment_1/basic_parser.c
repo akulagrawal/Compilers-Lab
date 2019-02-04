@@ -4,184 +4,133 @@
 #include "lex.h"
 
 /*
-stmt →    if comp_expr then stmt endif
-		| while comp_expr do stmt endwhile
-		| begin begin'
-		| id := comp_expr ; 
-		| id := comp_expr ; stmt
-		| comp_expr ;
-		| comp_expr; stmt
+stmt →    if comp_expr then stmt
+        | while comp_expr do stmt
+        | begin begin'
+        | id := comp_expr ; 
+        | comp_expr ;
+        | comp_expr; stmt
 
-begin' →  end
-		| stmt begin'
+begin' →  end stmt
+        | stmt begin'
 
 comp_expr →  expr c_expr
 
 c_expr  →  < expr c_expr
-		| > expr c_expr
-		| = expr c_expr
-		| epsilon
+        | > expr c_expr
+        | = expr c_expr
+        | epsilon
 
 expr →  term expr'
 
 expr' →  + term expr'
-		| - term expr'
-		| epsilon
+        | - term expr'
+        | epsilon
 
 term →  factor term'
 
 term' →  * factor term'
-		| / factor term'
-		| epsilon
+        | / factor term'
+        | epsilon
 
 factor →  ( expr )
-		| num_or_id
+        | num_or_id
 */
 
 
 statements()
 {
     /*
-	statements →  if comp_expression then statements endif
-	 *			| while comp_expression do statements endwhile
-	 *			| begin begin_prime
-	 *			| id COLON EQUAL comp_expression SEMI
-	 *			| comp_expression SEMI
-	 *			| comp_expression SEMI statements
-	 */
-	
-	if( match( IF ) )
-	{
-		advance();
-		comp_expression();
-		if( match( THEN ) )
-		{
-			advance();
-			statements();
-		}
-		else
-			ERROR("Inserting missing 'then'");
-		if( !match( ENDIF ) )
-		{
-			ERROR("Inserting missing 'endif'");
-		}
-		else
-			advance();
-	}
-	else if( match( WHILE ) )
-	{
-		advance();
-		comp_expression();
-		if( match( DO ) )
-		{
-			advance();
-			statements();
-		}
-		else
-			ERROR("Inserting missing 'do'");
-		if( !match( ENDWHILE ) )
-		{
-			ERROR("Inserting missing 'endwhile'");
-		}
-		else
-			advance();
-	}
-	else if( match( BEGIN ))
-	{
-		advance();
-		begin_prime();
-	}
-	else if( match( ID ) )
-	{
-		advance();
-		if( match( PLUS ) || match( MINUS ) )
-		{
-			expr_prime();
-			if( match( SEMI ) )
-				advance();
-			else
-				ERROR("Inserting missing semicolon");
-		}
-		else if( match( LT ) || match( GT ) || match( EQ ) )
-		{
-			c_expression();
-			if( match( SEMI ) )
-				advance();
-			else
-				ERROR("Inserting missing semicolon");
-		}
-		else if( match( COLON ) )
-		{
-			advance();
-			if( match( EQ ) )
-			{
-				advance();
-				comp_expression();
-				if( match( SEMI ) )
-					advance();
-				else
-	       			ERROR("Inserting missing semicolon");
-			}
-			else
-				ERROR("Inserting missing 'equal'")
-		}
-		else
-			ERROR("Invalid Operator");
+    statements →  if comp_expression then statements
+     *          | while comp_expression do statements
+     *          | begin begin_prime
+     *          | id COLON EQUAL comp_expression SEMI
+     *          | comp_expression SEMI
+     *          | comp_expression SEMI statements
+     */
+    
+    if( match( IF ) )
+    {
+        advance();
+        comp_expression();
+        if( !match( THEN ) )
+            fprintf( stderr, "%d: Inserting missing 'then'\n", yylineno );
+        else
+        {
+            advance();
+            statements();
+        }
+    }
+    else if( match( WHILE ) )
+    {
+        advance();
+        comp_expression();
+        if( !match( DO ) )
+            fprintf( stderr, "%d: Inserting missing 'do'\n", yylineno );
+        else
+        {
+            advance();
+            statements();
+        }
+    }
+    else if( match( BEGIN ))
+    {
+        advance();
+        begin_prime();
+    }
+    else
+    {   
+        comp_expression();
 
-		if( !match( ENDIF ) && !match( ENDWHILE ) && !match( END ) && !match( EOI ) )
-			statements();			/* Do another statement. */
-	}
-	else
-	{	
-    	comp_expression();
-
-	    if( match( SEMI ) )
-			advance();
-	    else
-	       ERROR("Inserting missing semicolon");
-	
-	    if( !match( ENDIF ) && !match( ENDWHILE ) && !match( END ) && !match( EOI ) )
-	        statements();			/* Do another statement. */
-	}	
+        if( match( SEMI ) )
+        advance();
+        else
+           fprintf( stderr, "%d: Inserting missing semicolon\n", yylineno );
+    
+        if( !match(EOI) )
+            statements();           /* Do another statement. */
+    }   
 }
 
 comp_expression()
 {
-	/* comp_expr →  expression c_expression	*/
-	expression();
-	c_expression();
+    /* comp_expr →  expression c_expression */
+    expression();
+    c_expression();
 }
 
 c_expression()
 {
-	/* c_expression  →  < expression c_expression
-	 *			| > expression c_expression
-	 *			| = expression c_expression
-	 *			| epsilon
-	 */
+    /* c_expression  →  < expression c_expression
+     *          | > expression c_expression
+     *          | = expression c_expression
+     *          | epsilon
+     */
 
-	if ( match (LT) || match(GT) || match(EQ) )
-	{
-		advance();
-		expression();
-		c_expression();
-	}
+    if ( match (LT) || match(GT) || match(EQ) )
+    {
+        advance();
+        expression();
+        c_expression();
+    }
 }
 
 begin_prime()
 {
-    /* begin' → end
-	 *		|  statements begin_prime
+    /* begin' → end statements
+     *      |  statements begin_prime
      */
 
-	if(match ( END ) )
-		advance();
-	else
-	{
-		statements();
-		begin_prime();
-	}
-
+    if(match ( END ) )
+    {
+        advance();
+        statements();
+    }
+    else
+    {
+        statements();
+        begin_prime();
+    }
 }
 
 expression()
@@ -195,7 +144,7 @@ expression()
 expr_prime()
 {
     /* expression' → PLUS term expression'
-	 *				| MINUS term expression'
+     *              | MINUS term expression'
      *              | epsilon
      */
 
@@ -218,7 +167,7 @@ term()
 term_prime()
 {
     /* term' → TIMES factor term'
-	 *		 | DIV factor term'
+     *       | DIV factor term'
      *       |   epsilon
      */
 
@@ -233,7 +182,7 @@ term_prime()
 factor()
 {
     /* factor   →    LP expression RP
-     *  	       | NUM_OR_ID
+     *             | NUM_OR_ID
      */
 
 
@@ -244,12 +193,10 @@ factor()
         if( match(RP) )
             advance();
         else
-            ERROR("Mismatched parenthesis");
+            fprintf( stderr, "%d: Mismatched parenthesis\n", yylineno);
     }
-    else if( match( NUM ) || match ( ID ) )
+    else if( match( NUM ) || match ( ID ) || match( NUM_OR_ID ) )
         advance();
     else
-
-		ERROR("Number or identifier expected");	
-
+        printf( stderr, "%d Number or identifier expected\n", yylineno );
 }
