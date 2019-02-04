@@ -4,6 +4,7 @@
 char    *factor     ( void );
 char    *term       ( void );
 char    *expression ( void );
+char    *full_expression ( void );
 
 extern char *newname( void       );
 extern void freename( char *name );
@@ -18,7 +19,55 @@ statements()
 
     while( !match(EOI) )
     {
-        tempvar = expression();
+        if( match( IF ) )
+        {
+            advance();
+            tempvar = full_expression();
+            printf("ifT %s\n", tempvar);
+            if( !match(THEN) )
+                fprintf( stderr, "%d: Inserting missing then\n", yylineno );
+            advance();
+            statements();
+            if( match( ENDIF ) ){
+                advance();
+                printf("endif\n");
+            }
+            else
+                fprintf( stderr, "%d: Inserting missing endif\n", yylineno );
+        }
+        if( match( ENDIF ) ) {return;}
+        if( match( WHILE ) )
+        {
+            advance();
+            tempvar = full_expression();
+            printf("while %s\n", tempvar);
+            if( !match(DO) )
+                fprintf( stderr, "%d: Inserting missing do\n", yylineno );
+            advance();
+            statements();
+            if( match( ENDWHILE ) ){
+                advance();
+                printf("endwhile\n");
+            }
+            else
+                fprintf( stderr, "%d: Inserting missing endwhile\n", yylineno );
+        }
+        if( match( ENDWHILE ) ) {return;}
+        if( match( BEGIN ) )
+        {
+            advance();
+            printf("\n");
+            statements();
+            if( match( END ) ){
+                advance();
+                printf("\n");
+            }
+            else
+                fprintf( stderr, "%d: Inserting missing end\n", yylineno );
+        }
+        if( match( END ) ) {return;}
+        if( match( ENDIF ) || match( ENDWHILE ) || match( END ) ) {return;}
+        tempvar = full_expression();
 
         if( match( SEMI ) )
             advance();
@@ -29,27 +78,54 @@ statements()
     }
 }
 
+char    *full_expression()
+{
+    /* full_expression -> expression full_expression'
+     * full_expression' -> LT/Gt/EQ expression full_expression' |  epsilon
+     */
+
+    char  *tempvar, *tempvar2;
+
+    tempvar = expression();
+    while( match( LT ) || match( GT ) || match( EQ ) )
+    {
+        char op, op2;
+        if( match( LT ) )
+            op = '<';
+        if( match( GT ) )
+            op = '>';
+        if( match( EQ ) ){
+            op = '=';
+            op2 = '=';
+        }
+        advance();
+        tempvar2 = expression();
+        printf("    %s %c%c %s\n", tempvar, op, op2, tempvar2 );
+        freename( tempvar2 );
+    }
+
+    return tempvar;
+}
+
 char    *expression()
 {
     /* expression -> term expression'
-     * expression' -> PLUS term expression' 
-     *              | MINUS term expression' 
-     *              | epsilon
+     * expression' -> PLUS/MINUS term expression' |  epsilon
      */
 
     char  *tempvar, *tempvar2;
 
     tempvar = term();
-    int plus_match = 0;
-    while( (plus_match = match( PLUS )) || match( MINUS ))
+    while( match( PLUS ) || match( MINUS ) )
     {
+        char op;
+        if( match( PLUS ) )
+            op = '+';
+        if( match( MINUS ) )
+            op = '-';
         advance();
         tempvar2 = term();
-        if (plus_match)
-            printf("    %s += %s\n", tempvar, tempvar2 );
-        else
-            printf("    %s -= %s\n", tempvar, tempvar2 );
-
+        printf("    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
         
         plus_match = 0;
@@ -69,15 +145,16 @@ char    *term()
     char  *tempvar, *tempvar2 ;
 
     tempvar = factor();
-    int times_match = 0;
-    while( (times_match = match( TIMES )) || match( DIV ) )
+    while( match( TIMES ) || match( DIV ) )
     {
+        char op;
+        if( match( TIMES ) )
+            op = '*';
+        if( match( DIV ) )
+            op = '/';
         advance();
         tempvar2 = factor();
-        if (times_match)
-            printf("    %s *= %s\n", tempvar, tempvar2 );
-        else
-            printf("    %s /= %s\n", tempvar, tempvar2 );
+        printf("    %s %c= %s\n", tempvar, op, tempvar2 );
         freename( tempvar2 );
 
         times_match = 0;

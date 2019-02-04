@@ -53,7 +53,7 @@ int lex(void){
             return LP;
            case ')':
             return RP;
-  			  case '<':
+           case '<':
             return LT;
            case '>':
             return GT;
@@ -73,27 +73,27 @@ int lex(void){
                while(isalnum(*current))
                   ++current;
                yyleng = current - yytext;
-                              
- 	         	if( MATCH_STR( "if", 2 ) )
-    	        	   return IF;
-		         else if( MATCH_STR( "then", 4 ) )
-    		         return THEN;
-		         else if( MATCH_STR( "while", 5 ) )
-   		 	  	   return WHILE;
-		         else if( MATCH_STR( "do", 2 ) )
-                  return DO;
-		         else if( MATCH_STR( "begin", 5 ) )
-    	 	    	   return BEGIN;
-		         else if( MATCH_STR( "end", 3 ) )
-    	        	   return END;
-		         else if( MATCH_STR( "endif", 5 ) )
-    	        	   return ENDIF;
-		         else if( MATCH_STR( "endwhile", 8 ) )
-    	        	   return ENDWHILE;
-		         else if(!isalpha(*yytext))
-                  return NUM;
-               else
-    	            return ID;
+               char sym[yyleng+1];
+               strncpy(sym, yytext, yyleng);
+               sym[yyleng] = '\0';
+               if( !strcmp(sym, "if") )
+                return IF;
+               if( !strcmp(sym, "then") )
+                return THEN;
+               if( !strcmp(sym, "endif") )
+                return ENDIF;
+               if( !strcmp(sym, "while") )
+                return WHILE;
+               if( !strcmp(sym, "do") )
+                return DO;
+               if( !strcmp(sym, "endwhile") )
+                return ENDWHILE;
+               if( !strcmp(sym, "begin") )
+                return BEGIN;
+               if( !strcmp(sym, "end") )
+                return END;
+
+               return NUM_OR_ID;
             }
             break;
          }

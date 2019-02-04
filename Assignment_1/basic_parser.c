@@ -181,6 +181,7 @@ begin_prime()
 		statements();
 		begin_prime();
 	}
+
 }
 
 expression()
@@ -248,5 +249,7 @@ factor()
     else if( match( NUM ) || match ( ID ) )
         advance();
     else
+
 		ERROR("Number or identifier expected");	
+
 }
