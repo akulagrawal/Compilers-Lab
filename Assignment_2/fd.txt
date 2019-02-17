@@ -1,0 +1,24 @@
+public class firstclass extends abhishek
+{
+	private class awesomeness
+	{
+
+	}
+} 
+
+class hungry_class
+{
+	public class extends pizza
+	{
+		class mac_and_cheese implements satisfaction
+		{
+
+		}
+	}
+
+}
+
+class Bondapa extends Phodu_panti implements CoMpIlEr5
+{
+	
+}
