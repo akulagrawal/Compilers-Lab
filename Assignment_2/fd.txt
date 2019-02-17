@@ -1,14 +1,8 @@
-public class firstclass extends abhishek
-{
-	private class awesomeness
-	{
+public class firstclass extends abhishek{private class awesomeness{}} public class gamelauncher extends abc
 
-	}
-} 
-
-class hungry_class
+public class hungryclass
 {
-	public class extends pizza
+	public class bagel extends pizza
 	{
 		class mac_and_cheese implements satisfaction
 		{
@@ -18,7 +12,58 @@ class hungry_class
 
 }
 
-class Bondapa extends Phodu_panti implements CoMpIlEr5
-{
-	
+class Bondapa extends Phodu_panti implements CoMpIlEr5{} class e43 {}
+
+public class guessgame {
+    player p1;
+    player p2;
+    player p3;
+
+    public void startgame() {
+        p1 = new player();
+        p2 = new player();
+        p3 = new player();
+        int guessp1 = 0;
+        int guessp2 = 0;
+        int guessp3 = 0;
+        boolean p1isright = false;
+        boolean p2isright = false;
+        boolean p3isright = false;
+        int targetnumber = (int) (Math.random() * 10);
+        System.out.println("i'm guessing a number between 0 and 9...");
+        while (true) {
+            System.out.println("number to guess is " + targetnumber);
+            p1.guess();
+            p2.guess();
+            p3.guess();
+            guessp1 = p1.number;
+            System.out.println("player one guessed " + guessp1);
+            guessp2 = p2.number;
+            System.out.println("player two guessed " + guessp2);
+            guessp3 = p3.number;
+            System.out.println("player three guessed " + guessp3);
+            if (guessp1 == targetnumber) {
+                p1isright = true;
+            }
+            if (guessp2 == targetnumber) {
+                p2isright = true;
+            }
+            if (guessp3 == targetnumber) {
+                p3isright = true;
+            }
+            if (p1isright || p2isright || p3isright) {
+                System.out.println("we have a winner ");
+                System.out.println("player1 got it right.. ? " + p1isright);
+                System.out.println("player2 got it right.. ? " + p2isright);
+                System.out.println("player3  got it right.. ? " + p3isright);
+                System.out.println("<<<<<<<<<<<<<<GAME IS OVER>>>>>>>>>>");
+                break;
+            } else {
+                System.out.println("players will have to try again...!");
+            }
+        }
+    }
 }
+
+public class player {int number = 0;public void guess() {number = (int) (Math.random() * 10);System.out.println(" I'm guessing " + number);}} 
+public class gamelauncher extends abc{static public void main(String[] args) { guessgame game;game.startgame();}}
