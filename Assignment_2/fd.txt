@@ -12,6 +12,7 @@ class hungry_class
 	{
 		class mac_and_cheese implements satisfaction
 		{
+			mac_and_cheese obj = new mac_and_cheese();
 
 		}
 	}
