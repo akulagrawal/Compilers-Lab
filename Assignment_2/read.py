@@ -1,7 +1,27 @@
 import re, sys
 
+def comment_remover(text):
+    def replacer(match):
+        s = match.group(0)
+        if s.startswith('/'):
+            return " " # note: a space and not an empty string
+        else:
+            return s
+    pattern = re.compile(
+        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+        re.DOTALL | re.MULTILINE
+    )
+    return re.sub(pattern, replacer, text)
+
+
 f = open(sys.argv[1]).read()
-lines = f.splitlines()
+
+# Remove all comments
+stripped = comment_remover(f)
+
+# Filter for removing \ns 
+filtered = "\n".join([ll.rstrip() for ll in stripped.splitlines() if ll.strip()])
+lines = filtered.splitlines()
 
 #number of inherited class declarations
 dec_inh_class=0

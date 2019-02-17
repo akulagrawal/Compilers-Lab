@@ -12,6 +12,17 @@ public class hungryclass
 
 }
 
+//single line comment
+/*Multi Line 
+Comment*/
+/*
+Strange comment
+*/
+
+/*
+public class comment class{} public jabajabajba ghacharghachar dhoop dhoop dham
+*/
+
 class Bondapa extends Phodu_panti implements CoMpIlEr5{} class e43 {}
 
 public class guessgame {
