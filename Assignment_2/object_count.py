@@ -12,7 +12,7 @@ def count_object(filename):
 			line = []
 			flag = 0
 			for word in x.split():
-				if re.search(word + r"[\s]*([a-zA-Z][a-zA-Z0-9_]*)[\s]*(=)[\s]*(new)[\s]*" + word + r"(\()",x):
+				if re.search(word + r"[\s]*([a-zA-Z][a-zA-Z0-9_]*)[\s]*(\s=\s)[\s]*(new)[\s]*" + word + r"(\()",x):
 					flag = 1
 					# print(x)
 					break

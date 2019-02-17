@@ -13,7 +13,7 @@ def main(filename = 'input.txt'):
     remove_comments(filename, intermediate_file)
 
     # get object count
-    # object_count = count_object(intermediate_file)
+    object_count = count_object(intermediate_file)
 
     # get the constructor count
     constructor_count = count_constructor(intermediate_file)
@@ -25,7 +25,7 @@ def main(filename = 'input.txt'):
         f.write('Number of Class Definitions: ' + str(class_count) + '\n')
         f.write('Number of Inherited Class Definitions:' + str(inherit_class_count) + '\n')
         f.write('Number of Constructor Definitions: ' + str(constructor_count) + '\n')
-        # f.write('Number of Object Declarations: ' + str(object_count) + '\n')
+        f.write('Number of Object Declarations: ' + str(object_count) + '\n')
     
 
 if __name__ == '__main__':
