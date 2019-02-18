@@ -1,4 +1,4 @@
-Number of Object Declarations: 4
+Number of Object Declarations: 2
 Number of Class Definitions: 1
-Number of Constructor Definitions: 0
+Number of Constructor Definitions: 2
 Number of Inherited Class Definitions:0
