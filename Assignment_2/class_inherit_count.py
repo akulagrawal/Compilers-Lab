@@ -12,8 +12,8 @@ def class_inherit_count(filename):
 		text = f.read()
 		lines = text.splitlines()
 		
-		pattern_ext_class = re.compile(r"[ \t]*(public[\n \t]+|private[\n \t]+)?class[\n \t]+[a-zA-Z][<>a-zA-Z0-9_]*[\n \t]+(((extends)[\n \t]+([a-zA-Z][a-zA-Z0-9_<>]*)[\n \t]+(implements)[\n \t]+([a-zA-Z][a-zA-Z0-9_<>]*)[\n \t]*)|((extends)[\n \t]+([a-zA-Z][a-zA-Z0-9_<>]*)[\n \t]*))")
-		pattern_class = re.compile(r"[ \t]*(public[\n \t]+|private[\n \t]+)?class[<>\s\w]*{")
+		pattern_ext_class = re.compile(r"[ \t]*(public[\n \t]+|private[\n \t]+)?([\n \t]+final[\n \t]+)?class[\n \t]+[a-zA-Z][<>a-zA-Z0-9_]*[\n \t]+(((extends)[\n \t]+([a-zA-Z][a-zA-Z0-9_<>]*)[\n \t]+(implements)[\n \t]+([a-zA-Z][a-zA-Z0-9_<>]*)[\n \t]*)|((extends)[\n \t]+([a-zA-Z][a-zA-Z0-9_<>]*)[\n \t]*))")
+		pattern_class = re.compile(r"[ \t]*(public[\n \t]+|private[\n \t]+)?([\n \t]+final[\n \t]+)?class[<>\s\w]*{")
 
 		eg = re.compile(r'cla[\n \t]*ss')
 		flag=0
