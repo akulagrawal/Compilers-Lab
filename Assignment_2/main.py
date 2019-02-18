@@ -1,3 +1,5 @@
+import sys
+
 from object_count import count_object
 from constructor_count import count_constructor
 from remove_comments import remove_comments
@@ -20,11 +22,11 @@ def main(filename = 'input.txt'):
     class_count, inherit_class_count = class_inherit_count(intermediate_file)
 
     with open(out_file, 'w') as f:
-        f.write('Number of Class definition : ' + str(class_count) + '\n')
-        f.write('Number of Inherited Class definition : ' + str(inherit_class_count) + '\n')
-        f.write('Number of Constructor definition : ' + str(constructor_count) + '\n')
-        # f.write('Number of Objects declaration : ' + str(object_count) + '\n')
+        f.write('Number of Class Definitions: ' + str(class_count) + '\n')
+        f.write('Number of Inherited Class Definitions:' + str(inherit_class_count) + '\n')
+        f.write('Number of Constructor Definitions: ' + str(constructor_count) + '\n')
+        # f.write('Number of Object Declarations: ' + str(object_count) + '\n')
     
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1])
