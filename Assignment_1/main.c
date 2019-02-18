@@ -3,5 +3,5 @@
 main ()
 {
 	while( !match( EOI ) )
-		statements ();
+		statements (0);
 }

@@ -11,6 +11,9 @@
 *.obj
 *.elf
 
+# Python files
+*pycache*
+
 # Linker output
 *.ilk
 *.map
