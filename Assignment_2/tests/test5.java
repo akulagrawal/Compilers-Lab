@@ -1,5 +1,5 @@
 /*
-Objects: 2
+Objects: 3
 Classes: 1
 Constructors: 2
 Inherited Classes: 0

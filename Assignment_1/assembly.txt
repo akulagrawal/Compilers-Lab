@@ -1,17 +1,16 @@
 ; Assigning to 8000H the value 3H
 MVI A, 3H
 STA 8000H
-; Assigning to 8001H the value 2H
-MVI A, 2H
+; Assigning to 8001H the value 4H
+MVI A, 4H
 STA 8001H
-; Greater-than with 8000H and the value at 8001H
+; Lesser-than with 8000H and the value at 8001H
 LDA 8001H
 MOV B, A
 LDA 8000H
 CMP B
-JC SETZERO1
-JZ SETZERO1
-JMP SETONE1
+JC SETONE1
+JNC SETZERO1
 SETONE1: NOP
 MVI A, FFH
 JMP COMPEND1
@@ -26,26 +25,16 @@ CPI 00H
 JNZ IFBRANCH1
 JMP ENDIF1
 IFBRANCH1: NOP
-; Assigning to 8001H the value 5H
-MVI A, 5H
+; Assigning to 8001H the value at 8003H
+LDA 8003H
 STA 8001H
-; Assigning to 8002H the value 4H
-MVI A, 4H
+; Assigning to 8002H the value 22H
+MVI A, 22H
 STA 8002H
-; Greater-than with 8001H and the value at 8002H
+; Assigning to 8001H the value at 8002H
 LDA 8002H
-MOV C, A
-LDA 8001H
-CMP C
-JC SETZERO2
-JZ SETZERO2
-JMP SETONE2
-SETONE2: NOP
-MVI A, FFH
-JMP COMPEND2
-SETZERO2: NOP
-MVI A, 00H
-JMP COMPEND2
-COMPEND2: NOP
 STA 8001H
+; Assigning to 8003H the value at 8001H
+LDA 8001H
+STA 8003H
 ENDIF1: NOP
