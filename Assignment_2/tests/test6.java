@@ -1,7 +1,7 @@
 /*
 Objects: 4
 Classes: 2
-Constructors: 2
+Constructors: 3
 Inherited Classes: 1
 */
 
