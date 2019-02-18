@@ -1,3 +1,10 @@
+/*
+Objects: 2
+Classes: 1
+Constructors: 2
+Inherited Classes: 0
+*/
+
 class Company {
 
     String domainName;
