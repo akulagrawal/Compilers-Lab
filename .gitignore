@@ -6,9 +6,9 @@
 *.d
 
 # Temporary, I/O files
-intermediate.txt
-input.txt
-output.txt
+*intermediate*
+*input*
+*output*
 
 # Object files
 *.o

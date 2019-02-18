@@ -19,11 +19,11 @@ def remove_comments(filename1, filename2):
         # Remove all comments
         stripped = comment_remover(text)
 
-        # Filter for removing \ns 
-        filtered = "\n".join([ll.rstrip() for ll in stripped.splitlines() if ll.strip()])
+        # Filter for removing empty lines
+        # filtered = "\n".join([ll.rstrip() for ll in stripped.splitlines() if ll.strip()])
 
         with open(filename2, 'w') as f:
-            f.write(filtered)
+            f.write(stripped)
 
 if __name__ == '__main__':
     remove_comments('input.txt', 'intermediate.txt')
