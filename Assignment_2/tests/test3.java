@@ -1,3 +1,10 @@
+/*
+Objects: 2
+Classes: 1
+Constructors: 0
+Inherited Classes: 0
+*/
+
 // Mike Scott
 // 2d array manipulation examples
 

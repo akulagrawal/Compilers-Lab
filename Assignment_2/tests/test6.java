@@ -1,3 +1,10 @@
+/*
+Objects: 4
+Classes: 2
+Constructors: 2
+Inherited Classes: 1
+*/
+
 package Fall0811;
 import java.util.Iterator;
 

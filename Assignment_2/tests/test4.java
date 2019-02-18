@@ -1,3 +1,10 @@
+/*
+Objects: 1
+Classes: 1
+Constructors: 1
+Inherited Classes: 0
+*/
+
 class ConsMain {
     private int x;
 

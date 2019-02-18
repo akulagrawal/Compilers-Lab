@@ -1,3 +1,10 @@
+/*
+Objects: 0
+Classes: 1
+Constructors: 0
+Inherited Classes: 0
+*/
+
 /* 
 HelloWorld.java
  */
