@@ -35,17 +35,15 @@ def count_constructor(filename):
         filestring = f.read()
 
         lines_count = 0
+        lines_set = set()
         for classname in classnames:
-            start = 0
             for position in re.finditer(classname + "\s*\([\s\w,]*\)\s*{", filestring):
-                lines_in_between = len(re.findall("\n", filestring[start: position.end()]))
-                start = position.end()
-
-                if lines_in_between > 0:
-                    lines_count += 1
-
-        # print("Number of lines with constructor definitions:", lines_count)
-        return lines_count
+                startline = len(re.findall("\n", filestring[0: position.start()]))
+                endline = len(re.findall("\n", filestring[0: position.end()]))
+                for linenum in range(startline, endline + 1):
+                    lines_set.add(linenum)
+                    
+        return len(lines_set)
                
 if __name__ == '__main__':
     constructor_count = count_constructor('intermediate.txt')

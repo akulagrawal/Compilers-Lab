@@ -22,10 +22,10 @@ def main(filename = 'input.txt'):
     class_count, inherit_class_count = class_inherit_count(intermediate_file)
 
     with open(out_file, 'w') as f:
-        f.write('Number of Object Declarations: ' + str(object_count) + '\n')
-        f.write('Number of Class Definitions: ' + str(class_count) + '\n')
-        f.write('Number of Constructor Definitions: ' + str(constructor_count) + '\n')
-        f.write('Number of Inherited Class Definitions:' + str(inherit_class_count) + '\n')
+        f.write('Number of Lines with Object Declarations: ' + str(object_count) + '\n')
+        f.write('Number of Lines with Class Definitions: ' + str(class_count) + '\n')
+        f.write('Number of Lines with Constructor Definitions: ' + str(constructor_count) + '\n')
+        f.write('Number of Lines with Inherited Class Definitions:' + str(inherit_class_count) + '\n')
     
 
 if __name__ == '__main__':
