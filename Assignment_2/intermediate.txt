@@ -1,49 +1,33 @@
 class DefaultConstructor {
-// ksdflskjdf
-/* lsdkfjslkdjf */
         class DefaultConstructor2 {
-
         int a;
         boolean b;
-
         private DefaultConstructor2() {
             a = 0;
             b = false;
         }
-
         private DefaultConstructor2(int c) {
             a = c;
             b = false;
         }
-
-        
         public static void main(String[] args) {
-
             DefaultConstructor obj = new DefaultConstructor();
-
             System.out.println("a = " + obj.a);
             System.out.println("b = " + obj.b);
         }
     }
-
     int a;
     boolean b;
-
     private DefaultConstructor() {
         a = 0;
         b = false;
     }
-
     private DefaultConstructor(int c) {
         a = c;
         b = false;
     }
-
-
     public static void main(String[] args) {
-
         DefaultConstructor obj = new DefaultConstructor();
-
         System.out.println("a = " + obj.a);
         System.out.println("b = " + obj.b);
     }

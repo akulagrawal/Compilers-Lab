@@ -10,8 +10,8 @@ def getname(candidate):
     
     return classname
 
-def count_constructor():
-    with open("input.txt", "r") as f:
+def count_constructor(filename):
+    with open(filename, "r") as f:
         lines = f.readlines()
     
         classnames = []
@@ -29,7 +29,7 @@ def count_constructor():
                             candidate = tokens[index + 1]
                             classnames.append(getname(candidate))
 
-        print(classnames) 
+        # print(classnames) 
 
         f.seek(0)
         filestring = f.read()
@@ -44,8 +44,9 @@ def count_constructor():
                 if lines_in_between > 0:
                     lines_count += 1
 
-        print("Number of lines with constructor definitions:", lines_count)
+        # print("Number of lines with constructor definitions:", lines_count)
+        return lines_count
                
 if __name__ == '__main__':
-    count_constructor()
-    
+    constructor_count = count_constructor('intermediate.txt')
+    print(constructor_count)
