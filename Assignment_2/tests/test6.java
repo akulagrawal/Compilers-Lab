@@ -2,7 +2,7 @@
 Objects: 3
 Classes: 2
 Constructors: 3
-Inherited Classes: 1
+Inherited Classes: 0
 */
 
 package Fall0811;

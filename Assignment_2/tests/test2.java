@@ -1,6 +1,6 @@
 /*
 Objects: 0
-Classes: 1
+Classes: 2
 Constructors: 0
 Inherited Classes: 0
 */
