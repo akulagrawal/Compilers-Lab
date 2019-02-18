@@ -36,6 +36,8 @@ def count_object(filename):
 					if word not in datatypes and word not in keywords:
 						if x.startswith(word):
 							y = x[len(word):]
+							if y[0] != ' ':
+								continue
 							y = y.lstrip()
 							if y.startswith(words[i+1]):
 								flag = 1
