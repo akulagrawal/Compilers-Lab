@@ -13,11 +13,16 @@ def comment_remover(text):
     )
     return re.sub(pattern, replacer, text)
 
-
-f = open(sys.argv[1]).read()
+try:
+    f = open(sys.argv[1]).read()
+except IndexError:
+    f = open("fd.txt").read()
 
 # Remove all comments
 stripped = comment_remover(f)
+
+print(stripped)
+exit(0)
 
 # Filter for removing \ns 
 filtered = "\n".join([ll.rstrip() for ll in stripped.splitlines() if ll.strip()])
