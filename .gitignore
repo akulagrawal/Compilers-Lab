@@ -9,6 +9,7 @@
 *intermediate*
 *input*
 *output*
+*.yy.c*
 
 # Object files
 *.o
