@@ -1,0 +1,15 @@
+public 
+final class lol
+{	
+	public class 
+	hg{
+
+	}	
+}
+
+public 
+class lmao extends 
+lol
+{
+	
+}
