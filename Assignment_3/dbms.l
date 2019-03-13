@@ -1,44 +1,50 @@
 dbms.l
 %{
-  #include <iostream>
-  using namespace std;
+  #include <stdio.h>
+  #include <string.h>
+  #include "bison_dbms.tab.h"
+
+  #define print(str, val) \
+    printf("%s %s\n", str, val);
+    
   extern int yylex();
 %}
 %%
-(SELECT)                  { cout << "Found a SELECT query: " << yytext << endl;}
-(PROJECT)                 { cout << "Found a PROJECT query: " << yytext << endl;}
-(CARTESIAN_PRODUCT)       { cout << "Found a CARTESIAN_PRODUCT query: " << yytext << endl;}
-(EQUI_JOIN)               { cout << "Found a EQUI_JOIN query: " << yytext << endl;}
-(AND|OR)                  { cout << "Found a boolean query: " << yytext << endl;}
-((<=)|(>=))           { cout << "Found a comparator: " << yytext << endl;}
-(=|(!=))                  { cout << "Found an assignment operator: " << yytext << endl;}
-\(                         { cout << "Found a LP: " << yytext << endl;}
-\)                         { cout << "Found a RP: " << yytext << endl;}
-\<                         { cout << "Found a LAB: " << yytext << endl;}
-\>                         { cout << "Found a RAB: " << yytext << endl;}
-'                         { cout << "Found a S_IC: " << yytext << endl;}
-\"                         { cout << "Found a D_IC: " << yytext << endl;}
-;                         { cout << "Found a SEMI: " << yytext << endl;}
-([0-9]+\.[0-9]+|[0-9]+)   { cout << "Found a number:" << yytext << endl; }
-[a-zA-Z0-9]+              { cout << "Found a string: " << yytext << endl; }
+(SELECT)                  { yylval.sval = strdup(yytext); return SELECT; } 
+(PROJECT)                 { yylval.sval = strdup(yytext); return PROJECT; } 
+(CARTESIAN_PRODUCT)       { yylval.sval = strdup(yytext); return CARTESIAN_PRODUCT; } 
+(EQUI_JOIN)               { yylval.sval = strdup(yytext); return EQUI_JOIN; } 
+(AND|OR)                  { yylval.sval = strdup(yytext); return AND; } 
+((<=)|(>=))           { yylval.sval = strdup(yytext); return LT_EQ; } 
+(=|(!=))                  { yylval.sval = strdup(yytext); return EQ; } 
+\(                         { yylval.sval = strdup(yytext); return LP; } 
+\)                         { yylval.sval = strdup(yytext); return RP; } 
+\<                         { yylval.sval = strdup(yytext); return LAB; } 
+\>                         { yylval.sval = strdup(yytext); return RAB; } 
+'                         { yylval.sval = strdup(yytext); return S_C; } 
+\"                         { yylval.sval = strdup(yytext); return D_C; } 
+,                         { yylval.sval = strdup(yytext); return COMMA; } 
+;                         { yylval.sval = strdup(yytext); return SEMI; } 
+((-[ \t\n])?[0-9]+\.[0-9]+|[0-9]+)   { yylval.ival = atoi(yytext); return NUM; } 
+[a-zA-Z0-9_]+              { yylval.sval = strdup(yytext); return ID; } 
 .                         ;
 %%
 
 int yywrap() {}
-int main() {
+// int main() {
   
-  char* filename = "input.txt";
-  // open a file handle to a particular file:
-  FILE *myfile = fopen(filename, "r");
+//   char* filename = "input.txt";
+//   // open a file handle to a particular file:
+//   FILE *myfile = fopen(filename, "r");
 
-  // make sure it's valid:
-  if (!myfile) {
-    cout << "I can't open " << filename << endl;
-    return -1;
-  }
-  // set lex to read from it instead of defaulting to STDIN:
-  yyin = myfile;
+//   // make sure it's valid:
+//   if (!myfile) {
+//     print("I can't open ", filename);
+//     return -1;
+//   }
+//   // set lex to read from it instead of defaulting to STDIN:
+//   yyin = myfile;
   
-  // lex through the input:
-  while(yylex());
-}
+//   // lex through the input:
+//   while(yylex());
+// }

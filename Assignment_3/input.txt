@@ -1,5 +1,7 @@
-SELECT < salary<200 > (Employee)
-SELECT < name=’John’ AND salary<200 > (Employee)
+(Table_Name_1) CARTESIAN_PRODUCT (Table_Name_2);
+SELECT < salary< -200.02 > (Employee);
+(Employee) EQUI_JOIN (Department);
+SELECT < name='John' AND salary< -200 > (Employee)
 SELECT(Employee)< salary<200.02  >
 
 PROJECT < name, salary> (Employee)
@@ -9,30 +11,3 @@ PROJECT (Employee) <salary, name>
 CARTESIAN_PRODUCT (Employee) (Department)
 
 < Table_Name_1> EQUI_JOIN <condition> < Table_Name_2>
-(Employee) EQUI_JOIN (Department)
-
-AND
-OR
-=
-!=
-<
->
->=
-<=
-
-(SELECT)                 
-(PROJECT)                
-(CARTESIAN_PRODUCT)      
-(EQUI_JOIN)              
-(AND|OR)                 
-((<=)|(>=))          
-(=|(!=))                 
-(                        
-)                        
-<                        
->                        
-'                        
-\"                        
-([0-9]+\.[0-9]+|[0-9]+)  
-[a-zA-Z0-9]+             
-.                         ;
