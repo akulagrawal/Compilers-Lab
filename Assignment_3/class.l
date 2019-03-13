@@ -6,8 +6,25 @@ dbms.l
   extern int yylex();
   int classmatch=0;
   int extmatch=0;
+  int comment=0;
 %}
 %%
+((\/\/.*[\n])|\/\*(.|[\n])*\*\/)                                            {
+                                                                                int matchsize = strlen(yytext);
+                                                                              //printf("Size of match = %d",matchsize);
+                                                                              int it=0;
+                                                                              int f=0;
+                                                                              while(it!=matchsize)
+                                                                              {
+                                                                                if(yytext[it] == '\n')
+                                                                                {
+                                                                                  f++;
+                                                                                  comment++;
+                                                                                }
+                                                                                it++;  
+                                                                              }
+                                                                              if(f>1)comment++;
+                                                                            }
 ([ \t]*((public|private)[\n \t]+)?(final[\n \t]+)?class[\n \t]+[a-zA-Z][<>a-zA-Z0-9_]*[\n \t]*(implements[\n \t]+)?[a-zA-Z][<>a-zA-Z0-9_]*[\n \t]*\{)                  { 
                                                                               //printf("Found %s",yytext);
                                                                               int matchsize = strlen(yytext);
@@ -62,4 +79,5 @@ int main() {
   while(yylex());
   printf("Number of lines with classes: %d\n", classmatch);
   printf("Number of lines with inherited classes: %d\n", extmatch);
+  printf("Number of lines with comments: %d\n", comment);
 }
