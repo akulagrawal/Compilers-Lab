@@ -1,0 +1,27 @@
+/*
+Objects: 3
+Classes: 2
+Constructors: 3
+Inherited Classes: 0
+*/
+
+
+    public String toString(){
+        StringBuffer result = new StringBuffer("[");
+        final int LIMIT = size() - 1;
+        for(int i = 0; i < LIMIT; i++){
+            if( this == this.get(i) )
+        		result.append("this list");
+            else{
+                result.append(get(i));
+            }
+            result.append(", ");
+        }
+        if( size() != 0)
+            result.append(get(size() - 1));
+        result.append("]");
+        return result.toString();
+    }
+   
+}
+

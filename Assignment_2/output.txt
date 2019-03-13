@@ -1,0 +1,7 @@
+Number of Non-Blank Lines in Source Code: 30
+Number of Blank Lines in Source Code: 10
+Number of Comment Lines in Source Code: 17
+Number of Lines with Object Declarations: 3
+Number of Lines with Class Definitions: 1
+Number of Lines with Constructor Definitions: 2
+Number of Lines with Inherited Class Definitions: 0
