@@ -1,0 +1,10 @@
+clean:	constructor_count.yy.c constructor_count.exe
+	rm constructor_count.yy.c
+	rm constructor_count.exe
+
+build: 	constructor_count.lex
+	flex -+ -o constructor_count.yy.c constructor_count.lex
+	g++ -o constructor_count.exe constructor_count.yy.c
+
+run: 	constructor_count.exe
+	@./constructor_count.exe
