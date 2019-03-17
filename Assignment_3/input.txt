@@ -1,10 +1,19 @@
 public 
 final class lol
 {	
-	public class /*
-*/	hg{
+	public class 
+	hg{
 
 	}	
+}
+
+//This is a test comment
+
+
+public class rofl extends 
+lmao
+{
+	
 }
 
 /*

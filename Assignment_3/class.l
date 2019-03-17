@@ -9,8 +9,12 @@ dbms.l
   int comment=0;
 %}
 %%
-((\/\/.*[\n])|\/\*(.|[\n])*\*\/)                                            {
-                                                                                int matchsize = strlen(yytext);
+(\/\/.*[\n])                                            					{
+                                                                                comment++;
+                                                                            }
+
+(\/\*([\n]|.)*\*\/[\n])															{
+                                                                              int matchsize = strlen(yytext);
                                                                               //printf("Size of match = %d",matchsize);
                                                                               int it=0;
                                                                               int f=0;
@@ -23,7 +27,6 @@ dbms.l
                                                                                 }
                                                                                 it++;  
                                                                               }
-                                                                              if(f>1)comment++;
                                                                             }
 ([ \t]*((public|private)[\n \t]+)?(final[\n \t]+)?class[\n \t]+[a-zA-Z][<>a-zA-Z0-9_]*[\n \t]*(implements[\n \t]+)?[a-zA-Z][<>a-zA-Z0-9_]*[\n \t]*\{)                  { 
                                                                               //printf("Found %s",yytext);
