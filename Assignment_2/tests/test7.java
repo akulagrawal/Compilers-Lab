@@ -1,8 +1,8 @@
 /*
 Objects: 1
-Classes: 2
+Classes: 3
 Constructors: 0
-Inherited Classes: 1
+Inherited Classes: 2
 */
 
 class Calculation {

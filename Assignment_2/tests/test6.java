@@ -13,8 +13,8 @@ public class GenericList<E> implements Iterable<E>{
     private static final int DEFAULT_CAP = 10;
  
     // instance variables
-    protected E[] container; /* // wqwe qsasa
-    //
+    protected E[] container; /*  wqwe qsasa
+    
 	the array is NOT the list */
     private int listSize;
     
