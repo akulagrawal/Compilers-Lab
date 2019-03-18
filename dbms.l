@@ -25,10 +25,14 @@ dbms.l
 '                         { yylval.sval = strdup(yytext); return S_C; } 
 \"                         { yylval.sval = strdup(yytext); return D_C; } 
 ,                         { yylval.sval = strdup(yytext); return COMMA; } 
-[\n]						{yylval.sval =strdup(yytext); return NEWLINE; }
+[+]                         { yylval.sval = strdup(yytext); return PLUS; } 
+[-]                         { yylval.sval = strdup(yytext); return MINUS; } 
+[*]                         { yylval.sval = strdup(yytext); return MUL; } 
+[/]                         { yylval.sval = strdup(yytext); return DIV; } 
+
 ;                         { yylval.sval = strdup(yytext); return SEMI; } 
 ((-[ \t\n])?[0-9]+\.[0-9]+|[0-9]+)   { yylval.ival = atoi(yytext); return NUM; } 
-[a-zA-Z0-9_]+              { yylval.sval = strdup(yytext); return ID; } 
+[a-zA-Z0-9_]+              { yylval.sval = strdup(yytext); return STR; } 
 .                         ;
 %%
 

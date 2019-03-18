@@ -62,9 +62,13 @@ extern int yydebug;
     COMMA = 272,
     SEMI = 273,
     NUM = 274,
-    ID = 275,
+    STR = 275,
     NEWLINE = 276,
-    DOT = 277
+    DOT = 277,
+    PLUS = 278,
+    MINUS = 279,
+    DIV = 280,
+    MUL = 281
   };
 #endif
 
@@ -73,13 +77,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 15 "bison_dbms.y" /* yacc.c:1909  */
+#line 16 "bison_dbms.y" /* yacc.c:1909  */
 
   int ival;
   float fval;
   char *sval;
 
-#line 83 "bison_dbms.tab.h" /* yacc.c:1909  */
+#line 87 "bison_dbms.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

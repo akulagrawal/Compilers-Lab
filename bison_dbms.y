@@ -7,6 +7,7 @@
   extern int yylex();
   extern int yyparse();
   extern FILE *yyin;
+  extern void eat_till_semi();
   
 void yyerror(const char *s);
 %}
@@ -36,108 +37,97 @@ void yyerror(const char *s);
 %token <sval> D_C
 %token <sval> COMMA
 %token <sval> SEMI
-%token <fval> NUM
-%token <sval> ID
+%token <sval> NUM
+%token <sval> STR
 %token <sval> NEWLINE
 %token <sval> DOT
+%token <sval> PLUS
+%token <sval> MINUS
+%token <sval> DIV
+%token <sval> MUL
 
 
+%type <sval> ID
 %type <sval> STMT_LIST
 %type <sval> STMT
 %type <sval> EXPR
 %type <sval> TABLE
 %type <sval> CONDITION
+%type <sval> CONDITION2
 %type <sval> COMP
 %type <sval> TERM
 %type <sval> ATTR
 
+%type <sval> ARITH
+%type <sval> EXPR_PRIME
+%type <sval> TERM2
+%type <sval> TERM_PRIME
+%type <sval> FACTOR
+
+
 %%
 
-STMT_LIST:
-    STMT 
-    |
-    STMT STMT_LIST
+STMT_LIST:  STMT 
+    |   STMT STMT_LIST
     ;
 
-STMT:
-    SELECT LAB CONDITION RAB LP TABLE RP NEWLINE   {
-        printf("Valid Syntax \n");
-    }
-    |
-    PROJECT LAB ATTR RAB LP TABLE RP NEWLINE     {
-        printf("Valid Syntax \n");
-    }
-    |
-    LP TABLE RP EXPR NEWLINE   {
-        printf("Valid Syntax \n");
-    }
-    |
-    error NEWLINE {yyerrok;}
-    ;
+STMT:   SELECT LAB CONDITION RAB LP TABLE RP SEMI   {
+            printf("Valid Syntax\t");
+        }
+    |   PROJECT LAB ATTR RAB LP TABLE RP SEMI     {
+            printf("Valid Syntax\t");
+        }
+    |   LP TABLE RP EXPR SEMI   {
+            printf("Valid Syntax\t");
+        }
+    |   error SEMI  {
+           yyerrok;
+           eat_till_semi();
+        }    ;
 
-EXPR:
-    CARTESIAN_PRODUCT LP TABLE RP  {
-        // printf("bison found a EXPR: ");
-    }
-    |
-    EQUI_JOIN LAB CONDITION RAB LP TABLE RP  {
-        // printf("bison found a EXPR: ");
-    }
-    ;
+EXPR:   CARTESIAN_PRODUCT LP TABLE RP
+    |   EQUI_JOIN LAB CONDITION2 RAB LP TABLE RP ;
 
-TABLE:
-    STMT {
-        // printf("bison found a TABLE: ");
-    }
-    |
-    ID  {
-        // printf("bison found a TABLE: ");
-    }
-    ;
+TABLE:  STR;
 
-CONDITION:
-    ID COMP AND CONDITION
-    |
-    ID COMP
-    ;
+CONDITION:   ID COMP AND CONDITION
+    |        ID COMP ;
 
-COMP:
-    EQ TERM {
-        // printf("bison found a COMP: ");
-    }
-    |
-    LAB NUM {
-        // printf("bison found a COMP: ");
-    }
-    |
-    LT_EQ NUM   {
-        // printf("bison found a COMP: ");
-    }
-    ;
+CONDITION2:  STR DOT STR EQ STR DOT STR AND CONDITION2
+    |        STR DOT STR EQ STR DOT STR   ;
 
-TERM:
-    NUM     {
-        // printf("bison found a TERM: ");
-    }
-    |
-    S_C ID S_C  {
-        // printf("bison found a TERM: ");
-    }
-    |
-    D_C ID D_C  {
-        // printf("bison found a TERM: ");
-    }
-    ;
+COMP:    EQ TERM
+    |    LAB NUM
+    |    LT_EQ NUM  ;
+
+TERM:    NUM
+    |    S_C ID S_C
+    |    D_C ID D_C ;
 
 ATTR:
-    ID COMMA ATTR   {
-        // printf("bison found a ATTR: ");
-    }
-    |
-    ID  {
-        // printf("bison found a ATTR: ");
-    }
-    ;
+    ID COMMA ATTR
+    |   ID    ;
+
+ID: STR
+    | ARITH   ;
+
+ARITH:   TERM2 EXPR_PRIME ;
+
+EXPR_PRIME :  PLUS TERM2 EXPR_PRIME
+		| MINUS TERM2 EXPR_PRIME
+		| /* epsilon */ ;
+
+TERM2 :  FACTOR TERM_PRIME ;
+
+TERM_PRIME :  MUL FACTOR TERM_PRIME
+		| DIV FACTOR TERM_PRIME
+		| /* epsilon */ ;
+
+FACTOR :  LP ARITH RP
+		| NUM
+        | STR ;
+
+
 %%
 
 int main(int argc, char **argv) {
@@ -153,9 +143,9 @@ int main(int argc, char **argv) {
    
     yyin = myfile;
 
-   do {
+   while(!feof(yyin)){
         yyparse();
-    } while(!feof(yyin));
+    } 
 
    // while(yyparse());
   
@@ -163,8 +153,14 @@ int main(int argc, char **argv) {
 
 void yyerror(const char *s) {
 
-  printf("Invalid Syntax\n");
+  printf("Invalid Syntax\t");
 
   //  exit(-1);
 }
 
+void eat_till_semi()
+{
+    int c;
+    while((c = (char)fgetc(yyin)) != EOF && c != ';')
+        printf("s");
+}
