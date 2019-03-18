@@ -175,8 +175,27 @@ extern FILE *yyin, *yyout;
 #define EOB_ACT_END_OF_FILE 1
 #define EOB_ACT_LAST_MATCH 2
 
-    #define YY_LESS_LINENO(n)
-    #define YY_LINENO_REWIND_TO(ptr)
+    /* Note: We specifically omit the test for yy_rule_can_match_eol because it requires
+     *       access to the local variable yy_act. Since yyless() is a macro, it would break
+     *       existing scanners that call yyless() from OUTSIDE yylex. 
+     *       One obvious solution it to make yy_act a global. I tried that, and saw
+     *       a 5% performance hit in a non-yylineno scanner, because yy_act is
+     *       normally declared as a register variable-- so it is not worth it.
+     */
+    #define  YY_LESS_LINENO(n) \
+            do { \
+                int yyl;\
+                for ( yyl = n; yyl < yyleng; ++yyl )\
+                    if ( yytext[yyl] == '\n' )\
+                        --yylineno;\
+            }while(0)
+    #define YY_LINENO_REWIND_TO(dst) \
+            do {\
+                const char *p;\
+                for ( p = yy_cp-1; p >= (dst); --p)\
+                    if ( *p == '\n' )\
+                        --yylineno;\
+            }while(0)
     
 /* Return all but the first "n" matched characters back to the input stream. */
 #define yyless(n) \
@@ -385,11 +404,11 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[29] =
+static yyconst flex_int16_t yy_accept[28] =
     {   0,
-        0,    0,    9,    2,    1,    2,    2,    2,    2,    4,
-        3,    5,    0,    0,    0,    0,    0,    0,    0,    0,
-        0,    7,    0,    7,    0,    0,    6,    0
+        0,    0,    9,    1,    2,    1,    1,    1,    1,    4,
+        3,    5,    0,    0,    0,    0,    5,    0,    0,    0,
+        0,    7,    0,    0,    0,    6,    0
     } ;
 
 static yyconst YY_CHAR yy_ec[256] =
@@ -397,17 +416,17 @@ static yyconst YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    2,    1,    1,    1,    1,    1,    1,    1,    4,
-        5,    6,    1,    1,    1,    1,    7,    8,    8,    8,
-        8,    8,    8,    8,    8,    8,    8,    1,    1,    1,
-        1,    1,    1,    1,    8,    8,    8,    8,    8,    8,
-        8,    8,    8,    8,    8,    8,    8,    8,    8,    8,
-        8,    8,    8,    8,    8,    8,    8,    8,    8,    8,
-        1,    1,    1,    1,    8,    1,    9,    8,   10,    8,
+        1,    4,    1,    1,    1,    1,    1,    1,    1,    5,
+        6,    7,    1,    8,    1,    1,    9,   10,   10,   10,
+       10,   10,   10,   10,   10,   10,   10,    1,    1,    8,
+        1,    8,    1,    1,   10,   10,   10,   10,   10,   10,
+       10,   10,   10,   10,   10,   10,   10,   10,   10,   10,
+       10,   10,   10,   10,   10,   10,   10,   10,   10,   10,
+        1,    1,    1,    1,   10,    1,   11,   10,   12,   10,
 
-        8,    8,    8,    8,    8,    8,    8,   11,    8,    8,
-        8,    8,    8,    8,   12,    8,    8,    8,    8,    8,
-        8,    8,   13,    1,    1,    1,    1,    1,    1,    1,
+       10,   10,   10,   10,   10,   10,   10,   13,   10,   10,
+       10,   10,   10,   10,   14,   10,   10,   10,   10,   10,
+       10,   10,   15,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -424,53 +443,58 @@ static yyconst YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst YY_CHAR yy_meta[14] =
+static yyconst YY_CHAR yy_meta[16] =
     {   0,
-        1,    2,    3,    4,    1,    1,    1,    5,    5,    5,
-        5,    5,    6
+        1,    2,    3,    4,    5,    6,    1,    6,    1,    7,
+        7,    7,    7,    7,    8
     } ;
 
-static yyconst flex_uint16_t yy_base[35] =
+static yyconst flex_uint16_t yy_base[33] =
     {   0,
-        0,    0,   37,   74,   74,   29,    8,   14,   17,   74,
-       74,   74,   30,   25,   16,   20,   21,   30,   33,    0,
-       12,   19,   11,   74,   44,   47,    0,   74,   50,   54,
-       58,   63,   68,   17
+        0,    0,   67,   71,   71,   52,    9,   17,   37,   71,
+       71,    0,   37,   35,    0,   29,    0,   33,   11,   11,
+        9,   71,    9,   30,   33,    0,   71,   47,   54,   56,
+       62,   10
     } ;
 
-static yyconst flex_int16_t yy_def[35] =
+static yyconst flex_int16_t yy_def[33] =
     {   0,
-       28,    1,   28,   28,   28,   28,   28,   29,   29,   28,
-       28,   28,   30,   31,    9,    9,   31,   31,    9,   18,
-       32,   31,   19,   28,   29,   33,   34,    0,   28,   28,
-       28,   28,   28,   28
+       27,    1,   27,   27,   27,   27,   27,   27,    8,   27,
+       27,   28,   29,   30,    8,    8,   28,   30,   31,    8,
+       31,   27,    8,    8,   27,   32,    0,   27,   27,   27,
+       27,   27
     } ;
 
-static yyconst flex_uint16_t yy_nxt[88] =
+static yyconst flex_uint16_t yy_nxt[87] =
     {   0,
-        4,    4,    5,    4,    4,    6,    7,    8,    8,    9,
-        8,    8,    4,   11,   12,   13,   13,   14,   13,   13,
-       14,   27,   25,   18,   24,   18,   15,   16,   19,   18,
-       15,   20,   21,   14,   18,   10,   28,   28,   28,   28,
-       28,   28,   22,   15,   23,   26,   26,   14,   26,   26,
-       14,   15,   15,   15,   15,   13,   13,   13,   17,   17,
-       28,   17,   17,   17,   21,   21,   28,   28,   21,   27,
-       27,   27,   27,    3,   28,   28,   28,   28,   28,   28,
-       28,   28,   28,   28,   28,   28,   28
+        4,    4,    5,    4,    4,    4,    6,    4,    7,    8,
+        8,    9,    8,    8,    4,   11,   26,   12,   13,   13,
+       13,   14,   24,   22,   23,   22,   15,   15,   15,   15,
+       15,   25,   25,   25,   25,   25,   25,   14,   19,   20,
+       19,   14,   26,   26,   26,   26,   26,   17,   17,   16,
+       17,   17,   17,   17,   17,   13,   13,   13,   13,   18,
+       10,   18,   18,   21,   21,   21,   27,   27,   27,   21,
+        3,   27,   27,   27,   27,   27,   27,   27,   27,   27,
+       27,   27,   27,   27,   27,   27
     } ;
 
-static yyconst flex_int16_t yy_chk[88] =
+static yyconst flex_int16_t yy_chk[87] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    7,    7,    8,    8,    8,    9,    9,
-        9,   34,   23,   22,   21,   17,   15,    9,   16,   14,
-       16,   18,   18,   13,   18,    6,    3,    0,    0,    0,
-        0,    0,   18,   19,   19,   25,   25,   25,   26,   26,
-       26,   29,   29,   29,   29,   30,   30,   30,   31,   31,
-        0,   31,   31,   31,   32,   32,    0,    0,   32,   33,
-       33,   33,   33,   28,   28,   28,   28,   28,   28,   28,
-       28,   28,   28,   28,   28,   28,   28
+        1,    1,    1,    1,    1,    7,   32,    7,    8,    8,
+        8,    8,   23,   21,   20,   19,    8,    8,    8,    8,
+        8,   24,   24,   24,   25,   25,   25,   25,   18,   16,
+       14,   13,   25,   25,   25,   25,   25,   28,   28,    9,
+       28,   28,   28,   28,   28,   29,   29,   29,   29,   30,
+        6,   30,   30,   31,   31,   31,    3,    0,    0,   31,
+       27,   27,   27,   27,   27,   27,   27,   27,   27,   27,
+       27,   27,   27,   27,   27,   27
     } ;
+
+/* Table of booleans, true if rule could match eol. */
+static yyconst flex_int32_t yy_rule_can_match_eol[9] =
+    {   0,
+0, 1, 0, 0, 0, 1, 1, 0,     };
 
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
@@ -488,18 +512,9 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "constructor_count.lex"
 /*
- * Sample Scanner2:
- * Description: Count the number of characters and the number of lines
- *              from standard input
- * Usage: (1) $ flex sample2.lex
- *        (2) $ gcc lex.yy.c -lfl
- *        (3) $ ./a.out
- *            stdin> whatever you like
- *	      stdin> Ctrl-D
- * Questions: Is it ok if we do not indent the first line?
- *            What will happen if we remove the second rule?
+ Counts the number of lines in a Java source program with constructor declarations.
  */
-#line 15 "constructor_count.lex"
+#line 6 "constructor_count.lex"
   #include <iostream>
   #include <set>
   #include <string>
@@ -508,12 +523,14 @@ char *yytext;
   using namespace std;
 
   set<string> classnames;
-  int num_lines = 0, num_chars = 0;
+  set<int> startlinenums;
   bool multilinecomment = false;
   bool singlelinecomment = false;
   bool comment = false;
+  int constructor_lines = 0;
+  int num_constructors = 0;
 
-  string conv_string(char * ptr) {
+  string conv_string(char* ptr) {
     string s;
     while(*ptr)
     {
@@ -544,7 +561,7 @@ char *yytext;
     }
   }
 
-#line 548 "constructor_count.yy.c"
+#line 565 "constructor_count.yy.c"
 
 #define INITIAL 0
 
@@ -762,9 +779,9 @@ YY_DECL
 		}
 
 	{
-#line 61 "constructor_count.lex"
+#line 56 "constructor_count.lex"
 
-#line 768 "constructor_count.yy.c"
+#line 785 "constructor_count.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -791,13 +808,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 29 )
+				if ( yy_current_state >= 28 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 74 );
+		while ( yy_base[yy_current_state] != 71 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -809,6 +826,16 @@ yy_find_action:
 			}
 
 		YY_DO_BEFORE_ACTION;
+
+		if ( yy_act != YY_END_OF_BUFFER && yy_rule_can_match_eol[yy_act] )
+			{
+			yy_size_t yyl;
+			for ( yyl = 0; yyl < yyleng; ++yyl )
+				if ( yytext[yyl] == '\n' )
+					   
+    yylineno++;
+;
+			}
 
 do_action:	/* This label is used only to access EOF actions. */
 
@@ -822,44 +849,43 @@ do_action:	/* This label is used only to access EOF actions. */
 			goto yy_find_action;
 
 case 1:
-/* rule 1 can match eol */
 YY_RULE_SETUP
-#line 62 "constructor_count.lex"
-++num_lines; ++num_chars; singlelinecomment = false;
+#line 57 "constructor_count.lex"
+
 	YY_BREAK
 case 2:
+/* rule 2 can match eol */
 YY_RULE_SETUP
-#line 63 "constructor_count.lex"
-++num_chars;
+#line 58 "constructor_count.lex"
+
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 64 "constructor_count.lex"
+#line 59 "constructor_count.lex"
 multilinecomment = true;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 65 "constructor_count.lex"
+#line 60 "constructor_count.lex"
 multilinecomment = false;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 66 "constructor_count.lex"
-singlelinecomment = true;
+#line 61 "constructor_count.lex"
+
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 67 "constructor_count.lex"
+#line 62 "constructor_count.lex"
 {
-          comment = multilinecomment or singlelinecomment;
-          if(!comment)
+          if(!multilinecomment)
           {
+            // Extract the class name from the class declaration regex.
             string classname = extract_classname(conv_string(yytext));
-            classnames.insert(classname);
 
-            cout << classname << "\n";
-            cout << classnames.size() << "\n";
+            // Add to a set of classnames
+            classnames.insert(classname);
           }
 
       }
@@ -867,26 +893,45 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 79 "constructor_count.lex"
+#line 73 "constructor_count.lex"
 {
-          comment = multilinecomment or singlelinecomment;
-          if(!comment)
+          if(!multilinecomment)
           {
-            string functionname = extract_functionname(conv_string(yytext));
-            //cout << functionname << ": function! \n";
+            // Convert yy_text to a C++ string.
+            string yy_string = conv_string(yytext);
 
-            if(classnames.count(functionname)){
-              cout << ": constructor! \n";
+            // Extract the function name from the function declaration regex.
+            string functionname = extract_functionname(yy_string);
+            cout << functionname << ": function at line number " << yylineno << "\n";
+
+            // If this function shares a name with a class, it must be a constructor.
+            if(classnames.count(functionname))
+            {
+              cout << functionname << ": constructor!" << "\n";
+              num_constructors += 1;
+
+              if(!startlinenums.count(yylineno))
+              {
+                startlinenums.insert(yylineno);
+                constructor_lines += 1;
+                for(int i = 0; i < yy_string.length(); ++i)
+                {
+                  if(yy_string[i] == '\n')
+                  {
+                    constructor_lines += 1;
+                  }
+                }
+              }
             }
           }
       }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 91 "constructor_count.lex"
+#line 104 "constructor_count.lex"
 ECHO;
 	YY_BREAK
-#line 890 "constructor_count.yy.c"
+#line 935 "constructor_count.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1179,7 +1224,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 29 )
+			if ( yy_current_state >= 28 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1207,11 +1252,11 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 29 )
+		if ( yy_current_state >= 28 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 28);
+	yy_is_jam = (yy_current_state == 27);
 
 		return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1249,6 +1294,10 @@ static int yy_get_next_buffer (void)
 		}
 
 	*--yy_cp = (char) c;
+
+    if ( c == '\n' ){
+        --yylineno;
+    }
 
 	(yytext_ptr) = yy_bp;
 	(yy_hold_char) = *yy_cp;
@@ -1326,6 +1375,11 @@ static int yy_get_next_buffer (void)
 	c = *(unsigned char *) (yy_c_buf_p);	/* cast for 8-bit char's */
 	*(yy_c_buf_p) = '\0';	/* preserve yytext */
 	(yy_hold_char) = *++(yy_c_buf_p);
+
+	if ( c == '\n' )
+		   
+    yylineno++;
+;
 
 	return c;
 }
@@ -1793,6 +1847,9 @@ static int yy_init_globals (void)
      * This function is called from yylex_destroy(), so don't allocate here.
      */
 
+    /* We do not touch yylineno unless the option is enabled. */
+    yylineno =  1;
+    
     (yy_buffer_stack) = 0;
     (yy_buffer_stack_top) = 0;
     (yy_buffer_stack_max) = 0;
@@ -1887,18 +1944,25 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 91 "constructor_count.lex"
+#line 104 "constructor_count.lex"
 
 
 
-int yywrap()
-{
-
+int yywrap(){
 }
 
-int main()
-{
+int main() {
   yylex();
 
+  cout << "\n";
+  cout << "Found classes:" << "\n";
+  for(set<string>::iterator it = classnames.begin(); it != classnames.end(); ++it)
+  {
+    cout << *it << "\n";
+  }
+  cout << "\n";
+
+  cout << "Number of constructors: " << num_constructors << "\n";
+  cout << "Number of constructor definition lines: " << constructor_lines << "\n";
 }
 

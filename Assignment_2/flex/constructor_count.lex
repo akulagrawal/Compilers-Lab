@@ -11,10 +11,12 @@
   using namespace std;
 
   set<string> classnames;
-  int num_lines = 0, num_chars = 0;
+  set<int> startlinenums;
   bool multilinecomment = false;
   bool singlelinecomment = false;
   bool comment = false;
+  int constructor_lines = 0;
+  int num_constructors = 0;
 
   string conv_string(char* ptr) {
     string s;
@@ -49,38 +51,53 @@
 
 %}
 
+%option yylineno
+
 %%
-\n	   ++num_lines; ++num_chars; singlelinecomment = false;
-.	   ++num_chars;
+.
+\n
 \/\*   multilinecomment = true;
 \*\/   multilinecomment = false;
-\/\/   singlelinecomment = true;
-(class[ \t\n]+[a-zA-Z0-9_]+\{)  {
-          comment = multilinecomment or singlelinecomment;
-          if(!comment)
+\/\/.*
+(class[ \t\n]+[a-zA-Z0-9_]+)  {
+          if(!multilinecomment)
           {
             // Extract the class name from the class declaration regex.
             string classname = extract_classname(conv_string(yytext));
 
             // Add to a set of classnames
             classnames.insert(classname);
-
-            cout << classname << "\n";
-            cout << classnames.size() << "\n";
           }
 
       }
-([a-zA-Z0-9_]+[ \t\n]*\(.*\)[ \t\n]*\{) {
-          comment = multilinecomment or singlelinecomment;
-          if(!comment)
+([a-zA-Z0-9_]+[ \t\n]*\([a-zA-Z0-9_, <>]*\)[ \t\n]*\{) {
+          if(!multilinecomment)
           {
+            // Convert yy_text to a C++ string.
+            string yy_string = conv_string(yytext);
+
             // Extract the function name from the function declaration regex.
-            string functionname = extract_functionname(conv_string(yytext));
-            //cout << functionname << ": function! \n";
+            string functionname = extract_functionname(yy_string);
+            cout << functionname << ": function at line number " << yylineno << "\n";
 
             // If this function shares a name with a class, it must be a constructor.
-            if(classnames.count(functionname)){
-              cout << functionname << ": constructor! \n";
+            if(classnames.count(functionname))
+            {
+              cout << functionname << ": constructor!" << "\n";
+              num_constructors += 1;
+
+              if(!startlinenums.count(yylineno))
+              {
+                startlinenums.insert(yylineno);
+                constructor_lines += 1;
+                for(int i = 0; i < yy_string.length(); ++i)
+                {
+                  if(yy_string[i] == '\n')
+                  {
+                    constructor_lines += 1;
+                  }
+                }
+              }
             }
           }
       }
@@ -91,4 +108,15 @@ int yywrap(){
 
 int main() {
   yylex();
+
+  cout << "\n";
+  cout << "Found classes:" << "\n";
+  for(set<string>::iterator it = classnames.begin(); it != classnames.end(); ++it)
+  {
+    cout << *it << "\n";
+  }
+  cout << "\n";
+
+  cout << "Number of constructors: " << num_constructors << "\n";
+  cout << "Number of constructor definition lines: " << constructor_lines << "\n";
 }
