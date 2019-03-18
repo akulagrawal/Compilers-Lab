@@ -50,19 +50,22 @@ extern int yydebug;
     CARTESIAN_PRODUCT = 260,
     EQUI_JOIN = 261,
     AND = 262,
-    OR = 263,
-    LT_EQ = 264,
-    EQ = 265,
+    LT_EQ = 263,
+    EQ = 264,
+    NEQ = 265,
     LP = 266,
     RP = 267,
     LAB = 268,
     RAB = 269,
-    S_C = 270,
-    D_C = 271,
+    SIC = 270,
+    DIC = 271,
     COMMA = 272,
     SEMI = 273,
     NUM = 274,
-    ID = 275
+    ID = 275,
+    DOT = 276,
+    MINUS = 277,
+    ARITH_OP = 278
   };
 #endif
 
@@ -71,13 +74,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 23 "bison_dbms.y" /* yacc.c:1909  */
+#line 24 "bison_dbms.y" /* yacc.c:1909  */
 
   int ival;
   float fval;
   char *sval;
 
-#line 81 "bison_dbms.tab.h" /* yacc.c:1909  */
+#line 84 "bison_dbms.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

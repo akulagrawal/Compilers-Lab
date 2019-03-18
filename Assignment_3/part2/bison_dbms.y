@@ -8,7 +8,8 @@
   extern int yylex();
   extern int yyparse();
   extern FILE *yyin;
- 
+  extern void eat_till_semi();
+
   void yyerror(const char *s);
 %}
 
@@ -33,122 +34,96 @@
 %token <sval> CARTESIAN_PRODUCT
 %token <sval> EQUI_JOIN
 %token <sval> AND
-%token <sval> OR
 %token <sval> LT_EQ
-%token <sval> EQ
+%token <sval> EQ, NEQ
 %token <sval> LP
 %token <sval> RP
 %token <sval> LAB
 %token <sval> RAB
-%token <sval> S_C
-%token <sval> D_C
+%token <sval> SIC
+%token <sval> DIC
 %token <sval> COMMA
 %token <sval> SEMI
-%token <fval> NUM
-%token <sval> ID
+%token <sval> NUM
+%token <sval> ID, DOT
+%token <sval> MINUS
+%token <sval> ARITH_OP
 
 %type <sval> STMT_LIST
 %type <sval> STMT
 %type <sval> EXPR
 %type <sval> TABLE
 %type <sval> CONDITION
-%type <sval> COMP
+%type <sval> CONDITION_LIST
+%type <sval> OP
 %type <sval> TERM
+%type <sval> ATTR_LIST
 %type <sval> ATTR
 
 %%
-// This is the actual grammar that bison will parse, but for right now it's just
-// something silly to echo to the screen what bison gets from flex.  We'll
-// make a real one shortly:
 
-STMT_LIST:
-    STMT SEMI
-    |
-    STMT SEMI STMT_LIST
-    ;
+STMT_LIST:    STMT
+    |         STMT STMT_LIST    ;
 
-STMT:
-    SELECT LAB CONDITION RAB LP TABLE RP     {
-        printf("Valid Syntax \n");
-    }
-    |
-    PROJECT LAB ATTR RAB LP TABLE RP      {
-        printf("Valid Syntax \n");
-    }
-    |
-    LP TABLE RP EXPR    {
-        printf("Valid Syntax \n");
-    }
-    ;
+STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
+           printf("Valid Syntax \n");
+        }
+    |   PROJECT LAB ATTR_LIST RAB LP TABLE RP SEMI     {
+           printf("Valid Syntax \n");
+        }
+    |   LP TABLE RP JOIN LP TABLE RP SEMI   {
+           printf("Valid Syntax \n");
+        }
+    |   error SEMI  {
+           yyerrok;
+           eat_till_semi();
+        }    ;
 
-EXPR:
-    CARTESIAN_PRODUCT LP TABLE RP  {
-        // printf("bison found a EXPR: ");
-    }
-    |
-    EQUI_JOIN LP TABLE RP  {
-        // printf("bison found a EXPR: ");
-    }
-    ;
+JOIN:    CARTESIAN_PRODUCT
+    |    EQUI_JOIN LAB CONDITION_LIST_EQ RAB    ;
 
-TABLE:
-    STMT {
-        // printf("bison found a TABLE: ");
-    }
-    |
-    ID  {
-        // printf("bison found a TABLE: ");
-    }
-    ;
+TABLE:   ID    ;
 
-CONDITION:
-    ID COMP AND CONDITION
-    |
-    ID COMP
-    ;
+CONDITION_LIST: CONDITION AND CONDITION_LIST
+    |           CONDITION
 
-COMP:
-    EQ TERM {
-        // printf("bison found a COMP: ");
-    }
-    |
-    LAB NUM {
-        // printf("bison found a COMP: ");
-    }
-    |
-    LT_EQ NUM   {
-        // printf("bison found a COMP: ");
-    }
-    ;
+CONDITION:      LP CONDITION_LIST RP
+    |           TERM OP EXPR    ;
+    
+CONDITION_LIST_EQ: CONDITION_EQ AND CONDITION_LIST_EQ
+    |           CONDITION_EQ
 
-TERM:
-    NUM     {
-        // printf("bison found a TERM: ");
-    }
-    |
-    S_C ID S_C  {
-        // printf("bison found a TERM: ");
-    }
-    |
-    D_C ID D_C  {
-        // printf("bison found a TERM: ");
-    }
-    ;
+CONDITION_EQ:      LP CONDITION_LIST_EQ RP
+    |              ID DOT ID EQ ID DOT ID    ;
 
-ATTR:
-    ID COMMA ATTR   {
-        // printf("bison found a ATTR: ");
-    }
-    |
-    ID  {
-        // printf("bison found a ATTR: ");
-    }
-    ;
+EXPR:   TERM ARITH_OP EXPR
+    |   TERM MINUS EXPR
+    |   TERM    ;
+
+TERM:   LP EXPR RP 
+    |   NUM
+    |   MINUS NUM
+    |   ID
+    |   SIC NUM SIC
+    |   SIC ID SIC
+    |   DIC NUM DIC
+    |   DIC ID DIC  ;
+
+OP:     '='
+    |   NEQ
+    |   LAB
+    |   RAB
+    |   LT_EQ    ;
+
+ATTR_LIST:    ATTR COMMA ATTR_LIST   
+    |         ATTR  ;
+
+ATTR:   ID
 %%
 
 int main(int argc, char **argv) {
 
-    char *filename = "input.txt";
+    char *filename = "tests/test1.txt";
     // Open a file handle to a particular file:
     FILE *myfile = fopen(filename, "r");
     // Make sure it is valid:
@@ -160,13 +135,22 @@ int main(int argc, char **argv) {
     yyin = myfile;
 
     // Parse through the input:
-    while(yyparse());
+    while(!feof(yyin))  {
+        yyparse();
+    }
   
 }
 
 void yyerror(const char *s) {
-//   print("EEK, parse error!  Message: ", s);
+  print("Invalid syntax ", s);
   // might as well halt now:
-  printf("Invalid Syntax\n");
-  exit(-1);
+//   printf("Invalid Syntax\n");
+//   exit(-1);
+}
+
+void eat_till_semi()
+{
+    int c;
+    while((c = (char)fgetc(yyin)) != EOF && c != ';')
+        printf("s");
 }

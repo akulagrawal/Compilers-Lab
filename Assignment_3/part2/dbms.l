@@ -16,16 +16,20 @@ dbms.l
 (EQUI_JOIN)               { yylval.sval = strdup(yytext); return EQUI_JOIN; } 
 (AND|OR)                  { yylval.sval = strdup(yytext); return AND; } 
 ((<=)|(>=))           { yylval.sval = strdup(yytext); return LT_EQ; } 
-(=|(!=))                  { yylval.sval = strdup(yytext); return EQ; } 
+=                  { yylval.sval = strdup(yytext); return EQ; } 
+!=                  { yylval.sval = strdup(yytext); return NEQ; } 
 \(                         { yylval.sval = strdup(yytext); return LP; } 
 \)                         { yylval.sval = strdup(yytext); return RP; } 
+\.                         { yylval.sval = strdup(yytext); return DOT; } 
 \<                         { yylval.sval = strdup(yytext); return LAB; } 
 \>                         { yylval.sval = strdup(yytext); return RAB; } 
-'                         { yylval.sval = strdup(yytext); return S_C; } 
-\"                         { yylval.sval = strdup(yytext); return D_C; } 
+'                         { yylval.sval = strdup(yytext); return SIC; } 
+\"                         { yylval.sval = strdup(yytext); return DIC; } 
 ,                         { yylval.sval = strdup(yytext); return COMMA; } 
 ;                         { yylval.sval = strdup(yytext); return SEMI; } 
-((-[ \t\n])?[0-9]+\.[0-9]+|[0-9]+)   { yylval.ival = atoi(yytext); return NUM; } 
+[\+\*/]                         { yylval.sval = strdup(yytext); return ARITH_OP; } 
+\-                         { yylval.sval = strdup(yytext); return MINUS; } 
+((-[ \t\n])?[0-9]+\.[0-9]+|[0-9]+)   { yylval.sval = strdup(yytext); return NUM; } 
 [a-zA-Z0-9_]+              { yylval.sval = strdup(yytext); return ID; } 
 .                         ;
 %%
