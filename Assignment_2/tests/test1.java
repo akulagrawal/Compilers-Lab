@@ -1,4 +1,5 @@
 /*
+Lines with...
 Objects: 3
 Classes: 1
 Constructors: 0
@@ -12,7 +13,7 @@ import java.util.Scanner;
 import java.util.TreeMap;
 
 public class SimpleWordCounter {
-    
+
     public static void main(String[] args) {
         try {
             File f = new File("ciaFactBook2008.txt");
@@ -27,7 +28,7 @@ public class SimpleWordCounter {
                 else
                     wordCount.put(word, wordCount.get(word) + 1);
             }
-            
+
             // show results
             for(String word : wordCount.keySet())
                 System.out.println(word + " " + wordCount.get(word));
@@ -38,4 +39,3 @@ public class SimpleWordCounter {
         }
     }
 }
-

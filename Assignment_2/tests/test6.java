@@ -1,7 +1,8 @@
 /*
+Lines with...
 Objects: 3
 Classes: 2
-Constructors: 3
+Constructors: 4
 Inherited Classes: 0
 */
 
@@ -11,45 +12,48 @@ import java.util.Iterator;
 public class GenericList<E> implements Iterable<E>{
  // class constant
     private static final int DEFAULT_CAP = 10;
- 
+
     // instance variables
     protected E[] container; // the array is NOT the list
     private int listSize;
-    
+
     public Iterator<E> iterator(){
         return new GenListIterator();
     }
-    
+
     // inner class
+    /*
+    ansdnaks
+    */
     private class GenListIterator implements Iterator<E>{
         private int indexOfNextElement;
         private boolean okToRemove;
-        
+
         private GenListIterator(){
             indexOfNextElement = 0;
             okToRemove = false;
         }
-        
+
         public boolean hasNext(){
             return indexOfNextElement < size();
         }
-        
+
         public E next(){
             assert hasNext();
             okToRemove = true;
             indexOfNextElement++;
             return container[indexOfNextElement - 1];
         }
-        
+
         public void remove(){
             assert okToRemove;
             okToRemove = false;
             indexOfNextElement--;
             GenericList.this.remove(indexOfNextElement);
         }
-        
+
     }
-    
+
     public boolean equals(Object obj){
         assert this != null;
         if(obj == null)
@@ -68,13 +72,14 @@ public class GenericList<E> implements Iterable<E>{
                     return false;
             return true;
         }
-        
-            
+
+
     }
-    
+
 
     // creates an empty IntList
-    public GenericList(){
+    public GenericList()
+    {
         this(DEFAULT_CAP);
     }
 
@@ -82,16 +87,16 @@ public class GenericList<E> implements Iterable<E>{
     public GenericList(int initialCap){
         assert initialCap >= 0 : "failed precondition";
         container = (E[])(new Object[initialCap]);
-        listSize = 0;        
+        listSize = 0;
     }
-    
+
     public void insertAll(int pos, GenericList<E> otherList){
-        
+
         for(int i = 0; i < otherList.listSize; i++){
             this.insert(pos + i, otherList.container[i]);
         }
     }
-    
+
     // pre: 0 <= pos < size()
     public E remove(int pos){
         E result = container[pos];
@@ -102,7 +107,7 @@ public class GenericList<E> implements Iterable<E>{
         container[listSize] = null;
         return result;
     }
-    
+
     // pre: 0 <= pos <= size()
     public void insert(int pos, E element){
         assert 0 <= pos && pos <= size();
@@ -115,21 +120,21 @@ public class GenericList<E> implements Iterable<E>{
         container[pos] = element;
         listSize++;
     }
-    
+
     // get size of list
     public int size(){
         return listSize;
     }
-    
+
     // access elements
     // pre: 0 <= position < size()
     public E get(int position){
         assert 0 <= position && position < size();
         return container[position];
     }
-    
+
     // pre: none
-    public void add(E element){    
+    public void add(E element){
         insert(size(), element);
     }
 
@@ -138,7 +143,7 @@ public class GenericList<E> implements Iterable<E>{
         System.arraycopy(container, 0, temp, 0, size());
         container = temp;
     }
-    
+
     public String toString(){
         StringBuffer result = new StringBuffer("[");
         final int LIMIT = size() - 1;
@@ -155,6 +160,5 @@ public class GenericList<E> implements Iterable<E>{
         result.append("]");
         return result.toString();
     }
-   
-}
 
+}
