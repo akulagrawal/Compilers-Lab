@@ -9,3 +9,4 @@ PROJECT (Employee) <salary, name>;
 CARTESIAN_PRODUCT (Employee) (Department);
 (Table_Name_) EQUI_JOIN <(E.J=T.D) AND (S.D=D.E OR D.IJ='DDSDFG')> ( Table_Name_2);
 SELECT < QWID            = 2 > (SURYAVANSHI);
+PROJECT <BDSJBAD> (STUDENTS) ;
