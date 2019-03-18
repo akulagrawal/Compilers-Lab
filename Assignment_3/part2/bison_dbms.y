@@ -109,7 +109,7 @@ TERM:   LP EXPR RP
     |   DIC NUM DIC
     |   DIC ID DIC  ;
 
-OP:     '='
+OP:     EQ
     |   NEQ
     |   LAB
     |   RAB
