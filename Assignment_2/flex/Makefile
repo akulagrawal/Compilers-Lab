@@ -1,10 +1,11 @@
-clean:	constructor_count.yy.c constructor_count.exe
-	rm constructor_count.yy.c
-	rm constructor_count.exe
+filename=analyze_java
+clean:	$(filename).yy.c $(filename).exe
+	rm $(filename).yy.c
+	rm $(filename).exe
 
-build: 	constructor_count.lex
-	flex -o constructor_count.yy.c constructor_count.lex
-	g++ -o constructor_count.exe constructor_count.yy.c
+build: 	$(filename).lex
+	flex -o $(filename).yy.c $(filename).lex
+	g++ -o $(filename).exe $(filename).yy.c
 
-run: 	constructor_count.exe
-	@./constructor_count.exe
+run: 	$(filename).exe
+	@./$(filename).exe
