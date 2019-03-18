@@ -1,0 +1,11 @@
+SELECT < salary<200 > (Employee) 
+SELECT < name='John' AND salary<200 > (Employee)
+SELECT (Employee) < salary<200 >
+PROJECT < salary> (Employee)
+ PROJECT < name, salary> (Employee)
+ PROJECT (Employee) <salary, name>
+(Employee) CARTESIAN_PRODUCT (Department)
+ CARTESIAN_PRODUCT (Employee) (Department)
+
+(Employee) EQUI_JOIN jfvgnvgh <
+ 
