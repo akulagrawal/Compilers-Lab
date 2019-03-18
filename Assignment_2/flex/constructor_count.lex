@@ -1,14 +1,5 @@
 /*
- * Sample Scanner2:
- * Description: Count the number of characters and the number of lines
- *              from standard input
- * Usage: (1) $ flex sample2.lex
- *        (2) $ gcc lex.yy.c -lfl
- *        (3) $ ./a.out
- *            stdin> whatever you like
- *	      stdin> Ctrl-D
- * Questions: Is it ok if we do not indent the first line?
- *            What will happen if we remove the second rule?
+ Counts the number of lines in a Java source program with constructor declarations.
  */
 
 %{
@@ -25,7 +16,7 @@
   bool singlelinecomment = false;
   bool comment = false;
 
-  string conv_string(char * ptr) {
+  string conv_string(char* ptr) {
     string s;
     while(*ptr)
     {
@@ -60,15 +51,18 @@
 
 %%
 \n	   ++num_lines; ++num_chars; singlelinecomment = false;
-.	     ++num_chars;
+.	   ++num_chars;
 \/\*   multilinecomment = true;
 \*\/   multilinecomment = false;
 \/\/   singlelinecomment = true;
-(class[ \t\n]+[a-zA-Z0-9_]+)  {
+(class[ \t\n]+[a-zA-Z0-9_]+\{)  {
           comment = multilinecomment or singlelinecomment;
           if(!comment)
           {
+            // Extract the class name from the class declaration regex.
             string classname = extract_classname(conv_string(yytext));
+
+            // Add to a set of classnames
             classnames.insert(classname);
 
             cout << classname << "\n";
@@ -80,23 +74,21 @@
           comment = multilinecomment or singlelinecomment;
           if(!comment)
           {
+            // Extract the function name from the function declaration regex.
             string functionname = extract_functionname(conv_string(yytext));
             //cout << functionname << ": function! \n";
 
+            // If this function shares a name with a class, it must be a constructor.
             if(classnames.count(functionname)){
-              cout << ": constructor! \n";
+              cout << functionname << ": constructor! \n";
             }
           }
       }
 %%
 
-int yywrap()
-{
-
+int yywrap(){
 }
 
-int main()
-{
+int main() {
   yylex();
-
 }
