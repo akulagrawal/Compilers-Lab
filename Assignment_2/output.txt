@@ -1,4 +1,4 @@
-Number of Lines with Object Declarations: 2
+Number of Lines with Object Declarations: 0
 Number of Lines with Class Definitions: 1
 Number of Lines with Constructor Definitions: 2
 Number of Lines with Inherited Class Definitions:0
