@@ -95,15 +95,16 @@ STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
             // printf("Condition = %s\n", condition);
 
             // Open the file in which table exists
-            fprintf(file_in, "\ttableName = \"%s.csv\";\n", $6);
-            fprintf(file_in, "\tprintColumnNames();\n");
+            fprintf(file_in, "\ttableName = \"%s\";\n", $6);
+            fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
+            // fprintf(file_in, "\tprintColumnNames();\n");
             // Iterate over each row of table
-            fprintf(file_in, "\tfor(int j = 0; j < numRows; j++) {\n");
+            fprintf(file_in, "\tfor(int j = 0; j < getNumRows(tableName); j++) {\n");
 
                 // Put if condition
                 fprintf(file_in, "\t\tif (%s) {\n", condition);
 
-                    fprintf(file_in, "\t\t\tprintRow(j);\n");
+                    fprintf(file_in, "\t\t\tprintRow(0, j);\n");
 
             fprintf(file_in, "\t\t}\n");
             fprintf(file_in, "\t}\n");
@@ -169,17 +170,17 @@ TERM:   LP EXPR RP { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$
     |   MINUS NUM { strcat($$, $2); }
     |   ID { 
             char columnName[30]; 
-            strcpy(columnName, "getValueAt( j, \"");
+            strcpy(columnName, "getVal( 0, j, \"");
             strcat(columnName, $1);
             strcat(columnName, "\")");
             strcpy($$, columnName);
             }
-    |   SIC NUM SIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
-    |   SIC ID SIC { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
-    |   DIC NUM DIC { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
-    |   DIC ID DIC   { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } ;
+    |   SIC NUM SIC  { strcat($$, $2); strcat($$, $3); } 
+    |   SIC ID SIC { strcat($$, $2); strcat($$, $3); } 
+    |   DIC NUM DIC { strcat($$, $2); strcat($$, $3); } 
+    |   DIC ID DIC   { strcat($$, $2); strcat($$, $3); } ;
 
-OP:     EQ
+OP:     EQ { strcat($$, $1); }
     |   NEQ
     |   LAB
     |   RAB
@@ -229,9 +230,16 @@ void eat_till_semi()
 }
 
 void insert_header (FILE *filename) {
-    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nstring tableName;\n\nint main () {\n";
-
+    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nstring tableName;\n";
     fprintf(filename, "%s", header);
+
+    FILE *fp = fopen("readcsv.cpp", "r");
+    int c;
+    while((c = (char)fgetc(fp)) != EOF)
+        fprintf(filename, "%c", (char)c);
+    fclose(fp);
+
+    fprintf(filename, "\nint main () {\n");
 }
 
 void insert_footer (FILE *filename) {

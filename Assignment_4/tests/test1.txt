@@ -1,2 +1,1 @@
-SELECT < NUM<=23*(2+3-10/5)+(23-5*34/34) and NUM<=23*(2+3-10/5)+(23-5*34/34) or NUM<=23*(2+3-10/5)+(23-5*34/34) > (input);
-PROJECT < ameya, Nitesh, Dark_night> (Chalchitra);
+SELECT < qwe = "1" > (sample);
