@@ -64,25 +64,32 @@
 /* Copy the first part of user declarations.  */
 #line 1 "bison_dbms.y" /* yacc.c:339  */
 
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <ctype.h>
-  #include <string.h>
-  #define print(str, val) \
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <ctype.h>
+    #include <string.h>
+    #define print(str, val) \
     printf("%s %s\n", str, val);
 
-  // Declare stuff from Flex that Bison needs to know about:
-  extern int yylex();
-  extern int yyparse();
-  extern FILE *yyin;
-  extern void eat_till_semi();
+    // Declare stuff from Flex that Bison needs to know about:
+    extern int yylex();
+    extern int yyparse();
+    extern FILE *yyin;
+    extern void eat_till_semi();
 
-  void yyerror(const char *s);
-  
-  extern void insert_header (FILE *filename);
-  extern void insert_footer (FILE *filename);
+    void yyerror(const char *s);
 
-#line 86 "bison_dbms.tab.c" /* yacc.c:339  */
+    extern void insert_header (FILE *filename);
+    extern void insert_footer (FILE *filename);
+    extern void extract_column ();
+
+    char schema[1024];
+    char column_str[1024];
+    char column[30][30];
+    int num_column = 0;
+    int position = 0;
+
+#line 93 "bison_dbms.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -146,13 +153,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 29 "bison_dbms.y" /* yacc.c:355  */
+#line 36 "bison_dbms.y" /* yacc.c:355  */
 
-  int ival;
-  float fval;
-  char *sval;
+    int ival;
+    float fval;
+    char *sval;
 
-#line 156 "bison_dbms.tab.c" /* yacc.c:355  */
+#line 163 "bison_dbms.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -169,7 +176,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 173 "bison_dbms.tab.c" /* yacc.c:358  */
+#line 180 "bison_dbms.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -468,10 +475,10 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    73,    73,    74,    76,    98,   101,   104,   109,   110,
-     112,   114,   116,   117,   119,   120,   122,   123,   125,   126,
-     128,   129,   130,   132,   133,   134,   135,   136,   137,   138,
-     139,   141,   142,   143,   144,   145,   147,   148,   150
+       0,    80,    80,    81,    83,   114,   136,   139,   144,   145,
+     147,   149,   151,   152,   154,   155,   157,   158,   160,   161,
+     163,   164,   165,   167,   168,   169,   170,   177,   178,   179,
+     180,   182,   183,   184,   185,   186,   188,   189,   191
 };
 #endif
 
@@ -1296,125 +1303,174 @@ yyreduce:
   switch (yyn)
     {
         case 4:
-#line 76 "bison_dbms.y" /* yacc.c:1646  */
+#line 83 "bison_dbms.y" /* yacc.c:1646  */
     {
-           printf("Valid Syntax \n");
 
-           FILE *file_in = fopen("intermediate.cpp", "w+");
-           insert_header(file_in);
+            printf("Valid Syntax \n");
 
-           FILE *akul = fopen(strcat((yyvsp[-2].sval), ".txt"), "r");
-           char line[1024];
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
 
-           fgets(line, sizeof(line), akul);
-           fgets(line, sizeof(line), akul);
-           printf("%s\n", line);
-           
-           fprintf(file_in, "FILE *fp = fopen(\"input.txt\", \"w+\")\n");
-           fprintf(file_in, "for(int i = 0; i < vals.size(); i++){\n");
-           fprintf(file_in, "\tfor(int j = 0; j < vals[0].size(); j++){\n");
-           fprintf(file_in, "m");
+            // Set if conditions to filter the rows
+            // Get the condition
+            char condition[1024];
+            strcpy(condition, (yyvsp[-5].sval));
 
+            // printf("Condition = %s\n", condition);
 
-           insert_footer(file_in);
-           fclose(file_in);
-        }
-#line 1323 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
+            // Open the file in which table exists
+            fprintf(file_in, "\ttableName = \"%s.csv\";\n", (yyvsp[-2].sval));
+            fprintf(file_in, "\tprintColumnNames();\n");
+            // Iterate over each row of table
+            fprintf(file_in, "\tfor(int j = 0; j < numRows; j++) {\n");
 
-  case 5:
-#line 98 "bison_dbms.y" /* yacc.c:1646  */
-    {
-           printf("Valid Syntax \n");
-        }
-#line 1331 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
+                // Put if condition
+                fprintf(file_in, "\t\tif (%s) {\n", condition);
 
-  case 6:
-#line 101 "bison_dbms.y" /* yacc.c:1646  */
-    {
-           printf("Valid Syntax \n");
+                    fprintf(file_in, "\t\t\tprintRow(j);\n");
+
+            fprintf(file_in, "\t\t}\n");
+            fprintf(file_in, "\t}\n");
+
+            insert_footer(file_in);
+            fclose(file_in);
         }
 #line 1339 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
+  case 5:
+#line 114 "bison_dbms.y" /* yacc.c:1646  */
+    {
+            printf("Valid Syntax \n");
+            int i = 0;
+            for (i = 0; i < position; i++) {
+                printf("%s ,", column[i]);
+            }
+
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
+
+            // Construct vector of columnNames
+            fprintf(file_in, "\tvector<string> columnNames;\n");
+            
+            for (i = 0; i < position; i++) {
+                fprintf(file_in, "\tcolumnNames.push_back(\"%s\");\n", column[i]);
+            }
+
+            fprintf(file_in, "\tprintColumn(columnNames);\n");
+
+            insert_footer(file_in);
+            fclose(file_in);
+        }
+#line 1366 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 6:
+#line 136 "bison_dbms.y" /* yacc.c:1646  */
+    {
+           printf("Valid Syntax \n");
+        }
+#line 1374 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
   case 7:
-#line 104 "bison_dbms.y" /* yacc.c:1646  */
+#line 139 "bison_dbms.y" /* yacc.c:1646  */
     {
            yyerrok;
            eat_till_semi();
         }
-#line 1348 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1383 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 116 "bison_dbms.y" /* yacc.c:1646  */
+#line 151 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1354 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1389 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 119 "bison_dbms.y" /* yacc.c:1646  */
+#line 154 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1360 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1395 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 120 "bison_dbms.y" /* yacc.c:1646  */
+#line 155 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1366 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1401 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 128 "bison_dbms.y" /* yacc.c:1646  */
+#line 163 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1372 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1407 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 129 "bison_dbms.y" /* yacc.c:1646  */
+#line 164 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1378 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1413 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 132 "bison_dbms.y" /* yacc.c:1646  */
+#line 167 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1384 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1419 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 134 "bison_dbms.y" /* yacc.c:1646  */
+#line 169 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1390 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1425 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 26:
+#line 170 "bison_dbms.y" /* yacc.c:1646  */
+    { 
+            char columnName[30]; 
+            strcpy(columnName, "getValueAt( j, \"");
+            strcat(columnName, (yyvsp[0].sval));
+            strcat(columnName, "\")");
+            strcpy((yyval.sval), columnName);
+            }
+#line 1437 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 136 "bison_dbms.y" /* yacc.c:1646  */
+#line 177 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1396 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1443 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 137 "bison_dbms.y" /* yacc.c:1646  */
+#line 178 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1402 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1449 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 138 "bison_dbms.y" /* yacc.c:1646  */
+#line 179 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1408 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1455 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 139 "bison_dbms.y" /* yacc.c:1646  */
+#line 180 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1414 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1461 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 38:
+#line 191 "bison_dbms.y" /* yacc.c:1646  */
+    {
+        strcpy(column[position], (yyvsp[0].sval));
+        position++;
+    }
+#line 1470 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1418 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1474 "bison_dbms.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1642,7 +1698,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 151 "bison_dbms.y" /* yacc.c:1906  */
+#line 195 "bison_dbms.y" /* yacc.c:1906  */
 
 
 int main(int argc, char **argv) {
@@ -1680,7 +1736,7 @@ void eat_till_semi()
 }
 
 void insert_header (FILE *filename) {
-    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nint main () {\n";
+    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nstring tableName;\n\nint main () {\n";
 
     fprintf(filename, "%s", header);
 }
@@ -1689,4 +1745,34 @@ void insert_footer (FILE *filename) {
     char *header = "return 0;\n}\n";
 
     fprintf(filename, "%s", header);
+}
+
+void extract_column(char *table) {
+    // Get the Schema and column name from the table
+    // Assuming schema in 1st row and column name in 2nd row
+    FILE *f_in = fopen(strcat(table, ".txt"), "r");
+
+    fgets(schema, sizeof(schema), f_in);
+    fgets(column_str, sizeof(column_str), f_in);
+    printf("%s\n", schema);
+    printf("%s\n", column_str);
+    
+    // Extract column name from column_str
+    int i = 0;
+    int begin = 0;
+    int end = -1;
+    int j = 0;
+    int k = 0;
+    for (i = 0; i < strlen(column_str); i++) {
+        if (column_str[i] == ',') {
+            end = i;
+            for (k = begin; k < end; k++) {
+                column[j][k-begin] = column_str[k];
+            }
+            column[j][k-begin] = '\0';
+            j++;
+            begin = i+1;
+        }
+    }
+    num_column = j;
 }

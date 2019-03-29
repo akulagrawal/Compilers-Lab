@@ -10,5 +10,8 @@ FLEX:
 BISON:	FLEX
 	bison -d bison_dbms.y
 
+run: all
+	gcc lex.yy.c bison_dbms.tab.c
+
 clean:
 	rm -rf lex.yy.c a.out bison_dbms.tab*

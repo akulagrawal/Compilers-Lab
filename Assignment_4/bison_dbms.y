@@ -1,21 +1,28 @@
 %{
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <ctype.h>
-  #include <string.h>
-  #define print(str, val) \
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <ctype.h>
+    #include <string.h>
+    #define print(str, val) \
     printf("%s %s\n", str, val);
 
-  // Declare stuff from Flex that Bison needs to know about:
-  extern int yylex();
-  extern int yyparse();
-  extern FILE *yyin;
-  extern void eat_till_semi();
+    // Declare stuff from Flex that Bison needs to know about:
+    extern int yylex();
+    extern int yyparse();
+    extern FILE *yyin;
+    extern void eat_till_semi();
 
-  void yyerror(const char *s);
-  
-  extern void insert_header (FILE *filename);
-  extern void insert_footer (FILE *filename);
+    void yyerror(const char *s);
+
+    extern void insert_header (FILE *filename);
+    extern void insert_footer (FILE *filename);
+    extern void extract_column ();
+
+    char schema[1024];
+    char column_str[1024];
+    char column[30][30];
+    int num_column = 0;
+    int position = 0;
 %}
 
 // Bison fundamentally works by asking flex to get the next token, which it
@@ -27,9 +34,9 @@
 // we can return ints or floats or strings cleanly.  Bison implements this
 // mechanism with the %union directive:
 %union {
-  int ival;
-  float fval;
-  char *sval;
+    int ival;
+    float fval;
+    char *sval;
 }
 
 // Define the "terminal symbol" token types I'm going to use (in CAPS
@@ -74,29 +81,57 @@ STMT_LIST:    STMT
     |         STMT STMT_LIST    ;
 
 STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
-           printf("Valid Syntax \n");
 
-           FILE *file_in = fopen("intermediate.cpp", "w+");
-           insert_header(file_in);
+            printf("Valid Syntax \n");
 
-           FILE *akul = fopen(strcat($6, ".txt"), "r");
-           char line[1024];
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
 
-           fgets(line, sizeof(line), akul);
-           fgets(line, sizeof(line), akul);
-           printf("%s\n", line);
-           
-           fprintf(file_in, "FILE *fp = fopen(\"input.txt\", \"w+\")\n");
-           fprintf(file_in, "for(int i = 0; i < vals.size(); i++){\n");
-           fprintf(file_in, "\tfor(int j = 0; j < vals[0].size(); j++){\n");
-           fprintf(file_in, "m");
+            // Set if conditions to filter the rows
+            // Get the condition
+            char condition[1024];
+            strcpy(condition, $3);
 
+            // printf("Condition = %s\n", condition);
 
-           insert_footer(file_in);
-           fclose(file_in);
+            // Open the file in which table exists
+            fprintf(file_in, "\ttableName = \"%s.csv\";\n", $6);
+            fprintf(file_in, "\tprintColumnNames();\n");
+            // Iterate over each row of table
+            fprintf(file_in, "\tfor(int j = 0; j < numRows; j++) {\n");
+
+                // Put if condition
+                fprintf(file_in, "\t\tif (%s) {\n", condition);
+
+                    fprintf(file_in, "\t\t\tprintRow(j);\n");
+
+            fprintf(file_in, "\t\t}\n");
+            fprintf(file_in, "\t}\n");
+
+            insert_footer(file_in);
+            fclose(file_in);
         }
     |   PROJECT LAB ATTR_LIST RAB LP TABLE RP SEMI     {
-           printf("Valid Syntax \n");
+            printf("Valid Syntax \n");
+            int i = 0;
+            for (i = 0; i < position; i++) {
+                printf("%s ,", column[i]);
+            }
+
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
+
+            // Construct vector of columnNames
+            fprintf(file_in, "\tvector<string> columnNames;\n");
+            
+            for (i = 0; i < position; i++) {
+                fprintf(file_in, "\tcolumnNames.push_back(\"%s\");\n", column[i]);
+            }
+
+            fprintf(file_in, "\tprintColumns(columnNames);\n");
+
+            insert_footer(file_in);
+            fclose(file_in);
         }
     |   LP TABLE RP JOIN LP TABLE RP SEMI   {
            printf("Valid Syntax \n");
@@ -132,7 +167,13 @@ EXPR:   TERM ARITH_OP EXPR  { strcat($$, " "); strcat($$, $2); strcat($$, " "); 
 TERM:   LP EXPR RP { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
     |   NUM
     |   MINUS NUM { strcat($$, $2); }
-    |   ID
+    |   ID { 
+            char columnName[30]; 
+            strcpy(columnName, "getValueAt( j, \"");
+            strcat(columnName, $1);
+            strcat(columnName, "\")");
+            strcpy($$, columnName);
+            }
     |   SIC NUM SIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
     |   SIC ID SIC { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
     |   DIC NUM DIC { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
@@ -147,7 +188,10 @@ OP:     EQ
 ATTR_LIST:    ATTR COMMA ATTR_LIST   
     |         ATTR  ;
 
-ATTR:   ID
+ATTR:   ID {
+        strcpy(column[position], $1);
+        position++;
+    } ;
 %%
 
 int main(int argc, char **argv) {
@@ -185,7 +229,7 @@ void eat_till_semi()
 }
 
 void insert_header (FILE *filename) {
-    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nint main () {\n";
+    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nstring tableName;\n\nint main () {\n";
 
     fprintf(filename, "%s", header);
 }
@@ -194,4 +238,34 @@ void insert_footer (FILE *filename) {
     char *header = "return 0;\n}\n";
 
     fprintf(filename, "%s", header);
+}
+
+void extract_column(char *table) {
+    // Get the Schema and column name from the table
+    // Assuming schema in 1st row and column name in 2nd row
+    FILE *f_in = fopen(strcat(table, ".txt"), "r");
+
+    fgets(schema, sizeof(schema), f_in);
+    fgets(column_str, sizeof(column_str), f_in);
+    printf("%s\n", schema);
+    printf("%s\n", column_str);
+    
+    // Extract column name from column_str
+    int i = 0;
+    int begin = 0;
+    int end = -1;
+    int j = 0;
+    int k = 0;
+    for (i = 0; i < strlen(column_str); i++) {
+        if (column_str[i] == ',') {
+            end = i;
+            for (k = begin; k < end; k++) {
+                column[j][k-begin] = column_str[k];
+            }
+            column[j][k-begin] = '\0';
+            j++;
+            begin = i+1;
+        }
+    }
+    num_column = j;
 }

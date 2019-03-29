@@ -74,11 +74,11 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 29 "bison_dbms.y" /* yacc.c:1909  */
+#line 36 "bison_dbms.y" /* yacc.c:1909  */
 
-  int ival;
-  float fval;
-  char *sval;
+    int ival;
+    float fval;
+    char *sval;
 
 #line 84 "bison_dbms.tab.h" /* yacc.c:1909  */
 };
