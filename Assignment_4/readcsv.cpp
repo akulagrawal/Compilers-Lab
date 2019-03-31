@@ -59,19 +59,16 @@ int getNumCols(int index)
 	return cols[index].size();
 }
 
-string printRow(int index, int row_number)
+void printRow(int index, int row_number)
 {
 	if(row_number >= vals[index].size())
 	{
 		cout<<"Row index out of bound"<<endl;
-		return "0";
+		return;
 	}
-	string s;
 	for (int i = 0; i < vals[index][row_number].size(); ++i)
-	{
-		s+=vals[index][row_number][i]+" ";
-	}
-	return s;
+		cout<<setw(20)<<vals[index][row_number][i]+" ";
+	return;
 	//cout<<endl;
 }
 

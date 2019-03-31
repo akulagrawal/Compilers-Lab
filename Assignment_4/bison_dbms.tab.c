@@ -1394,9 +1394,9 @@ yyreduce:
             fprintf(file_in, "\tint r0 = getNumRows(0);\n");
             fprintf(file_in, "\tint r1 = getNumRows(1);\n");
             fprintf(file_in, "\tfor(int i = 0; i < r0;i++){\n");
-            fprintf(file_in, "\t\tstring s = printRow(0, i);\n");
-            fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++)\n");
-            fprintf(file_in, "\t\t\tcout<<s<<printRow(1, j)<<endl;\n\t}\n");
+            fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++){\n");
+            fprintf(file_in, "\t\t\tprintRow(0, i);\n");
+            fprintf(file_in, "\t\t\tprintRow(1, j); cout<<endl;\n\t\t}\n\t}\n");
 
             insert_footer(file_in);
             fclose(file_in);
