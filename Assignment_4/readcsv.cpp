@@ -1,3 +1,6 @@
+#include <bits/stdc++.h>
+using namespace std;
+
 #define MAX_FILES 5
 vector<string> cols[MAX_FILES];
 vector<string> data_type[MAX_FILES];
@@ -48,6 +51,17 @@ int getNumRows(string name)
 	return vals[index].size();
 }
 
+int getNumCols(string name)
+{
+	int index = getindexfortable(name);
+	if(index == -1)
+	{
+		cout<<"No such table exists"<<endl;
+		return -1;
+	}
+	return cols[index].size();
+}
+
 void printRow(int index, int row_number)
 {
 	if(row_number >= vals[index].size())
@@ -60,6 +74,37 @@ void printRow(int index, int row_number)
 		cout<<vals[index][row_number][i]<<" ";
 	}
 	cout<<endl;
+}
+
+string getRow(int index, int row_number) {
+	
+	if(row_number >= vals[index].size())
+	{
+		cout<<"Row index out of bound"<<endl;
+		return "";
+	}
+
+	string concat = "";
+	string spacing = "";
+	int spacinglen = 0;
+	for (int i = 0; i < vals[index][row_number].size(); ++i)
+	{
+		spacinglen = max((14 - (int)vals[index][row_number][i].length()), 0);
+		spacing = string(spacinglen, ' ');
+		concat += vals[index][row_number][i] + spacing;
+	}
+	return concat;
+}
+
+void printColumnName(string table) {
+	int index = getindexfortable(table);
+	string spacing = "";
+	int spacinglen = 0;
+	for (int i = 0; i < cols[index].size(); i++) {
+		spacinglen = max((14 - (int)cols[index][i].length()), 0);
+		spacing = string(spacinglen, ' ');
+		cout << cols[index][i] << spacing;
+	}
 }
 
 void readcsv(string name, int index)
@@ -87,7 +132,7 @@ void readcsv(string name, int index)
         int len = strlen(tmp);
 
         string result = "";
-       	for (int i = 0; i < len; ++i)
+       	for (int i = 0; i < len-1; ++i)
        	{
 			if(line[i] == ',')
 			{
@@ -126,7 +171,7 @@ void readcsv(string name, int index)
         int len = strlen(tmp);
 
 
-       	for (int i = 0; i < len; ++i)
+       	for (int i = 0; i < len - 1; ++i)
        	{
 			if(line[i] == ',')
 			{
@@ -148,7 +193,7 @@ void readcsv(string name, int index)
         int len = strlen(tmp);
         vector<string> storage;
 
-       	for (int i = 0; i < len; ++i)
+       	for (int i = 0; i < len - 1; ++i)
        	{
 			if(line[i] == ',')
 			{

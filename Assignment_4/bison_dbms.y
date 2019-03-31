@@ -44,7 +44,7 @@
     extern int gettype(char* table_name, char* col);
     extern int getcolindex(int index, char* col);
     extern int getfileindex(char* name);
-    extern void readcsv(int index, char* name);
+    extern void readcsv(char* name);
     extern int isnum(char *);
     
 %}
@@ -92,7 +92,6 @@
 %type <sval> EXPR
 %type <sval> TABLE
 %type <sval> CONDITION
-%type <sval> CONDITION_LIST_FINAL
 %type <sval> CONDITION_LIST
 %type <sval> LOGICAL_OP
 %type <sval> OP
@@ -105,12 +104,9 @@
 STMT_LIST:    STMT
     |         STMT STMT_LIST    ;
 
-STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
+STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
 
             int condition_it = 0;
-            // for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
-            //     printf("*%s*\n", condition[condition_it]);
-            // }
 
             // Check syntax
             printf("Valid Syntax \n");
@@ -118,23 +114,19 @@ STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
             char filename[50];
             strcpy(filename, $6);
             strcat(filename, ".csv");
-            readcsv(num_files, filename);
+            readcsv(filename);
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
 
-            // Set if conditions to filter the rows
-            // Get the condition
-            char condition_str[1024];
-            strcpy(condition_str, $3);
-
-            // printf("Condition = %s\n", condition_str);
-
             // Open the file in which table exists
-            fprintf(file_in, "\ttableName = \"%s\";\n", $6);
+            fprintf(file_in, "\tstring tableName = \"%s\";\n", $6);
             fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
             // fprintf(file_in, "\tprintColumnNames();\n");
             // Iterate over each row of table
+            fprintf(file_in, "\tprintColumnName(tableName);");
+            fprintf(file_in, "\tcout << endl;");
+
             fprintf(file_in, "\tfor(int j = 0; j < getNumRows(tableName); j++) {\n");
 
                 // Put if condition_str
@@ -204,20 +196,142 @@ STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
             insert_footer(file_in);
             fclose(file_in);
         }
-    |   LP TABLE RP JOIN LP TABLE RP SEMI   {
+    |   LP TABLE RP CARTESIAN_PRODUCT LP TABLE RP SEMI   {
            printf("Valid Syntax \n");
+
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
+            fprintf(file_in, "\tint r0 = getNumRows(0);\n");
+            fprintf(file_in, "\tint r1 = getNumRows(1);\n");
+            fprintf(file_in, "\tfor(int i = 0; i < r0;i++){\n");
+            fprintf(file_in, "\t\tstring s = getRow(0, i);\n");
+            fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++)\n");
+            fprintf(file_in, "\t\t\tcout << s << getRow(0, i) << endl;\n}\n");
+
+            insert_footer(file_in);
+            fclose(file_in);
+        }
+    |   LP TABLE RP EQUI_JOIN LAB CONDITION_LIST_EQ RAB LP TABLE RP SEMI   {
+           printf("Valid Syntax \n");
+
+            // Open both tables -> $2 and $9
+            // Extract table names from condition_list_eq (len should be 2 and should be equal to both table names)
+            // Check column names (should exists in respective tables)
+            // Perform calculation
+
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
+            fprintf(file_in, "\tstring tableName1 = \"%s\";\n", $2);
+            fprintf(file_in, "\treadcsv(tableName1+\".csv\", 0);\n");
+            fprintf(file_in, "\tstring tableName2 = \"%s\";\n", $9);
+            fprintf(file_in, "\treadcsv(tableName2+\".csv\", 1);\n");
+
+            // Check the table names (should be either $2 or $9)
+            int condition_it = 0;
+            for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+                char *table1 = condition[condition_it++];
+                char *attribute1 = condition[condition_it++];
+                char *table2 = condition[condition_it++];
+                char *attribute2 = condition[condition_it++];   // After increment, Now at logical operation (and / or)
+                
+                if (strcmp(table1, $2) && strcmp(table1, $9)) // means none matches
+                {
+                    printf("Table names not matched in condition : %s\n", table1);
+                    exit(0);
+                }
+                if (strcmp(table2, $2) && strcmp(table2, $9)) // means none matches
+                {
+                    printf("Table names not matched in condition : %s\n", table2);
+                    exit(0);
+                }
+
+                // Attribute1 should be in table 1
+                char filename[50];
+                strcpy(filename, table1);
+                strcat(filename, ".csv");
+                readcsv(filename);
+
+                if (getcolindex(getfileindex(table1), attribute1) == -1)    // Column doesn't exists in table1
+                {
+                    printf("Invalid column name : %s in %s\n", attribute1, table1);
+                    exit(0);
+                }
+
+                strcpy(filename, table2);
+                strcat(filename, ".csv");
+                readcsv(filename);
+                if (getcolindex(getfileindex(table2), attribute2) == -1)    // Column doesn't exists in table2
+                {
+                    printf("Invalid column name : %s in %s\n", attribute2, table2);
+                    exit(0);
+                }
+            
+                // Check data type of attribute 1 from table 1 and attribute 2 from table 2
+                if(gettype(table1, attribute1) != gettype(table2, attribute2)) {
+                    printf("Data type mismatch column names : %s and %s\n", attribute1, attribute2);
+                }
+            }
+
+            fprintf(file_in, "\tprintColumnName(tableName1);");
+            fprintf(file_in, "\tcout << \" \";");
+            fprintf(file_in, "\tprintColumnName(tableName2);");
+            fprintf(file_in, "\tcout << endl;");
+
+            // Iterate over each row of table
+            fprintf(file_in, "\tfor(int j1 = 0; j1 < getNumRows(tableName1); j1++) {\n");
+            fprintf(file_in, "\t\tfor(int j2 = 0; j2 < getNumRows(tableName2); j2++) {\n");
+
+                // Put if condition_str
+                fprintf(file_in, "\t\t\tif (");
+
+                // Iterate over conditions.
+                for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+                    // Get column name
+                    char *table1 = condition[condition_it++];
+                    char *attribute1 = condition[condition_it++];
+                    char *table2 = condition[condition_it++];
+                    char *attribute2 = condition[condition_it++];   // After increment, Now at logical operation (and / or)                
+
+                    if(!strcmp(table1, $2)){
+                        fprintf(file_in, "getVal(getindexfortable(\"%s\"), j1, \"%s\") ", table1, attribute1);
+                    }
+                    else {
+                        fprintf(file_in, "getVal(getindexfortable(\"%s\"), j2, \"%s\") ", table1, attribute1);
+                    }
+
+                    if(!strcmp(table2, $9)){
+                        fprintf(file_in, "== getVal(getindexfortable(\"%s\"), j2, \"%s\") ", table2, attribute2);
+                    }
+                    else {
+                        fprintf(file_in, "== getVal(getindexfortable(\"%s\"), j1, \"%s\") ", table2, attribute2);
+                    }
+                        
+                    if (condition_it < condition_ptr) {
+                        char *and_or_op = condition[condition_it];
+                        fprintf(file_in, " %s ", and_or_op);
+                    }
+                }
+                // Put if condition_str
+                fprintf(file_in, ") {\n");
+
+                fprintf(file_in, "\t\t\tstring r1 = getRow(getindexfortable(tableName1), j1);\n");
+                fprintf(file_in, "\t\t\tstring r2 = getRow(getindexfortable(tableName2), j2);\n");
+                fprintf(file_in, "\t\t\tcout << r1 << \" \" << r2 << \"\\n\";" );
+
+            fprintf(file_in, "\t\t\t}\n");
+            fprintf(file_in, "\t\t}\n");
+            fprintf(file_in, "\t}\n");
+
+            insert_footer(file_in);
+            fclose(file_in);
+
         }
     |   error SEMI  {
            yyerrok;
            eat_till_semi();
         }    ;
 
-JOIN:    CARTESIAN_PRODUCT
-    |    EQUI_JOIN LAB CONDITION_LIST_EQ RAB    ;
-
 TABLE:   ID    ;
-
-CONDITION_LIST_FINAL:   CONDITION_LIST ;
 
 CONDITION_LIST: CONDITION LOGICAL_OP CONDITION_LIST     { 
                     strcat($$, " "); 
@@ -237,14 +351,18 @@ CONDITION:      LP CONDITION_LIST RP { strcat($$, " "); strcat($$, $2); strcat($
                     strcpy(condition[condition_ptr++], $1);
                     strcpy(condition[condition_ptr++], $2);
                     strcpy(condition[condition_ptr++], $3);
-                    
                     } ;
     
-CONDITION_LIST_EQ: CONDITION_EQ AND CONDITION_LIST_EQ
+CONDITION_LIST_EQ: CONDITION_EQ LOGICAL_OP CONDITION_LIST_EQ
     |           CONDITION_EQ
 
 CONDITION_EQ:      LP CONDITION_LIST_EQ RP
-    |              ID DOT ID EQ ID DOT ID    ;
+    |              ID DOT ID EQ ID DOT ID {
+                    strcpy(condition[condition_ptr++], $1);
+                    strcpy(condition[condition_ptr++], $3);
+                    strcpy(condition[condition_ptr++], $5);
+                    strcpy(condition[condition_ptr++], $7);
+                    }   ;
 
 EXPR:   ARITHMETIC
     |   DIC ID DIC  { strcat($$, $2); strcat($$, $3); strcat($$, " "); } 
@@ -304,9 +422,6 @@ void eat_till_semi()
 }
 
 void insert_header (FILE *filename) {
-    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nstring tableName;\n";
-    fprintf(filename, "%s", header);
-
     FILE *fp = fopen("readcsv.cpp", "r");
     int c;
     while((c = (char)fgetc(fp)) != EOF)
@@ -352,8 +467,9 @@ void extract_column(char *table) {
     num_column = j;
 }
 
-void readcsv(int index, char* name)
+void readcsv(char* name)
 {
+    int index = num_files;
 	//name of the file pushed
 	int name_len = strlen(name);
 	for (int i = 0; i < name_len-4; ++i)
