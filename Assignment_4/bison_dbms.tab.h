@@ -74,7 +74,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 36 "bison_dbms.y" /* yacc.c:1909  */
+#line 60 "bison_dbms.y" /* yacc.c:1909  */
 
     int ival;
     float fval;

@@ -1,7 +1,14 @@
 CXX = gcc
+CPP = g++
 CXXFLAG = -g
 
-all:	BISON FLEX
+all:	build
+		$(CPP) -std=c++11 intermediate.cpp
+
+build:	build_bison
+		./a.out
+
+build_bison:	BISON FLEX
 	$(CXX) $(CXXFLAG) bison_dbms.tab.c lex.yy.c -lfl
 
 FLEX:
@@ -9,9 +16,6 @@ FLEX:
 
 BISON:	FLEX
 	bison -d bison_dbms.y
-
-run: all
-	gcc lex.yy.c bison_dbms.tab.c
 
 clean:
 	rm -rf lex.yy.c a.out bison_dbms.tab*

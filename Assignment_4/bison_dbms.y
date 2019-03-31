@@ -5,6 +5,11 @@
     #include <string.h>
     #define print(str, val) \
     printf("%s %s\n", str, val);
+    #define TRUE 1
+    #define FALSE 0
+
+    #define NUMBER 1
+    #define STRING 0
 
     // Declare stuff from Flex that Bison needs to know about:
     extern int yylex();
@@ -23,6 +28,25 @@
     char column[30][30];
     int num_column = 0;
     int position = 0;
+    char condition[100][50];
+    int condition_ptr = 0;
+    // --------------------------------------------------------------------
+
+    #define MAX_COLS 10
+    #define MAX_COL_LEN 10
+    #define MAX_FILES 10
+    #define MAX_FILES_LEN 10
+
+    char data_type[MAX_FILES][MAX_COLS];
+    char col_name[MAX_FILES][MAX_COLS][MAX_COL_LEN];
+    char file_name[MAX_FILES][MAX_FILES_LEN];
+    int num_files = 0;
+    extern int gettype(char* table_name, char* col);
+    extern int getcolindex(int index, char* col);
+    extern int getfileindex(char* name);
+    extern void readcsv(int index, char* name);
+    extern int isnum(char *);
+    
 %}
 
 // Bison fundamentally works by asking flex to get the next token, which it
@@ -70,8 +94,9 @@
 %type <sval> CONDITION
 %type <sval> CONDITION_LIST_FINAL
 %type <sval> CONDITION_LIST
+%type <sval> LOGICAL_OP
 %type <sval> OP
-%type <sval> TERM
+%type <sval> ARITHMETIC
 %type <sval> ATTR_LIST
 %type <sval> ATTR
 
@@ -82,17 +107,28 @@ STMT_LIST:    STMT
 
 STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
 
+            int condition_it = 0;
+            // for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+            //     printf("*%s*\n", condition[condition_it]);
+            // }
+
+            // Check syntax
             printf("Valid Syntax \n");
+
+            char filename[50];
+            strcpy(filename, $6);
+            strcat(filename, ".csv");
+            readcsv(num_files, filename);
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
 
             // Set if conditions to filter the rows
             // Get the condition
-            char condition[1024];
-            strcpy(condition, $3);
+            char condition_str[1024];
+            strcpy(condition_str, $3);
 
-            // printf("Condition = %s\n", condition);
+            // printf("Condition = %s\n", condition_str);
 
             // Open the file in which table exists
             fprintf(file_in, "\ttableName = \"%s\";\n", $6);
@@ -101,8 +137,42 @@ STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
             // Iterate over each row of table
             fprintf(file_in, "\tfor(int j = 0; j < getNumRows(tableName); j++) {\n");
 
-                // Put if condition
-                fprintf(file_in, "\t\tif (%s) {\n", condition);
+                // Put if condition_str
+                fprintf(file_in, "\t\tif (");
+
+                // Iterate over condition and check data type with schema
+                for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+                    // Get column name
+                    char *columnName = condition[condition_it++];
+                    char *operator = condition[condition_it++];
+                    char *rhs = condition[condition_it++];
+
+                    // Both number
+                    if (gettype($6, columnName) == NUMBER && isnum(rhs) == TRUE) {
+                        fprintf(file_in, "stoi(getVal(0, j, \"%s\")) %s %s ", columnName, operator, rhs);
+                    }
+                    // Both string
+                    else if (gettype($6, columnName) == STRING && isnum(rhs) == FALSE) {
+                        if (!strcmp(operator, "=="))
+                            fprintf(file_in, "getVal(0, j, \"%s\") %s %s ", columnName, operator, rhs);
+                        else {
+                            printf("Operator unsupported for condition %s %s %s", columnName, operator, rhs);
+                            exit(0);
+                        }    
+                    }
+                    else {
+                        printf("gettype(%s) = %d\n", "name", gettype($6, "name"));
+                        printf("Datatype mismatch in Schema for condition %s %s %s", columnName, operator, rhs);
+                        exit(0);
+                    }
+
+                    if (condition_it < condition_ptr) {
+                        char *and_or_op = condition[condition_it];
+                        fprintf(file_in, " %s ", and_or_op);
+                    }
+                }
+                // Put if condition_str
+                fprintf(file_in, ") {\n");
 
                     fprintf(file_in, "\t\t\tprintRow(0, j);\n");
 
@@ -149,11 +219,26 @@ TABLE:   ID    ;
 
 CONDITION_LIST_FINAL:   CONDITION_LIST ;
 
-CONDITION_LIST: CONDITION AND CONDITION_LIST     { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
-    |           CONDITION
+CONDITION_LIST: CONDITION LOGICAL_OP CONDITION_LIST     { 
+                    strcat($$, " "); 
+                    strcat($$, $2); 
+                    strcat($$, " "); 
+                    strcat($$, $3); 
+                } 
+    |           CONDITION   ;
+
+LOGICAL_OP:     AND {
+                    strcpy(condition[condition_ptr++], $1);
+                };
+    
 
 CONDITION:      LP CONDITION_LIST RP { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
-    |           TERM OP EXPR  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } ;
+    |           ID OP EXPR  { 
+                    strcpy(condition[condition_ptr++], $1);
+                    strcpy(condition[condition_ptr++], $2);
+                    strcpy(condition[condition_ptr++], $3);
+                    
+                    } ;
     
 CONDITION_LIST_EQ: CONDITION_EQ AND CONDITION_LIST_EQ
     |           CONDITION_EQ
@@ -161,24 +246,13 @@ CONDITION_LIST_EQ: CONDITION_EQ AND CONDITION_LIST_EQ
 CONDITION_EQ:      LP CONDITION_LIST_EQ RP
     |              ID DOT ID EQ ID DOT ID    ;
 
-EXPR:   TERM ARITH_OP EXPR  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
-    |   TERM MINUS EXPR  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
-    |   TERM   ;
+EXPR:   ARITHMETIC
+    |   DIC ID DIC  { strcat($$, $2); strcat($$, $3); strcat($$, " "); } 
+    |   DIC NUM DIC { strcat($$, $2); strcat($$, $3); strcat($$, " "); } ;
 
-TERM:   LP EXPR RP { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
-    |   NUM
-    |   MINUS NUM { strcat($$, $2); }
-    |   ID { 
-            char columnName[30]; 
-            strcpy(columnName, "getVal( 0, j, \"");
-            strcat(columnName, $1);
-            strcat(columnName, "\")");
-            strcpy($$, columnName);
-            }
-    |   SIC NUM SIC  { strcat($$, $2); strcat($$, $3); } 
-    |   SIC ID SIC { strcat($$, $2); strcat($$, $3); } 
-    |   DIC NUM DIC { strcat($$, $2); strcat($$, $3); } 
-    |   DIC ID DIC   { strcat($$, $2); strcat($$, $3); } ;
+ARITHMETIC: NUM ARITH_OP ARITHMETIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
+    |   NUM MINUS ARITHMETIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
+    |   NUM  ;
 
 OP:     EQ { strcat($$, $1); }
     |   NEQ
@@ -276,4 +350,124 @@ void extract_column(char *table) {
         }
     }
     num_column = j;
+}
+
+void readcsv(int index, char* name)
+{
+	//name of the file pushed
+	int name_len = strlen(name);
+	for (int i = 0; i < name_len-4; ++i)
+	{
+		file_name[index][i] = name[i];
+	}
+
+	FILE* stream = fopen(name, "r");
+	char type_line[1024];
+	int itr;
+	
+	if(fgets(type_line, 1024, stream))
+	{
+        int len = strlen(type_line);
+   		// printf("%s\n", type_line);
+   		int i=0;
+	}
+
+	char name_line[1024];
+	if(fgets(name_line, 1024, stream))
+	{
+   		// printf("%s\n", name_line);
+   		int i=0;
+	}
+
+
+	int top=0;
+    int len = strlen(name_line);
+    int j=0;
+	for (int i = 0; i < len; ++i)
+	{
+		if(name_line[i] != ',' && name_line[i] != '\n')
+		{
+			col_name[index][top][j++] = name_line[i];
+		}
+		else
+		{
+			j = 0;
+			top++;
+		}	
+	}
+		
+	top = 0;
+    len = strlen(type_line);
+    for (int i = 0; i < len; ++i)
+	{
+		if(type_line[i] != ',' && type_line[i] != '\n')
+		{
+			data_type[index][top] = type_line[i];
+		}
+		else
+		{
+			top++;
+		}	
+	}
+	num_files++;
+}
+
+int getfileindex(char* name)
+{
+    // printf ("name = *%s*\n", name);
+	for (int i = 0; i < MAX_FILES; ++i)
+	{
+		if(strcmp(file_name[i], name)==0)
+		{
+            // printf ("filenames = *%s*\n", file_name[i]); 
+			return i;
+		}
+	}
+	return -1;
+}
+
+int getcolindex(int index, char* col)
+{
+	for (int i = 0; i < MAX_COLS; ++i)
+	{
+		if(strcmp(col_name[index][i], col) == 0)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+//returns 0 for string 1 for int
+int gettype(char* table_name, char* col)
+{
+	int index = getfileindex(table_name);
+	if(index == -1)
+	{
+		printf("No such Table loaded.\n");
+		return -1;
+	}
+
+	int colindex = getcolindex(index, col);
+	if(colindex == -1)
+	{
+        // printf("Here is the problem\n");
+        printf("column name = %s\n", col);
+		printf("No such column exists.\n");
+		exit(0);
+	}	
+
+	if(data_type[index][colindex] == 'i')
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int isnum (char *text) {
+    int i = 0;
+    if (text[0] == '"')
+        return 0;
+    else
+        return 1;
 }

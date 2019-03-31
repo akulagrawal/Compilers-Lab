@@ -1,1 +1,1 @@
-SELECT < qwe = "1" > (sample);
+SELECT < cpi = 9+1-1 or name="shimona" > (sample);
