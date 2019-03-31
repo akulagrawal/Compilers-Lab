@@ -1,1 +1,1 @@
-(ghi) EQUI_JOIN <abc.fr=def.hgf> (jkl);
+(ghi) CARTESIAN_PRODUCT (jkl);

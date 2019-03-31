@@ -37,9 +37,9 @@ int getindexfortable(string name)
 	return -1;
 }
 
-int getNumRows(string name)
+int getNumRows(int index)
 {
-	int index = getindexfortable(name);
+	//int index = getindexfortable(name);
 	if(index == -1)
 	{
 		cout<<"No such table exists"<<endl;
@@ -48,9 +48,9 @@ int getNumRows(string name)
 	return vals[index].size();
 }
 
-int getNumCols(string name)
+int getNumCols(int index)
 {
-	int index = getindexfortable(name);
+	//int index = getindexfortable(name);
 	if(index == -1)
 	{
 		cout<<"No such table exists"<<endl;
@@ -64,12 +64,14 @@ string printRow(int index, int row_number)
 	if(row_number >= vals[index].size())
 	{
 		cout<<"Row index out of bound"<<endl;
-		return;
+		return "0";
 	}
-	//for (int i = 0; i < vals[index][row_number].size(); ++i)
-	//{
-		return vals[index][row_number];
-	//}
+	string s;
+	for (int i = 0; i < vals[index][row_number].size(); ++i)
+	{
+		s+=vals[index][row_number][i]+" ";
+	}
+	return s;
 	//cout<<endl;
 }
 

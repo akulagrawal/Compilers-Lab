@@ -475,10 +475,10 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    80,    80,    81,    83,   115,   140,   143,   148,   163,
-     165,   167,   169,   170,   172,   173,   175,   176,   178,   179,
-     181,   182,   183,   185,   186,   187,   188,   195,   196,   197,
-     198,   200,   201,   202,   203,   204,   206,   207,   209
+       0,    80,    80,    81,    83,   115,   140,   143,   148,   162,
+     164,   166,   168,   169,   171,   172,   174,   175,   177,   178,
+     180,   181,   182,   184,   185,   186,   187,   194,   195,   196,
+     197,   199,   200,   201,   202,   203,   205,   206,   208
 };
 #endif
 
@@ -1389,7 +1389,6 @@ yyreduce:
   case 8:
 #line 148 "bison_dbms.y" /* yacc.c:1646  */
     {
-            printf("hi\n");
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
             fprintf(file_in, "\tint r0 = getNumRows(0);\n");
@@ -1397,59 +1396,59 @@ yyreduce:
             fprintf(file_in, "\tfor(int i = 0; i < r0;i++){\n");
             fprintf(file_in, "\t\tstring s = printRow(0, i);\n");
             fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++)\n");
-            fprintf(file_in, "\t\t\tcout<<s<<printRow(0, i)<<endl;\n}\n");
+            fprintf(file_in, "\t\t\tcout<<s<<printRow(1, j)<<endl;\n\t}\n");
 
             insert_footer(file_in);
             fclose(file_in);
 
         }
-#line 1407 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1406 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 169 "bison_dbms.y" /* yacc.c:1646  */
+#line 168 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1413 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1412 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 172 "bison_dbms.y" /* yacc.c:1646  */
+#line 171 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1419 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1418 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 173 "bison_dbms.y" /* yacc.c:1646  */
+#line 172 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1425 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1424 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 181 "bison_dbms.y" /* yacc.c:1646  */
+#line 180 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1431 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1430 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 182 "bison_dbms.y" /* yacc.c:1646  */
+#line 181 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1437 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1436 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 185 "bison_dbms.y" /* yacc.c:1646  */
+#line 184 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1443 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1442 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 187 "bison_dbms.y" /* yacc.c:1646  */
+#line 186 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1449 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1448 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 188 "bison_dbms.y" /* yacc.c:1646  */
+#line 187 "bison_dbms.y" /* yacc.c:1646  */
     {
             char columnName[30];
             strcpy(columnName, "getVal( 0, j, \"");
@@ -1457,50 +1456,50 @@ yyreduce:
             strcat(columnName, "\")");
             strcpy((yyval.sval), columnName);
             }
-#line 1461 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1460 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 195 "bison_dbms.y" /* yacc.c:1646  */
+#line 194 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1467 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1466 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 196 "bison_dbms.y" /* yacc.c:1646  */
+#line 195 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1473 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1472 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 197 "bison_dbms.y" /* yacc.c:1646  */
+#line 196 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1479 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1478 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 198 "bison_dbms.y" /* yacc.c:1646  */
+#line 197 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1485 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1484 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 200 "bison_dbms.y" /* yacc.c:1646  */
+#line 199 "bison_dbms.y" /* yacc.c:1646  */
     { strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1491 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1490 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 209 "bison_dbms.y" /* yacc.c:1646  */
+#line 208 "bison_dbms.y" /* yacc.c:1646  */
     {
         strcpy(column[position], (yyvsp[0].sval));
         position++;
     }
-#line 1500 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1499 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1504 "bison_dbms.tab.c" /* yacc.c:1646  */
+#line 1503 "bison_dbms.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1728,7 +1727,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 213 "bison_dbms.y" /* yacc.c:1906  */
+#line 212 "bison_dbms.y" /* yacc.c:1906  */
 
 
 int main(int argc, char **argv) {

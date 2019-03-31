@@ -146,7 +146,6 @@ STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
         }    ;
 
 JOIN:    CARTESIAN_PRODUCT {
-            printf("hi\n");
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
             fprintf(file_in, "\tint r0 = getNumRows(0);\n");
@@ -154,7 +153,7 @@ JOIN:    CARTESIAN_PRODUCT {
             fprintf(file_in, "\tfor(int i = 0; i < r0;i++){\n");
             fprintf(file_in, "\t\tstring s = printRow(0, i);\n");
             fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++)\n");
-            fprintf(file_in, "\t\t\tcout<<s<<printRow(0, i)<<endl;\n}\n");
+            fprintf(file_in, "\t\t\tcout<<s<<printRow(1, j)<<endl;\n\t}\n");
 
             insert_footer(file_in);
             fclose(file_in);
