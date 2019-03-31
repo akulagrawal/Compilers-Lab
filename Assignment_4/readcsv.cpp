@@ -32,7 +32,7 @@ int getindexfortable(string name)
 			{
 				return j;
 			}
-		}	
+		}
 	}
 	return -1;
 }
@@ -48,18 +48,29 @@ int getNumRows(string name)
 	return vals[index].size();
 }
 
-void printRow(int index, int row_number)
+int getNumCols(string name)
+{
+	int index = getindexfortable(name);
+	if(index == -1)
+	{
+		cout<<"No such table exists"<<endl;
+		return -1;
+	}
+	return cols[index].size();
+}
+
+string printRow(int index, int row_number)
 {
 	if(row_number >= vals[index].size())
 	{
 		cout<<"Row index out of bound"<<endl;
 		return;
 	}
-	for (int i = 0; i < vals[index][row_number].size(); ++i)
-	{
-		cout<<vals[index][row_number][i]<<" ";
-	}
-	cout<<endl;
+	//for (int i = 0; i < vals[index][row_number].size(); ++i)
+	//{
+		return vals[index][row_number];
+	//}
+	//cout<<endl;
 }
 
 void readcsv(string name, int index)
@@ -140,7 +151,7 @@ void readcsv(string name, int index)
        	}
        	cols[index].push_back(temp);
 	}
-	
+
 	temp = "";
 	while (fgets(line, 1024, stream))
 	{
