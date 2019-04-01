@@ -87,6 +87,8 @@
 %token <sval> MINUS
 %token <sval> ARITH_OP
 
+%type <sval> LP_NT
+%type <sval> RP_NT
 %type <sval> STMT_LIST
 %type <sval> STMT
 %type <sval> EXPR
@@ -178,20 +180,27 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
             printf("Valid Syntax \n");
             int i = 0;
             for (i = 0; i < position; i++) {
-                printf("%s ,", column[i]);
+                printf("*%s*,", column[i]);
             }
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
 
+            // Open the file in which table exists
+            fprintf(file_in, "\tstring tableName = \"%s\";\n", $6);
+            fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
+
             // Construct vector of columnNames
             fprintf(file_in, "\tvector<string> columnNames;\n");
-            
+
             for (i = 0; i < position; i++) {
                 fprintf(file_in, "\tcolumnNames.push_back(\"%s\");\n", column[i]);
             }
 
-            fprintf(file_in, "\tprintColumns(columnNames);\n");
+            fprintf(file_in, "\tfor(int i = 0; i < getNumRows(tableName);i++){\n");
+            fprintf(file_in, "\t\tfor(int k = 0; k < columnNames.size();k++)\n");
+            fprintf(file_in, "\t\t\tcout<<getVal(0,i, columnNames[k])<<\" \";\n");
+            fprintf(file_in, "\t\tcout<<\"\\n\";\n\t}\n");
 
             insert_footer(file_in);
             fclose(file_in);
@@ -201,12 +210,21 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
-            fprintf(file_in, "\tint r0 = getNumRows(0);\n");
-            fprintf(file_in, "\tint r1 = getNumRows(1);\n");
+            fprintf(file_in, "\tstring tableName1 = \"%s\";\n", $2);
+            fprintf(file_in, "\treadcsv(tableName1+\".csv\", 0);\n");
+            fprintf(file_in, "\tstring tableName2 = \"%s\";\n", $6);
+            fprintf(file_in, "\treadcsv(tableName2+\".csv\", 1);\n");
+
+            fprintf(file_in, "\tprintColumnName(tableName1);");
+            fprintf(file_in, "\tprintColumnName(tableName2);");
+            fprintf(file_in, "\tcout << endl;");
+
+            fprintf(file_in, "\tint r0 = getNumRows(tableName1);\n");
+            fprintf(file_in, "\tint r1 = getNumRows(tableName2);\n");
             fprintf(file_in, "\tfor(int i = 0; i < r0;i++){\n");
-            fprintf(file_in, "\t\tstring s = getRow(0, i);\n");
-            fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++)\n");
-            fprintf(file_in, "\t\t\tcout << s << getRow(0, i) << endl;\n}\n");
+            fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++){\n");
+            fprintf(file_in, "\t\t\tprintRow(getindexfortable(tableName1), i);\n");
+            fprintf(file_in, "\t\t\tprintRow(getindexfortable(tableName2), j); cout<<endl;\n\t\t}\n\t}\n");
 
             insert_footer(file_in);
             fclose(file_in);
@@ -314,9 +332,9 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
                 // Put if condition_str
                 fprintf(file_in, ") {\n");
 
-                fprintf(file_in, "\t\t\tstring r1 = getRow(getindexfortable(tableName1), j1);\n");
-                fprintf(file_in, "\t\t\tstring r2 = getRow(getindexfortable(tableName2), j2);\n");
-                fprintf(file_in, "\t\t\tcout << r1 << \" \" << r2 << \"\\n\";" );
+                fprintf(file_in, "\t\t\tprintRow(getindexfortable(tableName1), j1);\n");
+                fprintf(file_in, "\t\t\tprintRow(getindexfortable(tableName2), j2);\n");
+                fprintf(file_in, "\t\t\tcout << endl;\n");
 
             fprintf(file_in, "\t\t\t}\n");
             fprintf(file_in, "\t\t}\n");
@@ -346,7 +364,7 @@ LOGICAL_OP:     AND {
                 };
     
 
-CONDITION:      LP CONDITION_LIST RP { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
+CONDITION:      LP_NT CONDITION_LIST RP_NT { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
     |           ID OP EXPR  { 
                     strcpy(condition[condition_ptr++], $1);
                     strcpy(condition[condition_ptr++], $2);
@@ -356,13 +374,21 @@ CONDITION:      LP CONDITION_LIST RP { strcat($$, " "); strcat($$, $2); strcat($
 CONDITION_LIST_EQ: CONDITION_EQ LOGICAL_OP CONDITION_LIST_EQ
     |           CONDITION_EQ
 
-CONDITION_EQ:      LP CONDITION_LIST_EQ RP
+CONDITION_EQ:      LP_NT CONDITION_LIST_EQ RP_NT
     |              ID DOT ID EQ ID DOT ID {
                     strcpy(condition[condition_ptr++], $1);
                     strcpy(condition[condition_ptr++], $3);
                     strcpy(condition[condition_ptr++], $5);
                     strcpy(condition[condition_ptr++], $7);
                     }   ;
+
+LP_NT:  LP {
+            strcpy(condition[condition_ptr++], $1);
+        };
+
+RP_NT:  RP {
+            strcpy(condition[condition_ptr++], $1);
+        };
 
 EXPR:   ARITHMETIC
     |   DIC ID DIC  { strcat($$, $2); strcat($$, $3); strcat($$, " "); } 
@@ -432,7 +458,7 @@ void insert_header (FILE *filename) {
 }
 
 void insert_footer (FILE *filename) {
-    char *header = "return 0;\n}\n";
+    char *header = "cout << endl;\nreturn 0;\n}\n";
 
     fprintf(filename, "%s", header);
 }

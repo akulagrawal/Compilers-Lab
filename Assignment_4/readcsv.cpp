@@ -12,11 +12,6 @@ int getcol(string name, int index)
 {
 	for (int i = 0; i < cols[index].size(); ++i)
 	{
-		if(i == cols[index].size()-1)
-		{
-			name += "\n";
-		}
-
 		if(name.compare(cols[index][i])==0)
 		{
 			return i;
@@ -62,6 +57,26 @@ int getNumCols(string name)
 	return cols[index].size();
 }
 
+int getNumRowsCartesian(int index)
+{
+	if(index == -1)
+	{
+		cout<<"No such table exists"<<endl;
+		return -1;
+	}
+	return vals[index].size();
+}
+
+int getNumColsCartesian(int index)
+{
+	if(index == -1)
+	{
+		cout<<"No such table exists"<<endl;
+		return -1;
+	}
+	return cols[index].size();
+}
+
 void printRow(int index, int row_number)
 {
 	if(row_number >= vals[index].size())
@@ -71,9 +86,8 @@ void printRow(int index, int row_number)
 	}
 	for (int i = 0; i < vals[index][row_number].size(); ++i)
 	{
-		cout<<vals[index][row_number][i]<<" ";
+		cout<<setw(14)<<vals[index][row_number][i]+" ";
 	}
-	cout<<endl;
 }
 
 string getRow(int index, int row_number) {
@@ -91,7 +105,7 @@ string getRow(int index, int row_number) {
 	{
 		spacinglen = max((14 - (int)vals[index][row_number][i].length()), 0);
 		spacing = string(spacinglen, ' ');
-		concat += vals[index][row_number][i] + spacing;
+		concat += spacing + vals[index][row_number][i];
 	}
 	return concat;
 }
@@ -101,9 +115,7 @@ void printColumnName(string table) {
 	string spacing = "";
 	int spacinglen = 0;
 	for (int i = 0; i < cols[index].size(); i++) {
-		spacinglen = max((14 - (int)cols[index][i].length()), 0);
-		spacing = string(spacinglen, ' ');
-		cout << cols[index][i] << spacing;
+		cout<<setw(14)<<cols[index][i]+" ";
 	}
 }
 
@@ -111,6 +123,7 @@ void readcsv(string name, int index)
 {
 	string edited_name="";
 
+	// Removing .csv
 	for (int i = 0; i < name.length()-4; ++i)
 	{
 		edited_name += name[i];
@@ -121,6 +134,10 @@ void readcsv(string name, int index)
 	strcpy(cstr, name.c_str());
 
 	FILE* stream = fopen(cstr, "r");
+	if (stream == NULL) {
+		cout << "Table: " << edited_name << " does not exists\n";
+		exit(0);
+	}
 	char line[1024];
 	int itr;
 	string temp = "";
