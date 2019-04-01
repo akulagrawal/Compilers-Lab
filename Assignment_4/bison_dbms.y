@@ -136,6 +136,12 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
 
                 // Iterate over condition and check data type with schema
                 for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+
+                    if (strcmp(condition[condition_it], "(") == 0) {
+                        fprintf(file_in, " ( ");
+                        continue;
+                    }
+                    
                     // Get column name
                     char *columnName = condition[condition_it++];
                     char *operator = condition[condition_it++];
@@ -147,28 +153,40 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
                     }
                     // Both string
                     else if (gettype($6, columnName) == STRING && isnum(rhs) == FALSE) {
-                        if (!strcmp(operator, "=="))
+                        if (!strcmp(operator, "==") || !strcmp(operator, "!="))
                             fprintf(file_in, "getVal(0, j, \"%s\") %s %s ", columnName, operator, rhs);
                         else {
-                            printf("Operator unsupported for condition %s %s %s", columnName, operator, rhs);
+                            printf("Operator unsupported for condition %s %s %s \n", columnName, operator, rhs);
                             exit(0);
                         }    
                     }
                     else {
-                        printf("gettype(%s) = %d\n", "name", gettype($6, "name"));
-                        printf("Datatype mismatch in Schema for condition %s %s %s", columnName, operator, rhs);
+                        // printf("gettype(%s) = %d\n", "name", gettype($6, "name"));
+                        printf("Datatype mismatch in schema for condition %s %s %s \n", columnName, operator, rhs);
                         exit(0);
                     }
 
                     if (condition_it < condition_ptr) {
-                        char *and_or_op = condition[condition_it];
-                        fprintf(file_in, " %s ", and_or_op);
+                        while (!strcmp(condition[condition_it], ")")) {
+                            fprintf(file_in, " ) ");
+                            condition_it++;
+
+                            if (condition_it == condition_ptr){
+                                break;
+                            }
+                        }
+                        
+                        if (condition_it < condition_ptr) {
+                            char *and_or_op = condition[condition_it];
+                            fprintf(file_in, " %s ", and_or_op);
+                        }
                     }
                 }
+
                 // Put if condition_str
                 fprintf(file_in, ") {\n");
 
-                    fprintf(file_in, "\t\t\tprintRow(0, j);\n");
+                    fprintf(file_in, "\t\t\tprintRow(0, j); cout << endl; \n");
 
             fprintf(file_in, "\t\t}\n");
             fprintf(file_in, "\t}\n");
@@ -179,9 +197,6 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
     |   PROJECT LAB ATTR_LIST RAB LP TABLE RP SEMI     {
             printf("Valid Syntax \n");
             int i = 0;
-            for (i = 0; i < position; i++) {
-                printf("*%s*,", column[i]);
-            }
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
@@ -193,13 +208,23 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
             // Construct vector of columnNames
             fprintf(file_in, "\tvector<string> columnNames;\n");
 
+            char filename[100];
+            strcpy(filename, $6);
+            strcat(filename, ".csv");
+            readcsv(filename);
+            
             for (i = 0; i < position; i++) {
+                // printf("*%s*", column[i]);
+                int temp = gettype($6, column[i]);
                 fprintf(file_in, "\tcolumnNames.push_back(\"%s\");\n", column[i]);
+                fprintf(file_in, "\tcout << setw(14) << \"%s\";\n", column[i]);
             }
+
+            fprintf(file_in, "\tcout << endl;");
 
             fprintf(file_in, "\tfor(int i = 0; i < getNumRows(tableName);i++){\n");
             fprintf(file_in, "\t\tfor(int k = 0; k < columnNames.size();k++)\n");
-            fprintf(file_in, "\t\t\tcout<<getVal(0,i, columnNames[k])<<\" \";\n");
+            fprintf(file_in, "\t\t\tcout<<setw(14)<<getVal(0,i, columnNames[k]);\n");
             fprintf(file_in, "\t\tcout<<\"\\n\";\n\t}\n");
 
             insert_footer(file_in);
@@ -207,6 +232,15 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
         }
     |   LP TABLE RP CARTESIAN_PRODUCT LP TABLE RP SEMI   {
            printf("Valid Syntax \n");
+            
+            char filename[100];
+            strcpy(filename, $2);
+            strcat(filename, ".csv");
+            readcsv(filename);
+
+            strcpy(filename, $6);
+            strcat(filename, ".csv");
+            readcsv(filename);
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
@@ -237,7 +271,17 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
             // Check column names (should exists in respective tables)
             // Perform calculation
 
+            char filename[100];
+            strcpy(filename, $2);
+            strcat(filename, ".csv");
+            readcsv(filename);
+
+            strcpy(filename, $9);
+            strcat(filename, ".csv");
+            readcsv(filename);
+
             FILE *file_in = fopen("intermediate.cpp", "w+");
+            
             insert_header(file_in);
             fprintf(file_in, "\tstring tableName1 = \"%s\";\n", $2);
             fprintf(file_in, "\treadcsv(tableName1+\".csv\", 0);\n");
@@ -247,6 +291,15 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
             // Check the table names (should be either $2 or $9)
             int condition_it = 0;
             for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+
+                if (strcmp(condition[condition_it], "(") == 0 || strcmp(condition[condition_it], ")") == 0 ) {
+                    continue;
+                }
+
+                if (strcmp(condition[condition_it], "and") == 0 || strcmp(condition[condition_it], "or") == 0 ) {
+                    continue;
+                }
+
                 char *table1 = condition[condition_it++];
                 char *attribute1 = condition[condition_it++];
                 char *table2 = condition[condition_it++];
@@ -291,7 +344,6 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
             }
 
             fprintf(file_in, "\tprintColumnName(tableName1);");
-            fprintf(file_in, "\tcout << \" \";");
             fprintf(file_in, "\tprintColumnName(tableName2);");
             fprintf(file_in, "\tcout << endl;");
 
@@ -304,6 +356,12 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
 
                 // Iterate over conditions.
                 for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+
+                    if (strcmp(condition[condition_it], "(") == 0) {
+                        fprintf(file_in, " ( ");
+                        continue;
+                    }
+                    
                     // Get column name
                     char *table1 = condition[condition_it++];
                     char *attribute1 = condition[condition_it++];
@@ -323,10 +381,21 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
                     else {
                         fprintf(file_in, "== getVal(getindexfortable(\"%s\"), j1, \"%s\") ", table2, attribute2);
                     }
-                        
+
                     if (condition_it < condition_ptr) {
-                        char *and_or_op = condition[condition_it];
-                        fprintf(file_in, " %s ", and_or_op);
+                        while (!strcmp(condition[condition_it], ")")) {
+                            fprintf(file_in, " ) ");
+                            condition_it++;
+
+                            if (condition_it == condition_ptr){
+                                break;
+                            }
+                        }
+                        
+                        if (condition_it < condition_ptr) {
+                            char *and_or_op = condition[condition_it];
+                            fprintf(file_in, " %s ", and_or_op);
+                        }
                     }
                 }
                 // Put if condition_str
@@ -395,7 +464,10 @@ EXPR:   ARITHMETIC
     |   DIC NUM DIC { strcat($$, $2); strcat($$, $3); strcat($$, " "); } ;
 
 ARITHMETIC: NUM ARITH_OP ARITHMETIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
+    |   MINUS NUM ARITH_OP ARITHMETIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); strcat($$, " "); strcat($$, $4); } 
     |   NUM MINUS ARITHMETIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } 
+    |   MINUS NUM MINUS ARITHMETIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); strcat($$, " "); strcat($$, $4); } 
+    |   MINUS NUM  { strcat($$, " "); strcat($$, $2); } 
     |   NUM  ;
 
 OP:     EQ { strcat($$, $1); }
@@ -415,7 +487,7 @@ ATTR:   ID {
 
 int main(int argc, char **argv) {
 
-    char *filename = "tests/test1.txt";
+    char *filename = argv[1];
     // Open a file handle to a particular file:
     FILE *myfile = fopen(filename, "r");
     // Make sure it is valid:
@@ -504,6 +576,12 @@ void readcsv(char* name)
 	}
 
 	FILE* stream = fopen(name, "r");
+
+    if (stream == NULL) {
+        printf("No such table exists : %s\n", file_name[index]);
+        exit(0);
+    }
+    
 	char type_line[1024];
 	int itr;
 	
@@ -586,7 +664,7 @@ int gettype(char* table_name, char* col)
 	int index = getfileindex(table_name);
 	if(index == -1)
 	{
-		printf("No such Table loaded.\n");
+		printf("No such table loaded.\n");
 		return -1;
 	}
 
@@ -594,8 +672,8 @@ int gettype(char* table_name, char* col)
 	if(colindex == -1)
 	{
         // printf("Here is the problem\n");
-        printf("column name = %s\n", col);
-		printf("No such column exists.\n");
+        // printf("column name = %s\n", col);
+		printf("No such column exists : %s\n", col);
 		exit(0);
 	}	
 

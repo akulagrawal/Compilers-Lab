@@ -2,11 +2,14 @@ CXX = gcc
 CPP = g++
 CXXFLAG = -g
 
-all:	build
+run:	build
+		./a.out
+
+build:
 		$(CPP) -std=c++11 intermediate.cpp
 
-build:	build_bison
-		./a.out
+semantics:	build_bison
+		./a.out $(file)
 
 build_bison:	BISON FLEX
 	$(CXX) $(CXXFLAG) bison_dbms.tab.c lex.yy.c -lfl
