@@ -9,25 +9,29 @@ c_lang.l
   extern int yylex();
 %}
 %%
-(if)                  { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return IF; } 
-(then)                  { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return THEN; } 
-(else)                 { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return ELSE; } 
-(while)       { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return WHILE; } 
-(do)       { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return DO; } 
-(for)               { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return FOR; } 
+(if)                      { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return IF; } 
+(else)                    { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return ELSE; } 
+(while)                   { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return WHILE; } 
+(for)                     { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return FOR; } 
 (switch)                  { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return SWITCH; } 
-
-\(                         { yylval.type_id.sval = strdup(yytext); return '('  ; }
-\)                         { yylval.type_id.sval = strdup(yytext); return ')'  ; }
-\{                         { yylval.type_id.sval = strdup(yytext); return '{'  ; }
-\}                         { yylval.type_id.sval = strdup(yytext); return '}'  ; }
+(case)                    { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return CASE; } 
+(default)                 { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return DEFAULT; }
+\(                        { yylval.type_id.sval = strdup(yytext); return '('  ; }
+\)                        { yylval.type_id.sval = strdup(yytext); return ')'  ; }
+\{                        { yylval.type_id.sval = strdup(yytext); return '{'  ; }
+\}                        { yylval.type_id.sval = strdup(yytext); return '}'  ; }
 =                         { yylval.type_id.sval = strdup(yytext); return '='  ; }
 :                         { yylval.type_id.sval = strdup(yytext); return ':'  ; } 
 ;                         { yylval.type_id.sval = strdup(yytext); return ';'  ; } 
-
-([0-9]+\.[0-9]+|[0-9]+)   { yylval.type_id.val = atoi(yytext); return NUM; } 
-[a-zA-Z0-9_]+              { yylval.type_id.sval = strdup(yytext); return ID; } 
+((\|\|)|or)               { yylval.type_id.sval = strdup(yytext); return OR; } 
+((<=)|(>=)|<|>)           { yylval.type_id.sval = strdup(yytext); return '>'; } 
+'                         { yylval.type_id.sval = strdup(yytext); return '\''; } 
+\"                        { yylval.type_id.sval = strdup(yytext); return '"'; } 
+,                         { yylval.type_id.sval = strdup(yytext); return ','; }
+([0-9]+\.[0-9]+|[0-9]+)   { yylval.type_id.val = atoi(yytext); yylval.type_id.type = strdup("num"); return NUM; } 
+[a-zA-Z0-9_]+             { yylval.type_id.sval = strdup(yytext); yylval.type_id.type = strdup("num"); return IDENTIFIER; } 
 .                         ;
+\n                        ;
 %%
 
 int yywrap() {}

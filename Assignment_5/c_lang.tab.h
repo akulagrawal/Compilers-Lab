@@ -46,14 +46,16 @@ extern int yydebug;
   enum yytokentype
   {
     NUM = 258,
-    ID = 259,
-    IF = 260,
-    THEN = 261,
-    FOR = 262,
-    ELSE = 263,
+    IDENTIFIER = 259,
+    OR = 260,
+    IF = 261,
+    ELSE = 262,
+    FOR = 263,
     WHILE = 264,
     DO = 265,
-    SWITCH = 266
+    SWITCH = 266,
+    CASE = 267,
+    DEFAULT = 268
   };
 #endif
 
@@ -62,7 +64,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 16 "c_lang.y" /* yacc.c:1909  */
+#line 71 "c_lang.y" /* yacc.c:1909  */
 
     struct {
         char* type;
@@ -70,7 +72,7 @@ union YYSTYPE
         char* sval;
     } type_id;
 
-#line 74 "c_lang.tab.h" /* yacc.c:1909  */
+#line 76 "c_lang.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
