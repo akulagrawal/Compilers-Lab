@@ -28,8 +28,8 @@
 
     struct function_record {
         string function_return_type;
-        vector<var_record> parameters;
-        vector<var_record> local_variables;
+        list<var_record> parameters;
+        list<var_record> local_variables;
 
         void insert_parameter(string parameter_name, string type){
             parameters.push_back(var_record(parameter_name, type));
@@ -40,17 +40,17 @@
         }
 
         var_record& search_param(string parameter_name) {
-            for(int i = 0; i < parameters.size(); ++i){
-                if(parameters[i].name == parameter_name){
-                    return parameters[i];
+            for(auto it = parameters.begin(); it != parameters.end(); ++it){
+                if(it -> name == parameter_name){
+                    return it;
                 }
             }
         }
 
         var_record& search_variable(string var_name) {
-            for(int i = 0; i < local_variables.size(); ++i){
-                if(local_variables[i].name == var_name){
-                    return local_variables[i];
+            for(auto it = local_variables.begin(); it != local_variables.end(); ++it){
+                if(it -> name  == var_name){
+                    return it;
                 }
             }
         }
