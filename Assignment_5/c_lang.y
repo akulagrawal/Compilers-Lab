@@ -83,6 +83,14 @@
         }
 
     } symtab;
+
+    extern bool isInt(char *type);
+    extern bool isFloat(char *type);
+    extern bool isBoolean(char *type);
+    extern bool isErrorType(char *type);
+    extern bool isNoneType(char *type);
+    extern char* setErrorType();
+    extern char* setNoErrorType();
 %}
 
 %union {
@@ -101,7 +109,7 @@
 %type <type_id> expression
 %type <type_id> constant_expression logical_expression relational_expression assignment_expression
 %type <type_id> START
-%type <type_id> function_declaration function_head return_type func_name
+%type <type_id> function_declaration function_head func_name
 %type <type_id> param_list_declaration param_declaration
 %type <type_id> function_call arg_list
 %type <type_id> variable_declaration_list variable_declaration
@@ -127,15 +135,14 @@ START
 	;
 
 function_declaration
-	: function_head '{' variable_declaration_list statement_list '}'
+	: function_head '{' statement_list '}'
+	| function_head '{' '}'
 	;
 
 function_head
-    : return_type func_name '(' param_list_declaration ')'
+    : datatype func_name '(' param_list_declaration ')'
+    | datatype func_name '(' ')'
     ;
-
-return_type
-    : IDENTIFIER    ;
 
 func_name
     : IDENTIFIER
@@ -178,7 +185,6 @@ arg_list
 statement
 	: conditional_statement
 	| loop_statement
-	| labeled_statement
 	| compound_statement        // Nested statement_list
 	| expression_statement      // Expression followed by semicolon
     | variable_declaration_list
@@ -188,42 +194,90 @@ statement
 conditional_statement
 	: IF '(' expression ')' statement 
     {
-        if (strcmp($3.type, "num")) {
-            yyerror("int or boolean expected in expression of if-else");
+        if (!isErrorType($3.type)) {
+            if ( isInt($3.type) || isFloat($3.type) ) {
+                $$.type = setNoErrorType();
+            }
+            else {
+                yyerror("int expected in expression of if-else");
+                $$.type = setErrorType();
+            }
         }
+        else
+            $$.type = setErrorType();
     }
     | IF '(' expression ')' statement ELSE statement
     {
-        if (strcmp($3.type, "num")) {
-            yyerror("int or boolean expected in expression of if-else");
+        if (!isErrorType($3.type)) {
+            if ( isInt($3.type) || isFloat($3.type) ) {
+                $$.type = setNoErrorType();
+            }
+            else {
+                yyerror("int expected in expression of if-else");
+                $$.type = setErrorType();
+            }
         }
+        else
+            $$.type = setErrorType();
     }
-	| SWITCH '(' expression ')' statement
+	| SWITCH '(' expression ')' labeled_statement
     {
-        if (strcmp($3.type, "num")) {
-            yyerror("int expected in expression of switch case");
+        if (!isErrorType($3.type)) {
+            if (isInt($3.type)) {
+                $$.type = setNoErrorType();
+            }
+            else {
+                yyerror("int expected in expression of switch case");
+                $$.type = setErrorType();
+            }
         }
+        else
+            $$.type = setErrorType();
     }
 	;
 
 loop_statement
 	: WHILE '(' expression ')' statement 
     { 
-        if (strcmp($3.type, "num")) {
-            yyerror("int or boolean expected in expression of while statement");
+        if (!isErrorType($3.type)) {
+            if (isInt($3.type) || isFloat($3.type)) {
+                $$.type = setNoErrorType();
+            }
+            else {
+                yyerror("int expected in expression of while statement");
+                $$.type = setErrorType();
+            }
         }
+        else
+            $$.type = setErrorType();
     }
 	| FOR '(' expression_statement expression_statement ')' statement
     {
-        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
-            yyerror("Type error in condition of for loop");
+        if (!isErrorType($3.type)) {
+            if (isInt($4.type) || isFloat($4.type) || isNoneType($4.type)) {
+                $$.type = setNoErrorType();
+            }
+            else {
+                yyerror("Type error in condition of for loop");
+                $$.type = setErrorType();
+            }
         }
+        else
+            $$.type = setErrorType();
     }
 	| FOR '(' expression_statement expression_statement expression ')' statement
     {
-        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
-            yyerror("Type error in condition of for loop");
+        if (!isErrorType($3.type)) {
+            if (isInt($4.type) || isFloat($4.type) || isNoneType($4.type)) {
+                $$.type = setNoErrorType();
+            }
+            else {
+                yyerror("Type error in condition of for loop");
+                $$.type = setErrorType();
+            }
         }
+        else
+            $$.type = setErrorType();
     }
 	;
 
@@ -256,8 +310,8 @@ expression_statement
 */
 expression
     : assignment_expression         { $$.type = strdup($1.type); }
-    | logical_expression            { $$.type = strdup("num"); }
-    | relational_expression         { $$.type = strdup("num"); }
+    | logical_expression            { $$.type = strdup("int"); }
+    | relational_expression         { $$.type = strdup("int"); }
     ; 
 
 assignment_expression
@@ -308,7 +362,32 @@ int main(int argc, char **argv) {
 
 void yyerror(const char *s) {
   print("", s);
-  // might as well halt now:
-//   printf("Invalid Syntax\n");
 //   exit(-1);
+}
+
+bool isInt(char *type) {
+    if (strcmp(type, "int"))    return false;
+    else                        return true;
+}
+bool isFloat(char *type) {
+    if (strcmp(type, "float"))    return false;
+    else                        return true;
+}
+bool isBoolean(char *type) {
+    if (strcmp(type, "bool"))    return false;
+    else                        return true;
+}
+bool isErrorType(char *type) {
+    if (strcmp(type, "ErrorType"))    return false;
+    else                        return true;
+}
+bool isNoneType(char *type) {
+    if (strcmp(type, "None"))    return false;
+    else                        return true;
+}
+char* setErrorType() {
+    return strdup("ErrorType");
+}
+char* setNoErrorType() {
+    return strdup("NoErrorType");
 }

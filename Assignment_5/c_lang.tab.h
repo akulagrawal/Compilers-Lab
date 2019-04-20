@@ -65,7 +65,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 88 "c_lang.y" /* yacc.c:1909  */
+#line 96 "c_lang.y" /* yacc.c:1909  */
 
     struct {
         char* type;
