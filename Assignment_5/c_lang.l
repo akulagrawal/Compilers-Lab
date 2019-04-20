@@ -7,6 +7,7 @@ c_lang.l
     std::cout << str << " " <<  val << std::endl;
     
   extern int yylex();
+  extern int lineNo;
 %}
 %%
 (if)                      { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return IF; } 
@@ -34,7 +35,7 @@ c_lang.l
 ([0-9]+\.[0-9]+)   { yylval.type_id.val = atoi(yytext); yylval.type_id.type = strdup("float"); return NUM; } 
 [a-zA-Z0-9_]+             { yylval.type_id.sval = strdup(yytext); yylval.type_id.type = strdup("int"); return IDENTIFIER; } 
 .                         ;
-\n                        ;
+\n                        { lineNo ++; }
 %%
 
 int yywrap() {}

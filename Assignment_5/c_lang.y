@@ -11,9 +11,6 @@
     extern FILE *yyin;
     void yyerror(const char *s);    
     using namespace std;
-
-    // Stores active function name
-    string active_func_name;
     
     struct var_record {
         string name;
@@ -34,11 +31,11 @@
         list<var_record> parameters;
         list<var_record> local_variables;
 
-        void insert_parameter(string parameter_name, string type){
-            parameters.push_back(var_record(parameter_name, type));
+        void insert_parameter(string parameter_name, string type, int level = 0){
+            parameters.push_back(var_record(parameter_name, type, true, level));
         }
 
-        void insert_variable(string var_name, string type, int level){
+        void insert_variable(string var_name, string type, int level = 0){
             local_variables.push_back(var_record(var_name, type, false, level));
         }
 
@@ -68,12 +65,12 @@
             return entries[function_name]; 
         }
 
-        bool search_function(string function_name, function_record& function) {
+        bool search_function(string function_name, function_record *function) {
             // If function exists in symbol table
             if (entries.count(function_name)) {
                 // Set function = pointer to function in symbol table
                 // Returns true
-                function = entries[function_name];
+                function = &entries[function_name];
                 return true;
             }
             else {
@@ -84,11 +81,27 @@
 
     } symtab;
 
+    // Stores active function name
+    string active_func_name;
+
+    // Stores current level
+    int level = 0;
+
+    // Stores list of parameter of current function declaration
+    list<var_record> active_func_param_list;
+
+    // Stores true, If error is found while semantic checking
+    bool errorFound = false;
+
+    // Keep track of current line number
+    int lineNo = 1;
+
     extern bool isInt(char *type);
     extern bool isFloat(char *type);
     extern bool isBoolean(char *type);
     extern bool isErrorType(char *type);
     extern bool isNoneType(char *type);
+    extern bool isMatch(const char *str1, const char *str2);
     extern char* setErrorType();
     extern char* setNoErrorType();
 %}
@@ -136,25 +149,98 @@ START
 
 function_declaration
 	: function_head '{' statement_list '}'
+    {
+        level --;
+        active_func_name = "";
+        if (!isErrorType($1.type)) {
+            if (!(isMatch($1.type, $3.type) || isMatch($1.type, "void") && isNoneType($3.type)))
+                cout << "Type mismatch of return type between " << $$.type << " and " << $3.type << endl;
+        }
+    }
 	| function_head '{' '}'
+    {
+        active_func_name = "";
+    }
 	;
 
 function_head
     : datatype func_name '(' param_list_declaration ')'
+    {
+        level ++;
+        function_record r;
+
+        // Check if function already exists
+        if (symtab.search_function($2.sval, &r)) {
+            cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+        }
+        else {
+            r = symtab.insert_function($2.sval);
+            r.function_return_type = $1.sval;
+            active_func_name = $2.sval;
+
+            // Add param_list_declaration to symbol_table corresponding to active function
+            if ( !isErrorType($4.type) ) {
+                for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+                    r.insert_parameter(it->name, it->type, it->level);
+                }
+                $$.type = strdup($1.sval);
+            }
+        }
+    }
     | datatype func_name '(' ')'
+    {
+        level ++;
+        function_record r;
+
+        // Check if function already exists
+        if (symtab.search_function($2.sval, &r)) {
+            cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+        }
+        else {
+            r = symtab.insert_function($2.sval);
+            r.function_return_type = $1.sval;
+            active_func_name = $2.sval;
+            $$.type = strdup($1.sval);
+        }
+    }
     ;
 
 func_name
-    : IDENTIFIER
+    : IDENTIFIER                    { $$.sval = strdup($1.sval); }
     ;
 
 param_list_declaration
     : param_list_declaration ',' param_declaration
-    | param_declaration
+    {
+        if (!isErrorType($1.type)) {
+            bool found = false;
+            // Check if variable is repeated in parameter list
+            for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+                if (it -> name == $3.sval) {
+                    cout << "Redeclaration of parameter " << $3.sval << endl;
+                    $1.type = setErrorType();
+                    $$.type = setErrorType();
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                var_record param($3.sval, $3.type, /* is_parameter = */ true, level) ;
+                active_func_param_list.push_back(param);
+            }
+        }
+        else
+            $$.type = setErrorType();
+    }
+    | param_declaration             
+    { 
+        var_record param($1.sval, $1.type, /* is_parameter = */ true, level) ;
+        active_func_param_list.push_back(param);
+    }
     ;
 
 param_declaration
-    : datatype IDENTIFIER
+    : datatype IDENTIFIER           { $$.type = $1.sval; $$.sval = $2.sval; }
     ;
 
 variable_declaration_list
@@ -166,8 +252,8 @@ variable_declaration
     ;
 
 datatype
-    : INT                           { $$.type = strdup("int"); }
-    | FLOAT                         { $$.type = strdup("float"); }
+    : INT                           { $$.sval = strdup("int"); }
+    | FLOAT                         { $$.sval = strdup("float"); }
     ;
 
 function_call
@@ -283,7 +369,7 @@ loop_statement
 
 labeled_statement
 	: CASE constant_expression ':' statement {
-        if (strcmp($2.type, "int")) {
+        if (!isMatch($2.type, "int")) {
             yyerror("int expected in switch case");
         }
     }
@@ -366,28 +452,32 @@ void yyerror(const char *s) {
 }
 
 bool isInt(char *type) {
-    if (strcmp(type, "int"))    return false;
-    else                        return true;
+    if (isMatch(type, "int"))    return true;
+    else                        return false;
 }
 bool isFloat(char *type) {
-    if (strcmp(type, "float"))    return false;
-    else                        return true;
+    if (isMatch(type, "float"))    return true;
+    else                        return false;
 }
 bool isBoolean(char *type) {
-    if (strcmp(type, "bool"))    return false;
-    else                        return true;
+    if (isMatch(type, "bool"))    return true;
+    else                        return false;
 }
 bool isErrorType(char *type) {
-    if (strcmp(type, "ErrorType"))    return false;
-    else                        return true;
+    if (isMatch(type, "ErrorType"))    return true;
+    else                        return false;
 }
 bool isNoneType(char *type) {
-    if (strcmp(type, "None"))    return false;
-    else                        return true;
+    if (isMatch(type, "None"))    return true;
+    else                        return false;
 }
 char* setErrorType() {
+    errorFound = true;
     return strdup("ErrorType");
 }
 char* setNoErrorType() {
     return strdup("NoErrorType");
+}
+bool isMatch(const char *str1, const char *str2) {
+    return !strcmp(str1, str2);
 }

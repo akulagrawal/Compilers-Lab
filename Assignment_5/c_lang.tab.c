@@ -76,9 +76,6 @@
     extern FILE *yyin;
     void yyerror(const char *s);    
     using namespace std;
-
-    // Stores active function name
-    string active_func_name;
     
     struct var_record {
         string name;
@@ -99,11 +96,11 @@
         list<var_record> parameters;
         list<var_record> local_variables;
 
-        void insert_parameter(string parameter_name, string type){
-            parameters.push_back(var_record(parameter_name, type));
+        void insert_parameter(string parameter_name, string type, int level = 0){
+            parameters.push_back(var_record(parameter_name, type, true, level));
         }
 
-        void insert_variable(string var_name, string type, int level){
+        void insert_variable(string var_name, string type, int level = 0){
             local_variables.push_back(var_record(var_name, type, false, level));
         }
 
@@ -133,12 +130,12 @@
             return entries[function_name]; 
         }
 
-        bool search_function(string function_name, function_record& function) {
+        bool search_function(string function_name, function_record *function) {
             // If function exists in symbol table
             if (entries.count(function_name)) {
                 // Set function = pointer to function in symbol table
                 // Returns true
-                function = entries[function_name];
+                function = &entries[function_name];
                 return true;
             }
             else {
@@ -149,15 +146,31 @@
 
     } symtab;
 
+    // Stores active function name
+    string active_func_name;
+
+    // Stores current level
+    int level = 0;
+
+    // Stores list of parameter of current function declaration
+    list<var_record> active_func_param_list;
+
+    // Stores true, If error is found while semantic checking
+    bool errorFound = false;
+
+    // Keep track of current line number
+    int lineNo = 1;
+
     extern bool isInt(char *type);
     extern bool isFloat(char *type);
     extern bool isBoolean(char *type);
     extern bool isErrorType(char *type);
     extern bool isNoneType(char *type);
+    extern bool isMatch(const char *str1, const char *str2);
     extern char* setErrorType();
     extern char* setNoErrorType();
 
-#line 161 "c_lang.tab.c" /* yacc.c:339  */
+#line 174 "c_lang.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -212,7 +225,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 96 "c_lang.y" /* yacc.c:355  */
+#line 109 "c_lang.y" /* yacc.c:355  */
 
     struct {
         char* type;
@@ -220,7 +233,7 @@ union YYSTYPE
         char* sval;
     } type_id;
 
-#line 224 "c_lang.tab.c" /* yacc.c:355  */
+#line 237 "c_lang.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -237,7 +250,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 241 "c_lang.tab.c" /* yacc.c:358  */
+#line 254 "c_lang.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -535,12 +548,12 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   131,   131,   132,   133,   134,   138,   139,   143,   144,
-     148,   152,   153,   157,   161,   165,   169,   170,   174,   175,
-     176,   177,   181,   182,   186,   187,   188,   189,   190,   191,
-     195,   209,   223,   240,   254,   268,   285,   290,   294,   295,
-     299,   300,   304,   305,   312,   313,   314,   318,   319,   323,
-     324,   325,   326,   330,   331,   332,   333,   337
+       0,   144,   144,   145,   146,   147,   151,   160,   167,   190,
+     209,   213,   235,   243,   247,   251,   255,   256,   260,   261,
+     262,   263,   267,   268,   272,   273,   274,   275,   276,   277,
+     281,   295,   309,   326,   340,   354,   371,   376,   380,   381,
+     385,   386,   390,   391,   398,   399,   400,   404,   405,   409,
+     410,   411,   412,   416,   417,   418,   419,   423
 };
 #endif
 
@@ -1393,26 +1406,141 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 15:
-#line 165 "c_lang.y" /* yacc.c:1646  */
+        case 6:
+#line 152 "c_lang.y" /* yacc.c:1646  */
+    {
+        level --;
+        active_func_name = "";
+        if (!isErrorType((yyvsp[-3].type_id).type)) {
+            if (!(isMatch((yyvsp[-3].type_id).type, (yyvsp[-1].type_id).type) || isMatch((yyvsp[-3].type_id).type, "void") && isNoneType((yyvsp[-1].type_id).type)))
+                cout << "Type mismatch of return type between " << (yyval.type_id).type << " and " << (yyvsp[-1].type_id).type << endl;
+        }
+    }
+#line 1420 "c_lang.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 7:
+#line 161 "c_lang.y" /* yacc.c:1646  */
+    {
+        active_func_name = "";
+    }
+#line 1428 "c_lang.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 8:
+#line 168 "c_lang.y" /* yacc.c:1646  */
+    {
+        level ++;
+        function_record r;
+
+        // Check if function already exists
+        if (symtab.search_function((yyvsp[-3].type_id).sval, &r)) {
+            cout << "Error : Redeclaration of function : " << (yyvsp[-3].type_id).sval << " in line : " << lineNo << endl;
+        }
+        else {
+            r = symtab.insert_function((yyvsp[-3].type_id).sval);
+            r.function_return_type = (yyvsp[-4].type_id).sval;
+            active_func_name = (yyvsp[-3].type_id).sval;
+
+            // Add param_list_declaration to symbol_table corresponding to active function
+            if ( !isErrorType((yyvsp[-1].type_id).type) ) {
+                for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+                    r.insert_parameter(it->name, it->type, it->level);
+                }
+                (yyval.type_id).type = strdup((yyvsp[-4].type_id).sval);
+            }
+        }
+    }
+#line 1455 "c_lang.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 9:
+#line 191 "c_lang.y" /* yacc.c:1646  */
+    {
+        level ++;
+        function_record r;
+
+        // Check if function already exists
+        if (symtab.search_function((yyvsp[-2].type_id).sval, &r)) {
+            cout << "Error : Redeclaration of function : " << (yyvsp[-2].type_id).sval << " in line : " << lineNo << endl;
+        }
+        else {
+            r = symtab.insert_function((yyvsp[-2].type_id).sval);
+            r.function_return_type = (yyvsp[-3].type_id).sval;
+            active_func_name = (yyvsp[-2].type_id).sval;
+            (yyval.type_id).type = strdup((yyvsp[-3].type_id).sval);
+        }
+    }
+#line 1475 "c_lang.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 10:
+#line 209 "c_lang.y" /* yacc.c:1646  */
+    { (yyval.type_id).sval = strdup((yyvsp[0].type_id).sval); }
+#line 1481 "c_lang.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 11:
+#line 214 "c_lang.y" /* yacc.c:1646  */
+    {
+        if (!isErrorType((yyvsp[-2].type_id).type)) {
+            bool found = false;
+            // Check if variable is repeated in parameter list
+            for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+                if (it -> name == (yyvsp[0].type_id).sval) {
+                    cout << "Redeclaration of parameter " << (yyvsp[0].type_id).sval << endl;
+                    (yyvsp[-2].type_id).type = setErrorType();
+                    (yyval.type_id).type = setErrorType();
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                var_record param((yyvsp[0].type_id).sval, (yyvsp[0].type_id).type, /* is_parameter = */ true, level) ;
+                active_func_param_list.push_back(param);
+            }
+        }
+        else
+            (yyval.type_id).type = setErrorType();
+    }
+#line 1507 "c_lang.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 12:
+#line 236 "c_lang.y" /* yacc.c:1646  */
+    { 
+        var_record param((yyvsp[0].type_id).sval, (yyvsp[0].type_id).type, /* is_parameter = */ true, level) ;
+        active_func_param_list.push_back(param);
+    }
+#line 1516 "c_lang.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 13:
+#line 243 "c_lang.y" /* yacc.c:1646  */
+    { (yyval.type_id).type = (yyvsp[-1].type_id).sval; (yyval.type_id).sval = (yyvsp[0].type_id).sval; }
+#line 1522 "c_lang.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 15:
+#line 251 "c_lang.y" /* yacc.c:1646  */
     {}
-#line 1400 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1528 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 169 "c_lang.y" /* yacc.c:1646  */
-    { (yyval.type_id).type = strdup("int"); }
-#line 1406 "c_lang.tab.c" /* yacc.c:1646  */
+#line 255 "c_lang.y" /* yacc.c:1646  */
+    { (yyval.type_id).sval = strdup("int"); }
+#line 1534 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 170 "c_lang.y" /* yacc.c:1646  */
-    { (yyval.type_id).type = strdup("float"); }
-#line 1412 "c_lang.tab.c" /* yacc.c:1646  */
+#line 256 "c_lang.y" /* yacc.c:1646  */
+    { (yyval.type_id).sval = strdup("float"); }
+#line 1540 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 196 "c_lang.y" /* yacc.c:1646  */
+#line 282 "c_lang.y" /* yacc.c:1646  */
     {
         if (!isErrorType((yyvsp[-2].type_id).type)) {
             if ( isInt((yyvsp[-2].type_id).type) || isFloat((yyvsp[-2].type_id).type) ) {
@@ -1426,11 +1554,11 @@ yyreduce:
         else
             (yyval.type_id).type = setErrorType();
     }
-#line 1430 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1558 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 210 "c_lang.y" /* yacc.c:1646  */
+#line 296 "c_lang.y" /* yacc.c:1646  */
     {
         if (!isErrorType((yyvsp[-4].type_id).type)) {
             if ( isInt((yyvsp[-4].type_id).type) || isFloat((yyvsp[-4].type_id).type) ) {
@@ -1444,11 +1572,11 @@ yyreduce:
         else
             (yyval.type_id).type = setErrorType();
     }
-#line 1448 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1576 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 224 "c_lang.y" /* yacc.c:1646  */
+#line 310 "c_lang.y" /* yacc.c:1646  */
     {
         if (!isErrorType((yyvsp[-2].type_id).type)) {
             if (isInt((yyvsp[-2].type_id).type)) {
@@ -1462,11 +1590,11 @@ yyreduce:
         else
             (yyval.type_id).type = setErrorType();
     }
-#line 1466 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1594 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 241 "c_lang.y" /* yacc.c:1646  */
+#line 327 "c_lang.y" /* yacc.c:1646  */
     { 
         if (!isErrorType((yyvsp[-2].type_id).type)) {
             if (isInt((yyvsp[-2].type_id).type) || isFloat((yyvsp[-2].type_id).type)) {
@@ -1480,11 +1608,11 @@ yyreduce:
         else
             (yyval.type_id).type = setErrorType();
     }
-#line 1484 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1612 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 255 "c_lang.y" /* yacc.c:1646  */
+#line 341 "c_lang.y" /* yacc.c:1646  */
     {
         if (!isErrorType((yyvsp[-3].type_id).type)) {
             if (isInt((yyvsp[-2].type_id).type) || isFloat((yyvsp[-2].type_id).type) || isNoneType((yyvsp[-2].type_id).type)) {
@@ -1498,11 +1626,11 @@ yyreduce:
         else
             (yyval.type_id).type = setErrorType();
     }
-#line 1502 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1630 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 269 "c_lang.y" /* yacc.c:1646  */
+#line 355 "c_lang.y" /* yacc.c:1646  */
     {
         if (!isErrorType((yyvsp[-4].type_id).type)) {
             if (isInt((yyvsp[-3].type_id).type) || isFloat((yyvsp[-3].type_id).type) || isNoneType((yyvsp[-3].type_id).type)) {
@@ -1516,81 +1644,81 @@ yyreduce:
         else
             (yyval.type_id).type = setErrorType();
     }
-#line 1520 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1648 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 285 "c_lang.y" /* yacc.c:1646  */
+#line 371 "c_lang.y" /* yacc.c:1646  */
     {
-        if (strcmp((yyvsp[-2].type_id).type, "int")) {
+        if (!isMatch((yyvsp[-2].type_id).type, "int")) {
             yyerror("int expected in switch case");
         }
     }
-#line 1530 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1658 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 294 "c_lang.y" /* yacc.c:1646  */
+#line 380 "c_lang.y" /* yacc.c:1646  */
     {}
-#line 1536 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1664 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 295 "c_lang.y" /* yacc.c:1646  */
+#line 381 "c_lang.y" /* yacc.c:1646  */
     {}
-#line 1542 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1670 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 304 "c_lang.y" /* yacc.c:1646  */
+#line 390 "c_lang.y" /* yacc.c:1646  */
     { (yyval.type_id).type = strdup("None"); }
-#line 1548 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1676 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 305 "c_lang.y" /* yacc.c:1646  */
+#line 391 "c_lang.y" /* yacc.c:1646  */
     { (yyval.type_id).type = strdup((yyvsp[-1].type_id).type); }
-#line 1554 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1682 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 312 "c_lang.y" /* yacc.c:1646  */
+#line 398 "c_lang.y" /* yacc.c:1646  */
     { (yyval.type_id).type = strdup((yyvsp[0].type_id).type); }
-#line 1560 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1688 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 313 "c_lang.y" /* yacc.c:1646  */
+#line 399 "c_lang.y" /* yacc.c:1646  */
     { (yyval.type_id).type = strdup("int"); }
-#line 1566 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1694 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 314 "c_lang.y" /* yacc.c:1646  */
+#line 400 "c_lang.y" /* yacc.c:1646  */
     { (yyval.type_id).type = strdup("int"); }
-#line 1572 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1700 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 318 "c_lang.y" /* yacc.c:1646  */
+#line 404 "c_lang.y" /* yacc.c:1646  */
     { (yyval.type_id).type = strdup((yyvsp[0].type_id).type); }
-#line 1578 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1706 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 319 "c_lang.y" /* yacc.c:1646  */
+#line 405 "c_lang.y" /* yacc.c:1646  */
     { (yyval.type_id).type = strdup((yyvsp[-2].type_id).type); }
-#line 1584 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1712 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 337 "c_lang.y" /* yacc.c:1646  */
+#line 423 "c_lang.y" /* yacc.c:1646  */
     { (yyval.type_id).type = strdup("num"); }
-#line 1590 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1718 "c_lang.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1594 "c_lang.tab.c" /* yacc.c:1646  */
+#line 1722 "c_lang.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1818,7 +1946,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 339 "c_lang.y" /* yacc.c:1906  */
+#line 425 "c_lang.y" /* yacc.c:1906  */
 
 
 int main(int argc, char **argv) {
@@ -1849,28 +1977,32 @@ void yyerror(const char *s) {
 }
 
 bool isInt(char *type) {
-    if (strcmp(type, "int"))    return false;
-    else                        return true;
+    if (isMatch(type, "int"))    return true;
+    else                        return false;
 }
 bool isFloat(char *type) {
-    if (strcmp(type, "float"))    return false;
-    else                        return true;
+    if (isMatch(type, "float"))    return true;
+    else                        return false;
 }
 bool isBoolean(char *type) {
-    if (strcmp(type, "bool"))    return false;
-    else                        return true;
+    if (isMatch(type, "bool"))    return true;
+    else                        return false;
 }
 bool isErrorType(char *type) {
-    if (strcmp(type, "ErrorType"))    return false;
-    else                        return true;
+    if (isMatch(type, "ErrorType"))    return true;
+    else                        return false;
 }
 bool isNoneType(char *type) {
-    if (strcmp(type, "None"))    return false;
-    else                        return true;
+    if (isMatch(type, "None"))    return true;
+    else                        return false;
 }
 char* setErrorType() {
+    errorFound = true;
     return strdup("ErrorType");
 }
 char* setNoErrorType() {
     return strdup("NoErrorType");
+}
+bool isMatch(const char *str1, const char *str2) {
+    return !strcmp(str1, str2);
 }
