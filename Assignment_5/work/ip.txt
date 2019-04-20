@@ -1,1 +1,1 @@
-int ab, cd[ab], ef[10]; float gh; int ij[gh], kl[4];
+float ab = 4.5*3.21 , cd[ab], ef[10]; float gh = 4.35+1; int ij[gh], kl[4];

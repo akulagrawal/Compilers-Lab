@@ -74,7 +74,7 @@
 			for(int i=0;i<this->tab.size();i++)
 			{
 				cout<<"Start: "<<this->tab[i].startoffset<<endl;
-				cout<<this->tab[i].name<<": "<<" ( "<<this->tab[i].type<<" )";
+				cout<<this->tab[i].name<<": "<<this->tab[i].value<<" ( "<<this->tab[i].type<<" )";
 				if(this->tab[i].isarray)
 				{
 					cout<<" Dim: ";
@@ -152,6 +152,31 @@
 		return ans;
 	}
 
+	void makecorrect(vector<string> dim)
+	{
+		for (int i = 0; i < dim.size(); ++i)
+		{
+			if(symtab.search(dim[i]) == -1)
+			{
+				cout<<"not found"<<endl;
+				return;
+			}
+
+			if(symtab.tab[symtab.search(dim[i])].type == "i")
+			{
+				string temp = symtab.tab[symtab.search(dim[i])].value;
+				string temp2 = "";
+				int j=0;
+				while(j < temp.length() && temp[j] != '.')
+				{
+					temp2 += temp[j];
+					j++;
+				}
+				symtab.tab[symtab.search(dim[i])].value = temp2;
+			}
+		}	
+	}
+
 	void checksanity(vector<string> dim)
 	{
 		for (int i = 0; i < dim.size(); ++i)
@@ -182,6 +207,58 @@
 		}
 	}
 
+	string evaluvate(char* c_op1, char* c_op, char* c_op2)
+	{
+		string op1="", op="", op2="";
+
+		char* itr = c_op1;
+		while(*itr){
+			op1 += *itr;
+			itr++;
+		}
+
+		itr = c_op2;
+		while(*itr){
+			op2 += *itr;
+			itr++;
+		}
+
+		itr = c_op;
+		while(*itr){
+			op += *itr;
+			itr++;
+		}
+
+		float op1val, op2val;
+		
+		if(isNumber(op1))
+			op1val = stof(op1);
+		else
+			op1val = stof(symtab.tab[symtab.search(op1)].value);
+
+		if(isNumber(op2))
+			op2val = stof(op2);
+		else
+			op2val = stof(symtab.tab[symtab.search(op2)].value);
+
+
+		float ans;
+
+		if(op == "+"){
+			ans = op1val+op2val;
+		}
+		else if(op == "-"){
+			ans = op1val-op2val;	
+		}
+		else if(op == "*"){
+			ans = op1val*op2val;
+		}
+		else{
+			ans = op1val/op2val;
+		}
+		return to_string(ans);
+	}
+
 %}
 
 %union 
@@ -189,12 +266,7 @@
     int ival;
     float fval;
     char c;
-    char *sval;
-    struct
-    {
-    	char *s;
-    	char t;
-    }var_at;
+    char *sval;	
 }
 
 %start decl
@@ -206,14 +278,18 @@
 %left LSB
 %left VAR_NAME
 %left NUM
+%left EQUAL
+%left OP
 
 %token <sval> VAR_NAME
+%type <sval> NUM
+%type <sval> OP
 %type <sval> name_list
 %type <sval> id_arr
 %type <sval> id
-%type <sval> NUM
 %type <sval> dimlist
 %type <sval> br_dimlist
+%type <sval> expr
 %type <c> type
 %type <c> one_dec
 
@@ -234,6 +310,7 @@ one_dec:	type name_list	{
 								symtab.patch($1, $2);
 								vector<string> dim = makedimlist($2);
 								checksanity(dim);
+								makecorrect(dim);
 								cout<<endl;
 							}
 			;
@@ -251,23 +328,39 @@ name_list:	id_arr
 									}
 		;
 id_arr:		id 						{
-										variable v = variable($1, "type", "2", false, dummy);
+										variable v = variable($1, "type", "0", false, dummy);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);
 									}
 
+	|		id EQUAL expr			{
+										variable v = variable($1, "type", $3, false, dummy);
+										if(symtab.search(v.name) == -1)
+											symtab.insertintosymtab(v);	
+									}
+
 	|		id LSB dimlist RSB 		{
 										vector<string> dim = makedimlist($3);
-										variable v = variable($1, "type", "2", true, dim);
+										variable v = variable($1, "type", "0", true, dim);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);
 									}
 
 	|		id br_dimlist			{
 										vector<string> dim = makedimlist($2);
-										variable v = variable($1, "type", "2", true, dim);
+										variable v = variable($1, "type", "0", true, dim);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);
+									}
+	;
+
+expr:		id 
+	|		id OP expr				{
+										string s = evaluvate($1, $2, $3);
+										int n = s.length(); 
+ 									    char char_array[n + 1]; 
+									    strcpy(char_array, s.c_str());
+									    $$ = strdup(char_array);
 									}
 	;
 
