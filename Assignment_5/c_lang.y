@@ -1,7 +1,7 @@
 %{
     #include <bits/stdc++.h>
     #include <string>
-    
+
     #define print(str, val) \
         std::cout << str << " " <<  val << std::endl;
 
@@ -9,12 +9,12 @@
     extern int yylex();
     extern int yyparse();
     extern FILE *yyin;
-    void yyerror(const char *s);    
+    void yyerror(const char *s);
     using namespace std;
 
     // Stores active function name
     string active_func_name;
-    
+
     struct var_record {
         string name;
         string type;
@@ -57,7 +57,6 @@
                 }
             }
         }
-
     };
 
     struct symbol_table {
@@ -65,7 +64,7 @@
 
         function_record& insert_function(string function_name) {
             assert(!entries.count(function_name));
-            return entries[function_name]; 
+            return entries[function_name];
         }
 
         bool search_function(string function_name, function_record& function) {
@@ -83,10 +82,36 @@
         }
 
     } symtab;
+
+
+    struct quadruple {
+        char _operator;
+        char _arg1[2];
+        char _arg2[2];
+        char _result[2];
+        quadruple * _nextquad;
+
+        quadruple(char op, char * arg1, char * arg2, char * result){
+            this -> _operator = op;
+            for(int i = 0; i < 2; ++i){
+                this -> _arg1[i] = arg1[i];
+                this -> _arg2[i] = arg2[i];
+                this -> _result[i] = result[i];
+            }
+            this -> _nextquad = NULL;
+        }
+    };
+
+    vector<quadruple> quadruples;
+
+    struct indexlist {
+        int a
+    };
 %}
 
 %union {
     struct {
+        indexlist * indexlist;
         char* type;
         double val;
         char* sval;
@@ -174,7 +199,7 @@ arg_list
     : IDENTIFIER
     | arg_list ',' IDENTIFIER
     ;
-    
+
 statement
 	: conditional_statement
 	| loop_statement
@@ -185,14 +210,14 @@ statement
     | function_call
 	;
 
-conditional_statement
-	: IF '(' expression ')' statement 
+selection_statement
+	:  if_exp  statement
     {
         if (strcmp($3.type, "num")) {
             yyerror("int or boolean expected in expression of if-else");
         }
     }
-    | IF '(' expression ')' statement ELSE statement
+    | if_exp statement ELSE statement
     {
         if (strcmp($3.type, "num")) {
             yyerror("int or boolean expected in expression of if-else");
@@ -201,14 +226,20 @@ conditional_statement
 	| SWITCH '(' expression ')' statement
     {
         if (strcmp($3.type, "num")) {
-            yyerror("int expected in expression of switch case");
+            yyerror("int or boolean expected in expression of switch case");
         }
     }
 	;
 
-loop_statement
-	: WHILE '(' expression ')' statement 
-    { 
+if_exp
+    :   IF '(' expression ')'
+    {
+
+    }
+
+iteration_statement
+	: WHILE '(' expression ')' statement
+    {
         if (strcmp($3.type, "num")) {
             yyerror("int or boolean expected in expression of while statement");
         }
@@ -258,12 +289,12 @@ expression
     : assignment_expression         { $$.type = strdup($1.type); }
     | logical_expression            { $$.type = strdup("num"); }
     | relational_expression         { $$.type = strdup("num"); }
-    ; 
+    ;
 
 assignment_expression
     : IDENTIFIER '=' NUM            { $$.type = strdup($3.type); }
     | IDENTIFIER '=' IDENTIFIER     { $$.type = strdup($1.type); }
-    ; 
+    ;
 
 logical_expression
     : IDENTIFIER OR IDENTIFIER
@@ -281,7 +312,7 @@ relational_expression
 
 constant_expression
     : NUM                           { $$.type = strdup("num"); }
-    ; 
+    ;
 %%
 
 int main(int argc, char **argv) {
@@ -303,7 +334,7 @@ int main(int argc, char **argv) {
     while(!feof(yyin))  {
         yyparse();
     }
-  
+
 }
 
 void yyerror(const char *s) {
