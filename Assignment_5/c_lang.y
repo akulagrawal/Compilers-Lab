@@ -65,6 +65,20 @@
             return entries[function_name]; 
         }
 
+        bool search_function(string function_name, function_record& function) {
+            // If function exists in symbol table
+            if (entries.count(function_name)) {
+                // Set function = pointer to function in symbol table
+                // Returns true
+                function = entries[function_name];
+                return true;
+            }
+            else {
+                // If not found returns not found (i.e. false)
+                return false;
+            }
+        }
+
     } symtab;
 %}
 
@@ -78,38 +92,43 @@
 
 %expect 1
 
-// Define the "terminal symbol" token types I'm going to use (in CAPS
-// by convention), and associate each with a field of the %union:
+// Non Terminals
 %type <type_id> statement
-%type <type_id> labeled_statement
-%type <type_id> compound_statement
-%type <type_id> expression_statement
-%type <type_id> selection_statement
-%type <type_id> iteration_statement
+%type <type_id> labeled_statement compound_statement expression_statement selection_statement iteration_statement
 %type <type_id> expression
-%type <type_id> constant_expression
-%type <type_id> logical_expression
-%type <type_id> relational_expression
-%type <type_id> assignment_expression
+%type <type_id> constant_expression logical_expression relational_expression assignment_expression
+%type <type_id> START
+%type <type_id> function_declaration variable_declaration
 
-%token <type_id> NUM
-%token <type_id> IDENTIFIER
-
+// Terminals
+%token <type_id> NUM IDENTIFIER
 %token <type_id> OR
+%token <type_id> IF ELSE
+%token <type_id> FOR WHILE
+%token <type_id> SWITCH CASE DEFAULT
 
-%token <type_id> IF
-%token <type_id> ELSE
-
-%token <type_id> FOR
-
-%token <type_id> WHILE
-%token <type_id> DO
-
-%token <type_id> SWITCH
-%token <type_id> CASE
-%token <type_id> DEFAULT
+// Starting Non Terminal
+%start START
 
 %%
+START
+	: function_declaration
+    | variable_declaration
+	| START function_declaration
+	| START variable_declaration
+	;
+
+function_declaration
+	: function_head '{' variable_declaration body '}'
+	;
+
+function_head
+    : return_type '(' param_list ')'
+    ;
+
+return_type
+    : 
+    
 statement
 	: labeled_statement
 	| compound_statement
@@ -120,33 +139,52 @@ statement
 
 selection_statement
 	: IF '(' expression ')' statement 
-    { 
+    {
         if (strcmp($3.type, "num")) {
-            yyerror("Invalid expression type");
+            yyerror("int or boolean expected in expression of if-else");
         }
     }
     | IF '(' expression ')' statement ELSE statement
     {
         if (strcmp($3.type, "num")) {
-        yyerror("Invalid expression type");
+            yyerror("int or boolean expected in expression of if-else");
         }
     }
 	| SWITCH '(' expression ')' statement
+    {
+        if (strcmp($3.type, "num")) {
+            yyerror("int expected in expression of switch case");
+        }
+    }
 	;
 
 iteration_statement
 	: WHILE '(' expression ')' statement 
     { 
         if (strcmp($3.type, "num")) {
-            yyerror("Invalid expression type");
+            yyerror("int or boolean expected in expression of while statement");
         }
     }
 	| FOR '(' expression_statement expression_statement ')' statement
+    {
+        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
+            yyerror("Type error in condition of for loop");
+        }
+    }
 	| FOR '(' expression_statement expression_statement expression ')' statement
+    {
+        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
+            yyerror("Type error in condition of for loop");
+        }
+    }
 	;
 
 labeled_statement
-	: CASE constant_expression ':' statement
+	: CASE constant_expression ':' statement {
+        if (strcmp($2.type, "num")) {
+            yyerror("int expected in switch case");
+        }
+    }
 	| DEFAULT ':' statement
 	;
 
@@ -161,8 +199,8 @@ statement_list
 	;
 
 expression_statement
-	: ';'
-	| expression ';'
+	: ';'                           { $$.type = strdup("None"); }
+	| expression ';'                { strcpy($$.type, $1.type); }
 	;
 
 /*
