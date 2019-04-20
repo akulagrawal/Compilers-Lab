@@ -5,11 +5,21 @@
 # Prerequisites
 *.d
 
+# Temporary, I/O files
+*intermediate*
+*input*
+*output*
+*.yy.c*
+*vscode*
+
 # Object files
 *.o
 *.ko
 *.obj
 *.elf
+
+# Python files
+*pycache*
 
 # Linker output
 *.ilk

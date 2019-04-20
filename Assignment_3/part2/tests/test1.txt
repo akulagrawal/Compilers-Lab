@@ -1,0 +1,12 @@
+SELECT < salary< 1-200.02+2 AND (name = 'john' OR 2 < -2) > (Employee);
+(Table_Name_1) CARTESIAN_PRODUCT (Table_Name_2);
+(Employee) EQUI_JOIN (Department);
+SELECT < name='John' AND salary< 200 > (Employee);
+SELECT(Employee)< salary<200.02  >;
+PROJECT < name, salary> (Employee);
+PROJECT (Employee) <salary, name>;
+( Table_Name_1)CARTESIAN_PRODUCT ( Table_Name_2);
+CARTESIAN_PRODUCT (Employee) (Department);
+(Table_Name_) EQUI_JOIN <(E.J=T.D) AND (S.D=D.E OR D.IJ='DDSDFG')> ( Table_Name_2);
+SELECT < QWID            = 2 > (SURYAVANSHI);
+PROJECT <BDSJBAD> (STUDENTS) ;

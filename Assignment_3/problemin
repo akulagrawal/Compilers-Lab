@@ -1,0 +1,2 @@
+comment cannot have start of comment, * or / inside 
+implements not in inherited wala

@@ -5,6 +5,18 @@ Constructors: 0
 Inherited Classes: 2
 */
 
+
+/*
+afa
+/
+afef
+efe
+*/
+
+/*
+System.out.println("class Calculation {
+   }"+z);*/
+
 class Calculation {
    int z;
 	

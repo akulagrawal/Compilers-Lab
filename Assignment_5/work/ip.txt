@@ -1,0 +1,1 @@
+int ab, cd, ef; float gh; int ij, kl;

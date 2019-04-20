@@ -1,0 +1,1 @@
+(sample) EQUI_JOIN <sample.id = sample2.id or ((sample.name = sample2.name) and sample.name = sample2.name)> (sample2);

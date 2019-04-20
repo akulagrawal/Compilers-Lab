@@ -44,7 +44,7 @@ dbms.l
 	                                                                          	}
                                                                             }
 
-(\/\*([\n]|[^\*\/])*\*\/)													{
+(\/\*([\n]|[^\*])*\*\/)													{
 																			  //printf("Comment: %s\n", yytext);
                                                                               //printf("Line number: %u\n", yylineno);
                                                                               int matchsize = strlen(yytext);
