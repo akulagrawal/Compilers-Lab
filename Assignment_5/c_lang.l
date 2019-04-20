@@ -16,6 +16,8 @@ c_lang.l
 (switch)                  { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return SWITCH; } 
 (case)                    { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return CASE; } 
 (default)                 { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return DEFAULT; }
+(int)                     { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return INT; } 
+(float)                   { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return FLOAT; }
 \(                        { yylval.type_id.sval = strdup(yytext); return '('  ; }
 \)                        { yylval.type_id.sval = strdup(yytext); return ')'  ; }
 \{                        { yylval.type_id.sval = strdup(yytext); return '{'  ; }

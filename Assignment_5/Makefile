@@ -1,6 +1,7 @@
 CXX = g++
 CPP = g++
-CXXFLAG = -std=c++11
+CXXFLAG = -g -std=c++11
+# DEBUG_FLAG=gdb
 
 file=input.txt
 
@@ -8,10 +9,10 @@ run:	build
 		./a.out
 
 build:
-		$(CPP) -std=c++11 intermediate.cpp
+		$(CPP) $(CXXFLAG) intermediate.cpp
 
 semantics:	build_bison
-		./a.out < $(file)
+		$(DEBUG_FLAG) ./a.out
 
 build_bison:	BISON FLEX
 	$(CXX) $(CXXFLAG) c_lang.tab.c lex.yy.c -lfl
