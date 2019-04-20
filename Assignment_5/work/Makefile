@@ -7,7 +7,7 @@ FLEX:
 	flex decl.l
 
 BISON:	FLEX
-	bison -d decl.y
+	bison -d -v decl.y
 
 clean:
 	rm -rf lex.yy.c a.out decl.tab*
