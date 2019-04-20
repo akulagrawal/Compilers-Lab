@@ -1,7 +1,8 @@
 CC = g++
+CX = -std=c++11
 
 build:	BISON
-	$(CC) decl.tab.c lex.yy.c -lfl
+	$(CC) $(CX) decl.tab.c lex.yy.c -lfl
 
 FLEX:
 	flex decl.l

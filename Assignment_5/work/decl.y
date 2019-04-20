@@ -1,11 +1,21 @@
 %{
 	#include <bits/stdc++.h>
+	#include <string>
 	#define print(str, val) \
     printf("%s %s\n", str, val);
+    #define SIZE_INT 4
+    #define SIZE_FLOAT 4
+
 	using namespace std;
 	int yyerror(const char *s);
 	int yylex(void);
 	int yyparse();
+
+	bool isNumber(const string &line) 
+	{
+		if (line[0] == '0') return true;
+		return (atoi(line.c_str()));
+	}
 
 	class variable{
 		public:
@@ -13,6 +23,8 @@
 		string type;
 		string value;
 		bool isarray;
+		int startoffset;
+		int endoffset;
 		vector<string> dimension;
 
 		variable(string v_name, string v_type, string v_value, bool v_isarray, vector<string> v_dimension){
@@ -21,7 +33,10 @@
 			this->value = v_value;
 			this->isarray = v_isarray;
 			this->dimension = v_dimension;
+			this->startoffset = 0;
+			this->endoffset = -1;
 		}
+
 	};
 
 	class symbol_table{
@@ -29,12 +44,28 @@
 		vector <variable> tab;
 
 		void insertintosymtab(variable v){
-			for(int i=0;i<this->tab.size();i++){
-				if(this->tab[i].name == v.name){
-					cout<<"Variable "<<v.name<<" already present"<<endl;
-					return;
+			
+			if(tab.size() == 0)
+				v.startoffset = 0;
+			else
+				v.startoffset = tab[tab.size()-1].endoffset;
+
+			long long int mul = 1;
+			for (int i = 0; i < v.dimension.size(); ++i){
+				if(isNumber(v.dimension[i])){
+					mul *= stoi(v.dimension[i]);
+				}
+				else{
+					mul *= stoi(tab[this->search(v.dimension[i])].value);
 				}
 			}
+
+			if(v.type == "i")
+				mul *= SIZE_INT;
+			else
+				mul *= SIZE_FLOAT;
+
+			v.endoffset = v.startoffset +mul;
 			tab.push_back(v);	
 		}
 
@@ -42,6 +73,7 @@
 			cout<<"Symbol Table: "<<endl;
 			for(int i=0;i<this->tab.size();i++)
 			{
+				cout<<"Start: "<<this->tab[i].startoffset<<endl;
 				cout<<this->tab[i].name<<": "<<" ( "<<this->tab[i].type<<" )";
 				if(this->tab[i].isarray)
 				{
@@ -118,12 +150,6 @@
 			ans.push_back(var_name);
 		}
 		return ans;
-	}
-
-	bool isNumber(const string &line) 
-	{
-		if (line[0] == '0') return true;
-		return (atoi(line.c_str()));
 	}
 
 	void checksanity(vector<string> dim)
@@ -225,20 +251,23 @@ name_list:	id_arr
 									}
 		;
 id_arr:		id 						{
-										variable v = variable($1, "type", "value", false, dummy);
-										symtab.insertintosymtab(v);
+										variable v = variable($1, "type", "2", false, dummy);
+										if(symtab.search(v.name) == -1)
+											symtab.insertintosymtab(v);
 									}
 
 	|		id LSB dimlist RSB 		{
 										vector<string> dim = makedimlist($3);
-										variable v = variable($1, "type", "value", true, dim);
-										symtab.insertintosymtab(v);	
+										variable v = variable($1, "type", "2", true, dim);
+										if(symtab.search(v.name) == -1)
+											symtab.insertintosymtab(v);
 									}
 
 	|		id br_dimlist			{
 										vector<string> dim = makedimlist($2);
-										variable v = variable($1, "type", "value", true, dim);
-										symtab.insertintosymtab(v);	
+										variable v = variable($1, "type", "2", true, dim);
+										if(symtab.search(v.name) == -1)
+											symtab.insertintosymtab(v);
 									}
 	;
 
@@ -267,14 +296,8 @@ id:			VAR_NAME
 
 %%
 
-int main(int argc, char **argv)
+int main()
 {
-  if ((argc > 1) && (freopen(argv[1], "r", stdin) == NULL))
-  {
-    cerr << argv[0] << ": File " << argv[1] << " cannot be opened.\n";
-    exit(1);
-  }
-  
   yyparse();
 
   return 0;
