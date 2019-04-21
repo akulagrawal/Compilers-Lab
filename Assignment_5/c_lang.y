@@ -274,20 +274,25 @@ conditional_statement
 
 
 loop_statement
-	:  WHILEEXP statement
-	| FOR '(' expression_statement expression_statement ')' statement
-    {
-        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
-            yyerror("Type error in condition of for loop");
-        }
-    }
-	| FOR '(' expression_statement expression_statement expression ')' statement
-    {
-        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
-            yyerror("Type error in condition of for loop");
-        }
-    }
+	: WHILEEXP statement
+	| FOREXP ')' statement
+    | FOREXP expression ')' statement
 	;
+
+
+FOREXP
+    : FOR '(' expression_statement expression_statement {
+        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
+            yyerror("Type error in condition of for loop");
+        }
+        quadruple temp;
+        temp._operator = "ifz";
+        temp._arg1 = "expres";
+        temp._arg2 = "";
+        temp._result = "";
+        quadruples.push_back(temp);
+    }
+    ;
 
 WHILEEXP
     : WHILE '(' expression ')' {
