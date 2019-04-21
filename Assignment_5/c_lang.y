@@ -102,19 +102,22 @@
     extern bool isErrorType(char *type);
     extern bool isNoneType(char *type);
     extern bool isMatch(const char *str1, const char *str2);
+    extern bool isInsideFunc();
     extern char* setErrorType();
     extern char* setNoErrorType();
+    extern void set_active_function(const char *str);
+    extern void reset_active_function();
 %}
 
 %union {
     struct {
         char* type;
-        double val;
+        int len;
         char* sval;
     } type_id;
 }
 
-%expect 1
+%expect 1       // 1. if-else
 
 // Non Terminals
 %type <type_id> statement statement_list
@@ -126,11 +129,10 @@
 %type <type_id> param_list_declaration param_declaration
 %type <type_id> function_call arg_list
 %type <type_id> variable_declaration_list variable_declaration
-%type <type_id> datatype
 
 // Terminals
 %token <type_id> NUM IDENTIFIER
-%token <type_id> INT FLOAT
+%token <type_id> TYPE VOID
 %token <type_id> OR
 %token <type_id> IF ELSE
 %token <type_id> FOR WHILE
@@ -151,7 +153,7 @@ function_declaration
 	: function_head '{' statement_list '}'
     {
         level --;
-        active_func_name = "";
+        reset_active_function();
         if (!isErrorType($1.type)) {
             if (!(isMatch($1.type, $3.type) || isMatch($1.type, "void") && isNoneType($3.type)))
                 cout << "Type mismatch of return type between " << $$.type << " and " << $3.type << endl;
@@ -159,47 +161,91 @@ function_declaration
     }
 	| function_head '{' '}'
     {
-        active_func_name = "";
+        reset_active_function();
     }
 	;
 
 function_head
-    : datatype func_name '(' param_list_declaration ')'
+    : TYPE func_name '(' param_list_declaration ')'
     {
         level ++;
-        function_record r;
+        function_record *r;
 
         // Check if function already exists
-        if (symtab.search_function($2.sval, &r)) {
+        if (symtab.search_function($2.sval, r)) {
             cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+            r->function_return_type = setErrorType();
         }
         else {
-            r = symtab.insert_function($2.sval);
-            r.function_return_type = $1.sval;
-            active_func_name = $2.sval;
+            *r = symtab.insert_function($2.sval);
+            set_active_function($2.sval);
+
+            if ( !isErrorType($4.type) )
+                r->function_return_type = $1.sval;
+            else 
+                r->function_return_type = setErrorType();
 
             // Add param_list_declaration to symbol_table corresponding to active function
-            if ( !isErrorType($4.type) ) {
-                for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
-                    r.insert_parameter(it->name, it->type, it->level);
-                }
-                $$.type = strdup($1.sval);
+            for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+                r->insert_parameter(it->name, it->type, it->level);
             }
+            $$.type = strdup($1.sval);
         }
     }
-    | datatype func_name '(' ')'
+    | VOID func_name '(' param_list_declaration ')'
     {
         level ++;
-        function_record r;
+        function_record *r;
 
         // Check if function already exists
-        if (symtab.search_function($2.sval, &r)) {
+        if (symtab.search_function($2.sval, r)) {
             cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
         }
         else {
-            r = symtab.insert_function($2.sval);
-            r.function_return_type = $1.sval;
-            active_func_name = $2.sval;
+            *r = symtab.insert_function($2.sval);
+            set_active_function($2.sval);
+
+            if ( !isErrorType($4.type) )
+                r->function_return_type = $1.sval;
+            else 
+                r->function_return_type = setErrorType();
+
+            // Add param_list_declaration to symbol_table corresponding to active function
+            for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+                r->insert_parameter(it->name, it->type, it->level);
+            }
+            $$.type = strdup($1.sval);
+        }
+    }
+    | TYPE func_name '(' ')'
+    {
+        level ++;
+        function_record *r;
+
+        // Check if function already exists
+        if (symtab.search_function($2.sval, r)) {
+            cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+        }
+        else {
+            *r = symtab.insert_function($2.sval);
+            r->function_return_type = $1.sval;
+            set_active_function($2.sval);
+            $$.type = strdup($1.sval);
+        }
+    }
+    | VOID func_name '(' ')'
+    {
+        level ++;
+        function_record *r;
+
+        // Check if function already exists
+        if (symtab.search_function($2.sval, r)) {
+            cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+        }
+        else {
+            *r = symtab.insert_function($2.sval);
+            r->function_return_type = $1.sval;
+            set_active_function($2.sval);
             $$.type = strdup($1.sval);
         }
     }
@@ -212,35 +258,38 @@ func_name
 param_list_declaration
     : param_list_declaration ',' param_declaration
     {
-        if (!isErrorType($1.type)) {
-            bool found = false;
-            // Check if variable is repeated in parameter list
-            for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
-                if (it -> name == $3.sval) {
-                    cout << "Redeclaration of parameter " << $3.sval << endl;
-                    $1.type = setErrorType();
-                    $$.type = setErrorType();
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                var_record param($3.sval, $3.type, /* is_parameter = */ true, level) ;
-                active_func_param_list.push_back(param);
+        bool found = false;
+        // Check if variable is repeated in parameter list
+        for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+            if (it -> name == $3.sval) {
+                cout << "Redeclaration of parameter " << $3.sval << endl;
+                $$.type = setErrorType();
+                found = true;
+                break;
             }
         }
-        else
+        if (!found) {
+            var_record param($3.sval, $3.type, /* is_parameter = */ true, level) ;
+            active_func_param_list.push_back(param);
+            $$.type = setNoErrorType();
+            $$.len = $1.len + 1;
+        }
+        
+        if (isErrorType($1.type)) {
             $$.type = setErrorType();
+        }
     }
     | param_declaration             
-    { 
+    {
+        $$.len = 1; 
         var_record param($1.sval, $1.type, /* is_parameter = */ true, level) ;
         active_func_param_list.push_back(param);
+        $$.type = setNoErrorType();
     }
     ;
 
 param_declaration
-    : datatype IDENTIFIER           { $$.type = $1.sval; $$.sval = $2.sval; }
+    : TYPE IDENTIFIER           { $$.type = $1.sval; $$.sval = $2.sval; }
     ;
 
 variable_declaration_list
@@ -248,19 +297,60 @@ variable_declaration_list
     ;
 
 variable_declaration
-    : datatype IDENTIFIER ';'       {}
-    ;
-
-datatype
-    : INT                           { $$.sval = strdup("int"); }
-    | FLOAT                         { $$.sval = strdup("float"); }
+    : TYPE IDENTIFIER ';'       {}
     ;
 
 function_call
     : IDENTIFIER '(' ')' ';'
+    {
+        function_record *r;
+        string functionName = $1.sval;
+        
+        // search for function declaration
+        if (symtab.search_function(functionName, r)) {
+
+            // Check if param_list_declaration is empty
+            if (r->parameters.empty())  {
+                $$.type = strdup(r->function_return_type.c_str());
+            }
+            else {
+                // Error
+                cout << "too many arguments to function '" << functionName << "'\n";
+                $$.type = setErrorType();
+            }
+        }
+        else {
+            // Function not found
+            cout << "Function " << functionName << " is not declared\n";
+            $$.type = setErrorType();
+        }
+    }
     | IDENTIFIER '(' arg_list ')' ';'
-    | datatype IDENTIFIER '=' IDENTIFIER '(' ')' ';'
-    | datatype IDENTIFIER '=' IDENTIFIER '(' arg_list ')' ';'
+    {
+        function_record *r;
+        string functionName = $1.sval;
+        
+        // search for function declaration
+        if (symtab.search_function(functionName, r)) {
+            // Check if param_list_declaration is empty
+            if (r->parameters.empty())  {
+                $$.type = strdup(r->function_return_type.c_str());
+            }
+            else {
+                // Error
+                cout << "Argument list mismatch with parameter list of " << functionName << "\n";
+                $$.type = setErrorType();
+            }
+        }
+        else {
+            // Function not found
+            cout << "Function " << functionName << " is not declared\n";
+            $$.type = setErrorType();
+        }
+    }
+
+    | TYPE IDENTIFIER '=' IDENTIFIER '(' ')' ';'
+    | TYPE IDENTIFIER '=' IDENTIFIER '(' arg_list ')' ';'
     ;
 
 arg_list
@@ -433,7 +523,7 @@ int main(int argc, char **argv) {
     FILE *myfile = fopen(filename, "r");
     // Make sure it is valid:
     if (!myfile) {
-        print("I can't open ", filename);
+        print(filename, "does not exists.");
         return -1;
     }
     // Set Flex to read from it instead of defaulting to STDIN:
@@ -480,4 +570,13 @@ char* setNoErrorType() {
 }
 bool isMatch(const char *str1, const char *str2) {
     return !strcmp(str1, str2);
+}
+bool isInsideFunc() {
+    return !(active_func_name == "");
+}
+void set_active_function(const char *str) {
+    active_func_name = str;
+}
+void reset_active_function() {
+    active_func_name = "";
 }

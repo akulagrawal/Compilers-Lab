@@ -47,8 +47,8 @@ extern int yydebug;
   {
     NUM = 258,
     IDENTIFIER = 259,
-    INT = 260,
-    FLOAT = 261,
+    TYPE = 260,
+    VOID = 261,
     OR = 262,
     IF = 263,
     ELSE = 264,
@@ -65,11 +65,11 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 109 "c_lang.y" /* yacc.c:1909  */
+#line 112 "c_lang.y" /* yacc.c:1909  */
 
     struct {
         char* type;
-        double val;
+        int len;
         char* sval;
     } type_id;
 
