@@ -227,6 +227,32 @@ statement
     | function_call
 	;
 
+loopstatement
+    : conditional_statement
+    | loop_statement
+    | labeled_statement
+    | loopcompound_statement        // Nested statement_list
+    | expression_statement      // Expression followed by semicolon
+    | variable_declaration_list
+    | function_call
+    | BREAK ';' {
+        quadruple temp;
+        temp._operator = "ifz";
+        temp._arg1 = "expres";
+        temp._arg2 = "";
+        temp._result = "";
+        quadruples.push_back(temp);
+    }
+    |CONTINUE ';' {
+        quadruple temp;
+        temp._operator = "ifz";
+        temp._arg1 = "expres";
+        temp._arg2 = "";
+        temp._result = "";
+        quadruples.push_back(temp);
+    }
+    ;
+
 conditional_statement
 	: IF '(' expression ')' statement 
     {
@@ -274,9 +300,9 @@ conditional_statement
 
 
 loop_statement
-	: WHILEEXP statement
-	| FOREXP ')' statement
-    | FOREXP expression ')' statement
+	: WHILEEXP loopstatement
+	| FOREXP ')' loopstatement
+    | FOREXP expression ')' loopstatement
 	;
 
 
@@ -321,10 +347,20 @@ compound_statement
 	| '{' statement_list '}'        {}
 	;
 
+loopcompound_statement
+    : '{' '}'                       {}
+    | '{' loopstatement_list '}'    {}
+    ;
+
 statement_list
 	: statement
 	| statement_list statement
 	;
+
+loopstatement_list
+    :   loopstatement
+    |   loopstatement_list loopstatement
+    ;
 
 expression_statement
 	: ';'                           { $$.type = strdup("None"); }

@@ -1,5 +1,7 @@
 int main(){
 	for(i=0;i<4;i=6){
 		a=1;
+		break;
+		b=6;
 	}
 }
