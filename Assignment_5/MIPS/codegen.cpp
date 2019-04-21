@@ -57,7 +57,7 @@ string to_hex(int y) {
 
 int main()
 {   
-    freopen ("a.asm","w",stdout);
+    freopen ("Assembly.asm","w",stdout);
 	// File pointer 
 	fstream fin; 
 	vector<quad> quadlist;
