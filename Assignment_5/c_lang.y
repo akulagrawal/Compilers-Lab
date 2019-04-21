@@ -1,7 +1,8 @@
 %{
     #include <bits/stdc++.h>
     #include <string>
-
+    #define SIZE_INT 4
+    #define SIZE_FLOAT 4
     #define print(str, val) \
         std::cout << str << " " <<  val << std::endl;
 
@@ -211,13 +212,13 @@
 			return ans;
 		}
 
-		void patch(char v_type, char* s){
+		void patch(char* v_type, char* s){
 			vector<string> var_names = this->getvarvector(s);
 			for (int i = 0; i < var_names.size(); ++i){
 
 				for (int j = 0; j < tab.size(); ++j){
 					if(tab[j].name == var_names[i]){
-						tab[j].type = v_type;
+						tab[j].type = strdup(v_type);
 						break;
 					}
 				}
@@ -233,7 +234,7 @@
 		}
 	};
 
-	ab_symbol_table ab_symtab = symbol_table();
+	ab_symbol_table ab_symtab = ab_symbol_table();
 	vector<string> dummy;
 
 	vector <string> makedimlist(char* s){
@@ -303,16 +304,17 @@
 %type <type_id> statement statement_list
 %type <type_id> labeled_statement compound_statement expression_statement conditional_statement loop_statement
 %type <type_id> expression
-%type <type_id> constant_expression logical_expression relational_expression assignment_expression arithmetic_expression
+%type <type_id> logical_expression relational_expression assignment_expression arithmetic_expression
 %type <type_id> START
 %type <type_id> logical_operation
 %type <type_id> function_declaration function_head return_type func_name
 %type <type_id> param_list_declaration param_declaration
 %type <type_id> function_call arg_list
-%type <type_id> variable_declaration_list variable_declaration
+%type <type_id> variable_declaration_list
 %type <type_id> datatype
 %type <type_id> if_exp else_mark
 %type <type_id> bracket_dimlist name_list id_arr
+%type <type_id> term factor
 
 // Terminals
 %token <type_id> NUM IDENTIFIER
@@ -453,7 +455,7 @@ loop_statement
 	;
 
 labeled_statement
-	: CASE constant_expression ':' statement {
+	: CASE arithmetic_expression ':' statement {
         if (strcmp($2.type, "int")) {
             yyerror("int expected in switch case");
         }
@@ -518,7 +520,8 @@ expression
     }
     | arithmetic_expression
     {
-
+        $$.val = $1.val;
+        $$.type = strdup("num");
     }
     ;
 
@@ -596,16 +599,48 @@ relational_expression
     }
     ;
 
+
 arithmetic_expression
-    : constant_expression
+    : term '+' arithmetic_expression
     {
+        $$.type = strdup("num");
+		//evaluvation quad factor+term and $$ = that result
+		cout<<$1.sval<<" + "<<$3.sval<<endl;
+	}
 
+	| term '-' arithmetic_expression
+    {
+        $$.type = strdup("num");
+									//evaluvation quad factor-term and $$ = that result
+									cout<<$1.sval<<" - "<<$3.sval<<endl;
+								}
+	|		term
+    {
+        $$.type = strdup("num");
     }
-    ;
+	;
 
-constant_expression
-    : NUM                           { $$.type = strdup("num"); }
-    ;
+term:		factor '*' term
+    {
+		//evaluvation quad factor*term and $$ = that result
+		cout<<$1.sval<<" * "<<$3.sval<<endl;
+	}
+	|		factor '/' term		{
+									//evaluvation quad factor/term and $$ = that result
+									cout<<$1.sval<<" / "<<$3.sval<<endl;
+								}
+	|		factor
+	;
+
+factor
+    : '(' arithmetic_expression ')'
+    {
+		$$ = $2;
+		//evaluvate expr first and $$ = that result
+	}
+	| IDENTIFIER
+    | NUM
+	;
 
 /* Variable Declarations. */
 datatype
@@ -614,15 +649,11 @@ datatype
     ;
 
 variable_declaration_list
-    : variable_declaration
-	;
-
-variable_declaration
     : datatype name_list
     {
 		$$ = $1;
-		symtab.patch($1, $2);
-		vector<string> dim = makedimlist($2);
+        ab_symtab.patch($1.sval, $2.sval);
+        vector<string> dim = makedimlist($2.sval);
 		checksanity(dim);
 		// makecorrect(dim);
 		cout<<endl;
@@ -633,9 +664,9 @@ name_list
     : id_arr
 	| id_arr ',' name_list
     {
-		$$=$1;
-		strcat($$,",");
-		strcat($$,$3);
+        $$.sval=$1.sval;
+        strcat($$.sval,",");
+        strcat($$.sval,$3.sval);
 	}
     ;
 
@@ -643,14 +674,14 @@ id_arr
     : IDENTIFIER
     {
     	//abhishek //assignment quad = 0;
-    	variable v = variable($1, "type", "0", false, dummy);
+    	variable v = variable($1.sval, "type", "0", false, dummy);
     	if(ab_symtab.search(v.name) == -1)
     		ab_symtab.insertintosymtab(v);
 	}
 	| IDENTIFIER '=' arithmetic_expression
     {
 		//abhishek //assignment quad = exprvalue; //here we dump the expression as value of id
-		variable v = variable($1, "type", $3, false, dummy);
+		variable v = variable($1.sval, "type", $3.sval, false, dummy);
 		if(ab_symtab.search(v.name) == -1)
 			ab_symtab.insertintosymtab(v);
 	}
@@ -659,8 +690,8 @@ id_arr
     	//abhishek //assignment quad = 0;
     	//here seperate values should be assigned to seperate elements
     	//not done as of now
-    	vector<string> dim = makedimlist($2);
-    	variable v = variable($1, "type", "0", true, dim);
+        vector<string> dim = makedimlist($2.sval);
+        variable v = variable($1.sval, "type", "0", true, dim);
     	if(ab_symtab.search(v.name) == -1)
     		ab_symtab.insertintosymtab(v);
     }
@@ -673,9 +704,9 @@ bracket_dimlist
 	}
 	| '[' NUM ']' bracket_dimlist
     {
-		$$=$2;
-		strcat($$,",");
-		strcat($$,$4);
+        $$=$2;
+        strcat($$.sval,",");
+        strcat($$.sval,$4.sval);
 	}
 
 %%

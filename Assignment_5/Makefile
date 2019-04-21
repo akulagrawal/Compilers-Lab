@@ -21,7 +21,7 @@ FLEX:
 	flex c_lang.l
 
 BISON:	FLEX
-	bison -d c_lang.y
+	bison -d -v c_lang.y
 
 clean:
 	rm -rf lex.yy.c a.out *.tab*
