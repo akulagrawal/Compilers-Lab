@@ -1490,8 +1490,8 @@ yyreduce:
 #line 238 "c_lang.y" /* yacc.c:1646  */
     {
         quadruple temp;
-        temp._operator = "ifz";
-        temp._arg1 = "expres";
+        temp._operator = "jmp";
+        temp._arg1 = "";
         temp._arg2 = "";
         temp._result = "";
         quadruples.push_back(temp);
@@ -1503,8 +1503,8 @@ yyreduce:
 #line 246 "c_lang.y" /* yacc.c:1646  */
     {
         quadruple temp;
-        temp._operator = "ifz";
-        temp._arg1 = "expres";
+        temp._operator = "jmp";
+        temp._arg1 = "";
         temp._arg2 = "";
         temp._result = "";
         quadruples.push_back(temp);
