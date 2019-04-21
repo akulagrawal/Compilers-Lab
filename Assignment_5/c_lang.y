@@ -312,7 +312,7 @@ FOREXP
             yyerror("Type error in condition of for loop");
         }
         quadruple temp;
-        temp._operator = "ifz";
+        temp._operator = "ifF";
         temp._arg1 = "expres";
         temp._arg2 = "";
         temp._result = "";
@@ -326,7 +326,7 @@ WHILEEXP
             yyerror("int or boolean expected in expression of while statement");
         }
         quadruple temp;
-        temp._operator = "ifz";
+        temp._operator = "ifF";
         temp._arg1 = "expres";
         temp._arg2 = "";
         temp._result = "";

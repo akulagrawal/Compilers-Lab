@@ -96,7 +96,7 @@ int main()
 	map<string, int> isLabel;
 	int labelidx = 1;
 	for(int i=0;i<quadlist.size();i++) {
-		if(quadlist[i].opcode == "ifz") {
+		if((quadlist[i].opcode == "ifF") || (quadlist[i].opcode == "ifT")) {
 			if(!isLabel[quadlist[i].res]) {
 				isLabel[quadlist[i].res] = labelidx;
 				labelidx++;
@@ -181,7 +181,7 @@ int main()
 			int z = getmem(temp.res);
 			v.push_back("sw $v0, " + to_hex(z) + "($0)");
 		}
-		if(temp.opcode == "ifz") {
+		if(temp.opcode == "ifF") {
 			//int x = getfree();
 			//int y = getfree();
 			//if(x < 0 || y < 0) {
@@ -191,6 +191,17 @@ int main()
 			int x = memory[mapmem[temp.op1]];
 			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
 			v.push_back("beqz $t0, Label" + to_string(isLabel[quadlist[i].res]));
+		}
+		if(temp.opcode == "ifT") {
+			//int x = getfree();
+			//int y = getfree();
+			//if(x < 0 || y < 0) {
+			//	cout<<"ERROR: Register overflow\n";
+			//	exit(1);
+			//}
+			int x = memory[mapmem[temp.op1]];
+			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+			v.push_back("bnez $t0, Label" + to_string(isLabel[quadlist[i].res]));
 		}
 
 		/*if(temp.opcode == "-") {
