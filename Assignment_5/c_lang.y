@@ -320,9 +320,11 @@
 
     extern bool isInsideFunc();
     extern char* setErrorType();
+    extern char* setIntType();
     extern char* setNoErrorType();
     extern void reset_active_function();
-    extern void errorLine();
+    extern void errorLine(string errorMsg);
+    extern bool isVariableInSymtab(string varname);
 %}
 
 %union {
@@ -336,7 +338,7 @@
     } type_id;
 }
 
-%expect 1       // 1. if-else
+%expect 2       // 1. if-else // 2. function vs variable declaration
 
 // Non Terminals
 %type <type_id> statement statement_list
@@ -348,10 +350,9 @@
 %type <type_id> function_declaration function_head
 %type <type_id> param_list_declaration param_declaration
 %type <type_id> function_call arg_list
-%type <type_id> variable_declaration_list variable_declaration
+%type <type_id> variable_declaration_list
 
 %type <type_id> logical_operation
-%type <type_id> datatype
 %type <type_id> if_exp else_mark
 %type <type_id> bracket_dimlist name_list id_arr
 %type <type_id> term factor
@@ -375,6 +376,7 @@ START
     | variable_declaration_list
 	| START function_declaration
     | START variable_declaration_list
+    | expression
 	;
 
 function_declaration
@@ -573,8 +575,7 @@ function_call
                     while (param_it != r->parameters.end()) {
 
                         if (!isMatch(param_it->type, arg_it->type)) {
-                            errorLine();
-                            cout << "datatype mismatch for calling function : " << functionName << "\n";
+                            errorLine("datatype mismatch for calling function : " + functionName);
                             $$.type = setErrorType();
                             break;
                         }
@@ -586,8 +587,7 @@ function_call
         }
         else {
             // Function not found
-            errorLine();
-            cout << "Function " << functionName << " is not declared\n";
+            errorLine("Function " + functionName + " is not declared");
             $$.type = setErrorType();
         }
     }
@@ -607,8 +607,7 @@ function_call
                 if (r->parameters.empty())  {
                     string return_type = r->function_return_type;
                     if ( !isMatch($1.type, return_type) ) {
-                        errorLine();
-                        cout << "incompatible types when initializing type " << $1.type << " using type " << return_type << endl;
+                        errorLine("incompatible types when initializing type " + string($1.type) + " using type " + return_type);
                         $$.type = setErrorType();
                     }
                     else
@@ -616,16 +615,14 @@ function_call
                 }
                 else {
                     // Error
-                    errorLine();
-                    cout << "Too many arguments to function '" << functionName << "'\n";
+                    errorLine("Too many arguments to function '" + functionName + "'");
                     $$.type = setErrorType();
                 }
             }
         }
         else {
             // Function not found
-            errorLine();
-            cout << "Function " << functionName << " is not declared\n";
+            errorLine("Function " + string(functionName) + " is not declared");
             $$.type = setErrorType();
         }
     }
@@ -657,8 +654,7 @@ function_call
                     while (param_it != r->parameters.end()) {
 
                         if (!isMatch(param_it->type, arg_it->type)) {
-                            errorLine();
-                            cout << "datatype mismatch for calling function : " << functionName << "\n";
+                            errorLine("datatype mismatch for calling function : " + functionName);
                             $$.type = setErrorType();
                             matched = false;
                             break;
@@ -669,8 +665,7 @@ function_call
                     if (matched) {
                         string return_type = r->function_return_type;
                         if ( !isMatch($1.type, return_type) ) {
-                            errorLine();
-                            cout << "incompatible types when initializing type " << $1.type << " using type " << return_type << endl;
+                            errorLine("incompatible types when initializing type " + string($1.type) + " using type " + return_type);
                             $$.type = setErrorType();
                         }
                         else
@@ -681,8 +676,7 @@ function_call
         }
         else {
             // Function not found
-            errorLine();
-            cout << "Function " << functionName << " is not declared\n";
+            errorLine("Function " + functionName + " is not declared");
             $$.type = setErrorType();
         }
     }
@@ -703,7 +697,7 @@ arg_list
         var_record arg($1.sval, datatype, /* is_parameter = */ false, level) ;
         called_arg_list.push_back(arg);
     }
-    | TYPE
+    | NUM
     {
         called_arg_list.clear();
         $$.len = 1;
@@ -731,7 +725,7 @@ arg_list
             $$.type = setErrorType();
         }
     }
-    | arg_list ',' TYPE
+    | arg_list ',' NUM
     {
         string datatype = $3.type;
         $$.type = setNoErrorType();
@@ -879,7 +873,7 @@ loop_statement
 	;
 
 labeled_statement
-	: CASE constant_expression ':' statement {
+	: CASE NUM ':' statement {
         if (!isMatch($2.type, "int")) {
             yyerror("int expected in switch case");
         }
@@ -1003,57 +997,84 @@ logical_operation
 relational_expression
     : IDENTIFIER REL_OP IDENTIFIER
     {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        if (!isVariableInSymtab($1.sval)) {
+            errorLine("Variable " + string($1.sval) + " is not declared");
+            $$.type = setErrorType();
+        }
+        if (!isVariableInSymtab($3.sval)) {
+            errorLine("Variable " + string($3.sval) + " is not declared");
+            $$.type = setErrorType();
+        }
+        if (!isErrorType($$.type)) {
+            $$.val = 1;
+            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+            $$.type = setIntType();
+        }
     }
     | NUM REL_OP IDENTIFIER
     {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        if (!isVariableInSymtab($3.sval)) {
+            errorLine("Variable " + string($3.sval) + " is not declared");
+            $$.type = setErrorType();
+        }
+        else {
+            $$.val = 1;
+            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+            $$.type = setIntType();
+        }
     }
     | IDENTIFIER REL_OP NUM
     {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        if (!isVariableInSymtab($1.sval)) {
+            errorLine("Variable " + string($1.sval) + " is not declared");
+            $$.type = setErrorType();
+        }
+        else {
+            $$.val = 1;
+            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+            $$.type = setIntType();
+        }
     }
     | NUM REL_OP NUM
     {
         $$.val = 1;
         quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        $$.type = setIntType();
     }
     ;
-
 
 arithmetic_expression
     : term '+' arithmetic_expression
     {
-        $$.type = strdup("num");
+        $$.type = setIntType();
 		//evaluvation quad factor+term and $$ = that result
 		cout<<$1.sval<<" + "<<$3.sval<<endl;
 	}
 
 	| term '-' arithmetic_expression
     {
-        $$.type = strdup("num");
+        $$.type = setIntType();
 									//evaluvation quad factor-term and $$ = that result
 									cout<<$1.sval<<" - "<<$3.sval<<endl;
 								}
 	|		term
     {
-        $$.type = strdup("num");
+        $$.type = setIntType();
     }
 	;
 
-term:		factor '*' term
+term
+    : factor '*' term
     {
 		//evaluvation quad factor*term and $$ = that result
 		cout<<$1.sval<<" * "<<$3.sval<<endl;
 	}
-	|		factor '/' term		{
-									//evaluvation quad factor/term and $$ = that result
-									cout<<$1.sval<<" / "<<$3.sval<<endl;
-								}
-	|		factor
+	| factor '/' term
+    {
+		//evaluvation quad factor/term and $$ = that result
+		cout<<$1.sval<<" / "<<$3.sval<<endl;
+	}
+	| factor
 	;
 
 factor
@@ -1063,17 +1084,21 @@ factor
 		//evaluvate expr first and $$ = that result
 	}
 	| IDENTIFIER
+    {
+        if (!isVariableInSymtab($1.sval)) {
+            errorLine("Variable " + string($1.sval) + " is not declared");
+            $$.type = setErrorType();
+        }
+        else {
+            $$.type = strdup(ab_symtab.tab[ab_symtab.search($1.sval)].type.c_str());
+        }
+    }
     | NUM
 	;
 
 /* Variable Declarations. */
-datatype
-    : INT                           { $$.type = strdup("int"); }
-    | FLOAT                         { $$.type = strdup("float"); }
-    ;
-
 variable_declaration_list
-    : datatype name_list
+    : TYPE name_list
     {
 		$$ = $1;
         ab_symtab.patch($1.sval, $2.sval);
@@ -1232,12 +1257,21 @@ char* setNoErrorType() {
 char* setNoneType() {
     return strdup("NoneType");
 }
+char* setIntType() {
+    return strdup("int");
+}
 bool isInsideFunc() {
     return !(active_func_name == "");
 }
 void reset_active_function() {
     active_func_name = "";
 }
-void errorLine() {
-    cout << "Error at line " << lineNo << " : ";
+void errorLine(string errorMsg) {
+    cout << "Error at line " << lineNo << " : " << errorMsg << endl;
+}
+bool isVariableInSymtab(string varname) {
+    if(ab_symtab.search(varname) == -1)
+        return false;
+    else
+        return true;
 }
