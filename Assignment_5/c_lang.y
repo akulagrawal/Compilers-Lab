@@ -113,6 +113,178 @@
         curr_temp += 1;
         return "t" + std::to_string(curr_temp);
     }
+
+    /* abhishek */
+    bool isNumber(const string &line)
+	{
+		if (line[0] == '0') return true;
+		return (atoi(line.c_str()));
+	}
+
+	class variable{
+		public:
+		string name;
+		string type;
+		string value;
+		bool isarray;
+		int startoffset;
+		int endoffset;
+		vector<string> dimension;
+
+		variable(string v_name, string v_type, string v_value, bool v_isarray, vector<string> v_dimension){
+			this->name = v_name;
+			this->type = v_type;
+			this->value = v_value;
+			this->isarray = v_isarray;
+			this->dimension = v_dimension;
+			this->startoffset = 0;
+			this->endoffset = -1;
+		}
+
+	};
+
+	class ab_symbol_table{
+		public:
+		vector <variable> tab;
+
+		void insertintosymtab(variable v){
+
+			if(tab.size() == 0)
+				v.startoffset = 0;
+			else
+				v.startoffset = tab[tab.size()-1].endoffset;
+
+			long long int mul = 1;
+			for (int i = 0; i < v.dimension.size(); ++i){
+				if(isNumber(v.dimension[i])){
+					mul *= stoi(v.dimension[i]);
+				}
+				else{
+					mul *= stoi(tab[this->search(v.dimension[i])].value);
+				}
+			}
+
+			if(v.type == "i")
+				mul *= SIZE_INT;
+			else
+				mul *= SIZE_FLOAT;
+
+			v.endoffset = v.startoffset +mul;
+			tab.push_back(v);
+		}
+
+		void printsymtab()	{
+			cout<<"Symbol Table: "<<endl;
+			for(int i=0;i<this->tab.size();i++)
+			{
+				cout<<"Start: "<<this->tab[i].startoffset<<endl;
+				cout<<this->tab[i].name<<": "<<this->tab[i].value<<" ( "<<this->tab[i].type<<" )";
+				if(this->tab[i].isarray)
+				{
+					cout<<" Dim: ";
+					for (int j = 0; j < this->tab[i].dimension.size(); ++j)
+					{
+						cout<<", "<<this->tab[i].dimension[j];
+					}
+				}
+				cout<<endl;
+			}
+		}
+
+		vector <string> getvarvector(char* s){
+			vector<string> ans;
+			string var_name = "";
+			char* itr = s;
+			while(*itr){
+				if(*itr == ','){
+					ans.push_back(var_name);
+					var_name = "";
+					itr++;
+					continue;
+				}
+				var_name += *itr;
+				itr++;
+			}
+			if(var_name != ""){
+				ans.push_back(var_name);
+			}
+			return ans;
+		}
+
+		void patch(char v_type, char* s){
+			vector<string> var_names = this->getvarvector(s);
+			for (int i = 0; i < var_names.size(); ++i){
+
+				for (int j = 0; j < tab.size(); ++j){
+					if(tab[j].name == var_names[i]){
+						tab[j].type = v_type;
+						break;
+					}
+				}
+			}
+		}
+
+		int search(string varname){
+			for (int i = 0; i < tab.size(); ++i){
+				if(tab[i].name == varname)
+					return i;
+			}
+			return -1;
+		}
+	};
+
+	ab_symbol_table ab_symtab = symbol_table();
+	vector<string> dummy;
+
+	vector <string> makedimlist(char* s){
+		vector<string> ans;
+		string var_name = "";
+		char* itr = s;
+		while(*itr){
+			if(*itr == ','){
+				ans.push_back(var_name);
+				var_name = "";
+				itr++;
+				continue;
+			}
+			var_name += *itr;
+			itr++;
+		}
+		if(var_name != ""){
+			ans.push_back(var_name);
+		}
+		return ans;
+	}
+
+	void checksanity(vector<string> dim)
+	{
+		for (int i = 0; i < dim.size(); ++i)
+		{
+			int index = ab_symtab.search(dim[i]);
+			if(ab_symtab.tab[index].isarray)
+			{
+				for(int j=0;j < ab_symtab.tab[index].dimension.size();j++)
+				{
+					if(isNumber(ab_symtab.tab[index].dimension[j]))
+						continue;
+					int dim_index = ab_symtab.search(ab_symtab.tab[index].dimension[j]);
+
+					if(dim_index<0){
+						cout<<"Variable: "<<ab_symtab.tab[index].dimension[j]<<" not declared"<<endl;
+					}
+					else
+					{
+						if(ab_symtab.tab[dim_index].type != "i"){
+							cout<<"Variable: "<<ab_symtab.tab[dim_index].name<<" must be of type int"<<endl;
+						}
+						if(ab_symtab.tab[dim_index].isarray){
+							cout<<"Variable: "<<ab_symtab.tab[dim_index].name<<" is array type"<<endl;
+						}
+					}
+				}
+			}
+		}
+	}
 %}
 
 %union {
@@ -131,7 +303,7 @@
 %type <type_id> statement statement_list
 %type <type_id> labeled_statement compound_statement expression_statement conditional_statement loop_statement
 %type <type_id> expression
-%type <type_id> constant_expression logical_expression relational_expression assignment_expression
+%type <type_id> constant_expression logical_expression relational_expression assignment_expression arithmetic_expression
 %type <type_id> START
 %type <type_id> logical_operation
 %type <type_id> function_declaration function_head return_type func_name
@@ -139,8 +311,8 @@
 %type <type_id> function_call arg_list
 %type <type_id> variable_declaration_list variable_declaration
 %type <type_id> datatype
-%type <type_id> if_exp
-%type <type_id> else_mark
+%type <type_id> if_exp else_mark
+%type <type_id> bracket_dimlist name_list id_arr
 
 // Terminals
 %token <type_id> NUM IDENTIFIER
@@ -185,19 +357,6 @@ param_list_declaration
 
 param_declaration
     : datatype IDENTIFIER
-    ;
-
-variable_declaration_list
-    : variable_declaration
-    ;
-
-variable_declaration
-    : datatype IDENTIFIER ';'       {}
-    ;
-
-datatype
-    : INT                           { $$.type = strdup("int"); }
-    | FLOAT                         { $$.type = strdup("float"); }
     ;
 
 function_call
@@ -338,7 +497,8 @@ expression_statement
 	;
 
 /*
- Expecting: Logical & Relational and Arithmetic expression
+    Expressions.
+    Expecting: Logical & Relational and Arithmetic Expressions
 */
 expression
     : assignment_expression
@@ -355,6 +515,10 @@ expression
     {
         $$.val = $1.val;
         $$.type = strdup("num");
+    }
+    | arithmetic_expression
+    {
+
     }
     ;
 
@@ -432,9 +596,88 @@ relational_expression
     }
     ;
 
+arithmetic_expression
+    : constant_expression
+    {
+
+    }
+    ;
+
 constant_expression
     : NUM                           { $$.type = strdup("num"); }
     ;
+
+/* Variable Declarations. */
+datatype
+    : INT                           { $$.type = strdup("int"); }
+    | FLOAT                         { $$.type = strdup("float"); }
+    ;
+
+variable_declaration_list
+    : variable_declaration
+	;
+
+variable_declaration
+    : datatype name_list
+    {
+		$$ = $1;
+		symtab.patch($1, $2);
+		vector<string> dim = makedimlist($2);
+		checksanity(dim);
+		// makecorrect(dim);
+		cout<<endl;
+	}
+    ;
+
+name_list
+    : id_arr
+	| id_arr ',' name_list
+    {
+		$$=$1;
+		strcat($$,",");
+		strcat($$,$3);
+	}
+    ;
+
+id_arr
+    : IDENTIFIER
+    {
+    	//abhishek //assignment quad = 0;
+    	variable v = variable($1, "type", "0", false, dummy);
+    	if(ab_symtab.search(v.name) == -1)
+    		ab_symtab.insertintosymtab(v);
+	}
+	| IDENTIFIER '=' arithmetic_expression
+    {
+		//abhishek //assignment quad = exprvalue; //here we dump the expression as value of id
+		variable v = variable($1, "type", $3, false, dummy);
+		if(ab_symtab.search(v.name) == -1)
+			ab_symtab.insertintosymtab(v);
+	}
+	| IDENTIFIER bracket_dimlist
+    {
+    	//abhishek //assignment quad = 0;
+    	//here seperate values should be assigned to seperate elements
+    	//not done as of now
+    	vector<string> dim = makedimlist($2);
+    	variable v = variable($1, "type", "0", true, dim);
+    	if(ab_symtab.search(v.name) == -1)
+    		ab_symtab.insertintosymtab(v);
+    }
+	;
+
+bracket_dimlist
+    : '[' NUM ']'
+    {
+	    $$=$2;
+	}
+	| '[' NUM ']' bracket_dimlist
+    {
+		$$=$2;
+		strcat($$,",");
+		strcat($$,$4);
+	}
+
 %%
 
 int main(int argc, char **argv) {

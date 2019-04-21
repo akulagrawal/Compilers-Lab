@@ -67,7 +67,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 118 "c_lang.y" /* yacc.c:1909  */
+#line 290 "c_lang.y" /* yacc.c:1909  */
 
     struct {
         struct indexlist * indexlist;

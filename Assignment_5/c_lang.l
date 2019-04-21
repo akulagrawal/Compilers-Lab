@@ -22,6 +22,8 @@ c_lang.l
 \)                        { yylval.type_id.sval = strdup(yytext); return ')'  ; }
 \{                        { yylval.type_id.sval = strdup(yytext); return '{'  ; }
 \}                        { yylval.type_id.sval = strdup(yytext); return '}'  ; }
+\[                        { yylval.type_id.sval = strdup(yytext); return '['  ; }
+\]                        { yylval.type_id.sval = strdup(yytext); return ']'  ; }
 =                         { yylval.type_id.sval = strdup(yytext); return '='  ; }
 :                         { yylval.type_id.sval = strdup(yytext); return ':'  ; }
 ;                         { yylval.type_id.sval = strdup(yytext); return ';'  ; }
