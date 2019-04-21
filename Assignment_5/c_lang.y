@@ -140,6 +140,7 @@
 %type <type_id> variable_declaration_list variable_declaration
 %type <type_id> datatype
 %type <type_id> if_exp
+%type <type_id> else_mark
 
 // Terminals
 %token <type_id> NUM IDENTIFIER
@@ -213,10 +214,10 @@ arg_list
     ;
 
 statement
-	: conditional_statement
-	| loop_statement
-	| labeled_statement
-	| compound_statement        // Nested statement_list
+    : conditional_statement
+    | loop_statement
+    | labeled_statement
+    | compound_statement        // Nested statement_list
     {
         $$.val = $1.val;
     }
@@ -233,13 +234,15 @@ conditional_statement
     {
         $$.val = $1.val + $2.val;
         int gotoindex = $1.index;
-        quadruples[gotoindex]._result = to_string($2.val);
+        quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
     }
-    | if_exp statement ELSE statement
+    | if_exp statement else_mark statement
     {
-        $$.val = $1.val + $2.val;
-        int gotoindex = $1.index;
-        quadruples[gotoindex]._result = to_string($2.val);
+        $$.val = $1.val + $2.val + $3.val + $4.val;
+        int gotoindex1 = $1.index;
+        quadruples[gotoindex1]._result = to_string(gotoindex1 + $2.val + $3.val + 1);
+        int gotoindex2 = $3.index;
+        quadruples[gotoindex2]._result = to_string(gotoindex2 + $4.val + 1);
     }
 	| SWITCH '(' expression ')' statement
     {
@@ -260,6 +263,14 @@ if_exp
         $$.index = quadruples.size();
         $$.val = $3.val + 1;
         quadruples.push_back(quadruple("if0", "expres", "", ""));
+    }
+
+else_mark
+    : ELSE
+    {
+        $$.val = 1;
+        $$.index = quadruples.size();
+        quadruples.push_back(quadruple("go", "", "", ""));
     }
 
 loop_statement
@@ -310,7 +321,6 @@ statement_list
     }
 	| statement_list statement
     {
-        cout << $1.val << " " << $2.val << "\n";
         $$.val = $1.val + $2.val;
     }
 	;
@@ -369,31 +379,23 @@ assignment_expression
 logical_expression
     : IDENTIFIER logical_operation IDENTIFIER
     {
-        $$.val = 2;
-        string temp = get_next_temp();
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        quadruples.push_back(quadruple("=", temp, "", "expres"));
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
     }
     | NUM logical_operation IDENTIFIER
     {
-        $$.val = 2;
-        string temp = get_next_temp();
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        quadruples.push_back(quadruple("=", temp, "", "expres"));
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
     }
     | IDENTIFIER logical_operation NUM
     {
-        $$.val = 2;
-        string temp = get_next_temp();
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        quadruples.push_back(quadruple("=", temp, "", "expres"));
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
     }
     | NUM logical_operation NUM
     {
-        $$.val = 2;
-        string temp = get_next_temp();
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        quadruples.push_back(quadruple("=", temp, "", "expres"));
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
     }
     ;
 
@@ -411,31 +413,23 @@ logical_operation
 relational_expression
     : IDENTIFIER REL_OP IDENTIFIER
     {
-        $$.val = 2;
-        string temp = get_next_temp();
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        quadruples.push_back(quadruple("=", temp, "", "expres"));
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
     }
     | NUM REL_OP IDENTIFIER
     {
-        $$.val = 2;
-        string temp = get_next_temp();
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        quadruples.push_back(quadruple("=", temp, "", "expres"));
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
     }
     | IDENTIFIER REL_OP NUM
     {
-        $$.val = 2;
-        string temp = get_next_temp();
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        quadruples.push_back(quadruple("=", temp, "", "expres"));
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
     }
     | NUM REL_OP NUM
     {
-        $$.val = 2;
-        string temp = get_next_temp();
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        quadruples.push_back(quadruple("=", temp, "", "expres"));
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
     }
     ;
 
@@ -467,7 +461,7 @@ int main(int argc, char **argv) {
     cout << "Intermediate Code in Quadruple Format:" << "\n";
     for(int i = 0; i < quadruples.size(); ++i){
         quadruple quad = quadruples[i];
-        cout << setw(3) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
+        cout << setw(3) << i << "      " << setw(3) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
     }
 
 }
