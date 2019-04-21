@@ -287,7 +287,6 @@
 %type <sval> name_list
 %type <sval> id_arr
 %type <sval> id
-%type <sval> dimlist
 %type <sval> br_dimlist
 %type <sval> expr
 %type <c> type
@@ -328,25 +327,23 @@ name_list:	id_arr
 									}
 		;
 id_arr:		id 						{
+										//abhishek //assignment quad = 0;
 										variable v = variable($1, "type", "0", false, dummy);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);
 									}
 
 	|		id EQUAL expr			{
+										//abhishek //assignment quad = exprvalue;
 										variable v = variable($1, "type", $3, false, dummy);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);	
 									}
 
-	|		id LSB dimlist RSB 		{
-										vector<string> dim = makedimlist($3);
-										variable v = variable($1, "type", "0", true, dim);
-										if(symtab.search(v.name) == -1)
-											symtab.insertintosymtab(v);
-									}
-
 	|		id br_dimlist			{
+										//abhishek //assignment quad = 0;
+										//here seperate values should be assigned to seperate elements
+										//not done as of now
 										vector<string> dim = makedimlist($2);
 										variable v = variable($1, "type", "0", true, dim);
 										if(symtab.search(v.name) == -1)
@@ -356,6 +353,7 @@ id_arr:		id 						{
 
 expr:		id 
 	|		id OP expr				{
+										//abhishek //evaluvation quad = 0;
 										string s = evaluvate($1, $2, $3);
 										int n = s.length(); 
  									    char char_array[n + 1]; 
@@ -364,14 +362,6 @@ expr:		id
 									}
 	;
 
-dimlist:	id 						
-
-	|		id COMMA dimlist 		{
-										$$=$1;
-										strcat($$,",");
-										strcat($$,$3);
-									}
-	;
 
 br_dimlist:	LSB	id RSB				{
 										$$=$2;
