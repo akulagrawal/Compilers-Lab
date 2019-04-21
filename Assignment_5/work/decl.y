@@ -289,6 +289,8 @@
 %type <sval> id
 %type <sval> br_dimlist
 %type <sval> expr
+%type <sval> term
+%type <sval> factor
 %type <c> type
 %type <c> one_dec
 
@@ -351,18 +353,35 @@ id_arr:		id 						{
 									}
 	;
 
-expr:		id 
-	|		id OP expr				{
-										//abhishek //evaluvation quad;
-										// string s = evaluvate($1, $2, $3);
-										// int n = s.length(); 
- 									//     char char_array[n + 1]; 
-									 //    strcpy(char_array, s.c_str());
-									 //    $$ = strdup(char_array);
-											
-											strcat($$,$2);
-											strcat($$,$3);
-									}
+expr:		term '+' expr 		{
+									//evaluvation quad factor+term and $$ = that result	
+									cout<<$1<<" + "<<$3<<endl;
+								}
+
+	|		term '-' expr 		{
+									//evaluvation quad factor-term and $$ = that result
+									cout<<$1<<" - "<<$3<<endl;
+								}
+	|		term
+	;
+
+term:		factor '*' term		{
+									//evaluvation quad factor*term and $$ = that result	
+									cout<<$1<<" * "<<$3<<endl;
+								}
+
+	|		factor '/' term		{
+									//evaluvation quad factor/term and $$ = that result
+									cout<<$1<<" / "<<$3<<endl;
+								}
+	|		factor
+	;
+
+factor:		'(' expr ')'		{
+									$$ = $2;
+									//evaluvate expr first and $$ = that result
+								}
+	|		id
 	;
 
 
