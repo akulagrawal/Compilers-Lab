@@ -161,7 +161,6 @@ START
     | variable_declaration_list
 	| START function_declaration
     | START variable_declaration_list
-    | conditional_statement
 	;
 
 function_declaration
