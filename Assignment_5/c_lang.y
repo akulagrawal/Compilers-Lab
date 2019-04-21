@@ -341,12 +341,12 @@
     } type_id;
 }
 
-%expect 1       // 1. if-else
+%expect 8       // 1. if-else
 
 // Non Terminals
 %type <type_id> statement statement_list
 %type <type_id> labeled_statement compound_statement expression_statement conditional_statement loop_statement
-%type <type_id> expression
+%type <type_id> expression expression_cover
 %type <type_id> logical_expression relational_expression assignment_expression arithmetic_expression
 %type <type_id> START
 
@@ -807,7 +807,7 @@ conditional_statement
 	;
 
 if_exp
-    :   IF '(' expression ')'
+    :   IF '(' expression_cover ')'
     {
         if (!isErrorType($3.type)) {
             if ( isInt($3.type) || isFloat($3.type) ) {
@@ -833,7 +833,7 @@ else_mark
     }
 
 loop_statement
-	: WHILE '(' expression ')' statement
+	: WHILE '(' expression_cover ')' statement
     {
         if (!isErrorType($3.type)) {
             if (isInt($3.type) || isFloat($3.type)) {
@@ -925,58 +925,68 @@ expression_statement
     Expressions.
     Expecting: Logical & Relational and Arithmetic Expressions
 */
+expression_cover
+    : expression
+    {
+        $$.val = $1.val;
+        $$.sval = $1.sval;
+    }
+    | '(' expression ')'
+    {
+        $$.val = $2.val;
+        $$.sval = $2.sval;
+    }
+
 expression
     : assignment_expression
     {
-        $$.val = $1.val;
+        $$.val = $1.val + 1;
+        $$.sval = $1.sval;
         $$.type = strdup($1.type);
+        quadruples.push_back(quadruple("=", $1.sval, "", "expres"));
     }
     | logical_expression
     {
-        $$.val = $1.val;
+        $$.val = $1.val + 1;
+        $$.sval = $1.sval;
         $$.type = strdup("int");
+        quadruples.push_back(quadruple("=", $1.sval, "", "expres"));
     }
     | relational_expression
     {
-        $$.val = $1.val;
+        $$.val = $1.val + 1;
+        $$.sval = $1.sval;
         $$.type = strdup("int");
+        quadruples.push_back(quadruple("=", $1.sval, "", "expres"));
     }
     | arithmetic_expression
     {
-        $$.val = $1.val;
+        $$.val = $1.val + 1;
+        $$.sval = $1.sval;
         $$.type = strdup("int");
+        quadruples.push_back(quadruple("=", $1.sval, "", "expres"));
     }
     ;
 
 assignment_expression
     : IDENTIFIER '=' arithmetic_expression
     {
-        $$.val = $3.val + 1;
+        $$.val = $3.val + 2;
         $$.type = strdup($3.type);
-        quadruples.push_back(quadruple("=", "expres", "", string($1.sval)));
+        string temp = get_next_temp();
+        $$.sval = strdup(temp.c_str());
+        quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+        quadruples.push_back(quadruple("=", string($3.sval), "", temp));
     }
     ;
 
 logical_expression
-    : IDENTIFIER logical_operation IDENTIFIER
+    : expression_cover logical_operation expression_cover
     {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
-    }
-    | NUM logical_operation IDENTIFIER
-    {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
-    }
-    | IDENTIFIER logical_operation NUM
-    {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
-    }
-    | NUM logical_operation NUM
-    {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        $$.val = $1.val + $3.val + 1;
+        string temp = get_next_temp();
+        $$.sval = strdup(temp.c_str());
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
     }
     ;
 
@@ -992,50 +1002,12 @@ logical_operation
     ;
 
 relational_expression
-    : IDENTIFIER REL_OP IDENTIFIER
+    : expression_cover REL_OP expression_cover
     {
-        if (!isVariableInSymtab($1.sval)) {
-            errorLine("Variable " + string($1.sval) + " is not declared");
-            $$.type = setErrorType();
-        }
-        if (!isVariableInSymtab($3.sval)) {
-            errorLine("Variable " + string($3.sval) + " is not declared");
-            $$.type = setErrorType();
-        }
-        if (!isErrorType($$.type)) {
-            $$.val = 1;
-            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
-            $$.type = setIntType();
-        }
-    }
-    | NUM REL_OP IDENTIFIER
-    {
-        if (!isVariableInSymtab($3.sval)) {
-            errorLine("Variable " + string($3.sval) + " is not declared");
-            $$.type = setErrorType();
-        }
-        else {
-            $$.val = 1;
-            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
-            $$.type = setIntType();
-        }
-    }
-    | IDENTIFIER REL_OP NUM
-    {
-        if (!isVariableInSymtab($1.sval)) {
-            errorLine("Variable " + string($1.sval) + " is not declared");
-            $$.type = setErrorType();
-        }
-        else {
-            $$.val = 1;
-            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
-            $$.type = setIntType();
-        }
-    }
-    | NUM REL_OP NUM
-    {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        $$.val = $1.val + $3.val + 1;
+        string temp = get_next_temp();
+        $$.sval = strdup(temp.c_str());
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
         $$.type = setIntType();
     }
     ;
@@ -1044,33 +1016,29 @@ arithmetic_expression
     : arithmetic_term '+' arithmetic_expression
     {
         $$.type = setIntType();
-		//evaluvation quad factor+term and $$ = that result
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("+", string($1.sval), "expres", "expres"));
+        quadruples.push_back(quadruple("+", string($1.sval), string($3.sval), temp));
     }
 	| arithmetic_term '-' arithmetic_expression
     {
         $$.type = setIntType();
-		//evaluvation quad factor-term and $$ = that result
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("-", string($1.sval), "expres", "expres"));
+        quadruples.push_back(quadruple("-", string($1.sval), string($3.sval), temp));
     }
 	| arithmetic_term
     {
-        $$.type = setIntType();
-        $$.val = $1.val + 1;
-        quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+        $$.sval = $1.sval;
+        $$.val = $1.val;
     }
 	;
 
 arithmetic_term
     : arithmetic_factor '*' arithmetic_term
     {
-		//evaluvation quad factor*term and $$ = that result
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
@@ -1078,7 +1046,6 @@ arithmetic_term
 	}
 	| arithmetic_factor '/' arithmetic_term
     {
-		//evaluvation quad factor/term and $$ = that result
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
@@ -1098,11 +1065,11 @@ arithmetic_factor
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         $$.val = $2.val + 1;
-        quadruples.push_back(quadruple("=", "expres", "",  temp));
+        quadruples.push_back(quadruple("=", $2.sval, "",  temp));
 	}
 	| IDENTIFIER
     {
-        if (!isVariableInSymtab($1.sval)) {
+        if (!isVariableInSymtab($1.sval) && ($1.sval[0] == '_')) {
             errorLine("Variable " + string($1.sval) + " is not declared");
             $$.type = setErrorType();
         }
@@ -1110,17 +1077,11 @@ arithmetic_factor
             $$.type = strdup(ab_symtab.tab[ab_symtab.search($1.sval)].type.c_str());
         }
 
-        string temp = get_next_temp();
-        $$.sval = strdup(temp.c_str());
-        $$.val = 1;
-        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
+        $$.sval = $1.sval;
     }
     | NUM
     {
-        string temp = get_next_temp();
-        $$.sval = strdup(temp.c_str());
-        $$.val = 1;
-        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
+        $$.sval = $1.sval;
     }
 	;
 
@@ -1132,9 +1093,6 @@ variable_declaration_statement
         ab_symtab.patch($1.sval, $2.sval);
         vector<string> dim = makedimlist($2.sval);
 		checksanity(dim);
-
-        // Patch types now.
-
 	}
     ;
 
@@ -1235,7 +1193,7 @@ int main(int argc, char **argv) {
     cout << "Intermediate Code in Quadruple Format:" << "\n";
     for(int i = 0; i < quadruples.size(); ++i){
         quadruple quad = quadruples[i];
-        cout << setw(3) << i << "      " << setw(3) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
+        cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
     }
 
 }
