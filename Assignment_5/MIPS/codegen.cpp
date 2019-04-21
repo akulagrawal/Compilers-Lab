@@ -9,7 +9,7 @@ using namespace std;
 #define pb push_back
 #define INF 1e18
 #define pii pair<int,int>
-#define OFFSET 268435456
+#define OFFSET 268435455
 
 struct quad {
 	string opcode;
@@ -25,7 +25,7 @@ map<string, int> mapmem;
 int getmem(string s) {
 	if(mapmem[s])
 		return mapmem[s];
-	for(int i=1;i<MAX;i++) {
+	for(int i=1;i<MAX;i+=4) {
 		if(!isfull[i]) {
 			mapmem[s] = i;
 			isfull[i] =1;
@@ -35,12 +35,20 @@ int getmem(string s) {
 	exit(1);
 }
 
+string hextoken(int x) {
+	if (x % 16 < 10)
+		return to_string(x % 16);
+	string s;
+	s.push_back('a' + x % 16 - 9);
+	return s;
+}
+
 string to_hex(int y) {
 	long long x = (long long)y;
 	x+= OFFSET;
 	string s;
 	while(x) {
-		s = to_string(x % 16) + s;
+		s = hextoken(x % 16) + s;
 		x/=16;
 	}
 	s = "0x" + s;
@@ -60,7 +68,7 @@ int main()
 	vector<string> row;
 	string line, word; 
 	vector<string> v;
-	v.push_back(".data 0x10000000\nmsg1: .globl main\nmain: ");
+	v.push_back(".data 0x10000000\n.text\n.globl main\nmain: ");
 
 	while (fin >> line) { 
 		row.clear();
@@ -154,6 +162,7 @@ int main()
 
 
 	}
+	v.push_back("jr $ra");
 	for(int i=0;i<v.size();i++){
 		cout<<v[i]<<endl;
 	}
