@@ -266,7 +266,15 @@
     int ival;
     float fval;
     char c;
-    char *sval;	
+    char *sval;
+
+    struct {
+        struct indexlist * indexlist;
+        char* type;
+        int val;
+        int index;
+        char* sval;
+    } type_id;
 }
 
 %start decl
@@ -281,14 +289,16 @@
 %left EQUAL
 %left OP
 
-%token <sval> VAR_NAME
-%type <sval> NUM
-%type <sval> OP
-%type <sval> name_list
-%type <sval> id_arr
-%type <sval> id
-%type <sval> br_dimlist
-%type <sval> expr
+%token <type_id> VAR_NAME
+%type <type_id> NUM
+%type <type_id> OP
+%type <type_id> name_list
+%type <type_id> id_arr
+%type <type_id> id
+%type <type_id> br_dimlist
+%type <type_id> expr
+%type <type_id> term
+%type <type_id> factor
 %type <c> type
 %type <c> one_dec
 
@@ -306,36 +316,41 @@ decl_list:	one_dec
 
 one_dec:	type name_list	{
 								$$ = $1;
-								symtab.patch($1, $2);
-								vector<string> dim = makedimlist($2);
+								symtab.patch($1, $2.sval);
+								vector<string> dim = makedimlist($2.sval);
 								checksanity(dim);
 								// makecorrect(dim);
 								cout<<endl;
 							}
 			;
 
-type:		INT 	{$$ = 'i';}
-	|		FLOAT	{$$ = 'f';}
+type:		INT 	{
+						$$ = 'i';
+					}
+
+	|		FLOAT	{
+						$$ = 'f';
+					}
 			;
 
 
 name_list:	id_arr					
 		|	id_arr COMMA name_list	{
-										$$=$1;
-										strcat($$,",");
-										strcat($$,$3);
+										$$.sval=$1.sval;
+										strcat($$.sval,",");
+										strcat($$.sval,$3.sval);
 									}
 		;
 id_arr:		id 						{
 										//abhishek //assignment quad = 0;
-										variable v = variable($1, "type", "0", false, dummy);
+										variable v = variable($1.sval, "type", "0", false, dummy);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);
 									}
 
 	|		id EQUAL expr			{
 										//abhishek //assignment quad = exprvalue; //here we dump the expreseeion as value of id
-										variable v = variable($1, "type", $3, false, dummy);
+										variable v = variable($1.sval, "type", $3.sval, false, dummy);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);	
 									}
@@ -344,25 +359,42 @@ id_arr:		id 						{
 										//abhishek //assignment quad = 0;
 										//here seperate values should be assigned to seperate elements
 										//not done as of now
-										vector<string> dim = makedimlist($2);
-										variable v = variable($1, "type", "0", true, dim);
+										vector<string> dim = makedimlist($2.sval);
+										variable v = variable($1.sval, "type", "0", true, dim);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);
 									}
 	;
 
-expr:		id 
-	|		id OP expr				{
-										//abhishek //evaluvation quad;
-										// string s = evaluvate($1, $2, $3);
-										// int n = s.length(); 
- 									//     char char_array[n + 1]; 
-									 //    strcpy(char_array, s.c_str());
-									 //    $$ = strdup(char_array);
-											
-											strcat($$,$2);
-											strcat($$,$3);
-									}
+expr:		term '+' expr 		{
+									//evaluvation quad factor+term and $$ = that result	
+									cout<<$1.sval<<" + "<<$3.sval<<endl;
+								}
+
+	|		term '-' expr 		{
+									//evaluvation quad factor-term and $$ = that result
+									cout<<$1.sval<<" - "<<$3.sval<<endl;
+								}
+	|		term
+	;
+
+term:		factor '*' term		{
+									//evaluvation quad factor*term and $$ = that result	
+									cout<<$1.sval<<" * "<<$3.sval<<endl;
+								}
+
+	|		factor '/' term		{
+									//evaluvation quad factor/term and $$ = that result
+									cout<<$1.sval<<" / "<<$3.sval<<endl;
+								}
+	|		factor
+	;
+
+factor:		'(' expr ')'		{
+									$$ = $2;
+									//evaluvate expr first and $$ = that result
+								}
+	|		id
 	;
 
 
@@ -372,13 +404,14 @@ br_dimlist:	LSB	id RSB				{
 
 	|		LSB id RSB br_dimlist	{
 										$$=$2;
-										strcat($$,",");
-										strcat($$,$4);
+										strcat($$.sval,",");
+										strcat($$.sval,$4.sval);
 									}
 	;
 
 id:			VAR_NAME
-	|		NUM;
+	|		NUM
+	;
 
 %%
 
