@@ -237,16 +237,16 @@ loopstatement
     | function_call
     | BREAK ';' {
         quadruple temp;
-        temp._operator = "ifz";
-        temp._arg1 = "expres";
+        temp._operator = "jmp";
+        temp._arg1 = "";
         temp._arg2 = "";
         temp._result = "";
         quadruples.push_back(temp);
     }
     |CONTINUE ';' {
         quadruple temp;
-        temp._operator = "ifz";
-        temp._arg1 = "expres";
+        temp._operator = "jmp";
+        temp._arg1 = "";
         temp._arg2 = "";
         temp._result = "";
         quadruples.push_back(temp);
