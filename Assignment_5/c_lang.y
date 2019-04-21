@@ -1,7 +1,6 @@
 %{
     #include <bits/stdc++.h>
     #include <string>
-    
     #define print(str, val) \
         std::cout << str << " " <<  val << std::endl;
 
@@ -14,7 +13,7 @@
 
     // Stores active function name
     string active_func_name;
-    
+
     struct var_record {
         string name;
         string type;
@@ -57,7 +56,6 @@
                 }
             }
         }
-
     };
 
     struct symbol_table {
@@ -65,7 +63,7 @@
 
         function_record& insert_function(string function_name) {
             assert(!entries.count(function_name));
-            return entries[function_name]; 
+            return entries[function_name];
         }
 
         bool search_function(string function_name, function_record& function) {
@@ -84,15 +82,6 @@
 
     } symtab;
 
-    struct quadruple {
-        string opcode;
-        string op1;
-        string op2;
-        string res;
-    };
-
-    vector<quadruple> quad;
-
     extern bool isInt(char *type);
     extern bool isFloat(char *type);
     extern bool isBoolean(char *type);
@@ -100,10 +89,43 @@
     extern bool isNoneType(char *type);
     extern char* setErrorType();
     extern char* setNoErrorType();
+
+    /* Intermediate Code Generation. */
+    /* Quadruples. */
+    struct quadruple {
+        string _operator;
+        string _arg1;
+        string _arg2;
+        string _result;
+
+        quadruple(){}
+
+        quadruple(string op, string arg1, string arg2, string result){
+            this -> _operator = op;
+            this -> _arg1 = arg1;
+            this -> _arg2 = arg2;
+            this -> _result = result;
+        }
+    };
+
+    vector<quadruple> quadruples;
+
+    /* Indices of associated quadruples. */
+    struct indexlist {
+        vector<int> indexes;
+    };
+
+    /* Temporary variables for intermediate code. */
+    int curr_temp = 0;
+    string get_next_temp(){
+        curr_temp += 1;
+        return "t" + std::to_string(curr_temp);
+    }
 %}
 
 %union {
     struct {
+        struct indexlist * indexlist;
         char* type;
         double val;
         char* sval;
@@ -118,7 +140,8 @@
 %type <type_id> expression
 %type <type_id> constant_expression logical_expression relational_expression assignment_expression
 %type <type_id> START
-%type <type_id> function_declaration function_head func_name
+%type <type_id> logical_operation
+%type <type_id> function_declaration function_head return_type func_name
 %type <type_id> param_list_declaration param_declaration
 %type <type_id> function_call arg_list
 %type <type_id> variable_declaration_list variable_declaration
@@ -132,6 +155,8 @@
 %token <type_id> FOR WHILE
 %token <type_id> SWITCH CASE DEFAULT
 %token <type_id> BREAK CONTINUE
+%token <type_id> AND
+%token <type_id> REL_OP
 
 // Starting Non Terminal
 %start START
@@ -191,10 +216,11 @@ arg_list
     : IDENTIFIER
     | arg_list ',' IDENTIFIER
     ;
-    
+
 statement
 	: conditional_statement
 	| loop_statement
+	| labeled_statement
 	| compound_statement        // Nested statement_list
 	| expression_statement      // Expression followed by semicolon
     | variable_declaration_list
@@ -246,55 +272,35 @@ conditional_statement
     }
 	;
 
-loop_statement
-	: WHILE '(' expression ')' statement 
-    { 
-        if (!isErrorType($3.type)) {
-            if (isInt($3.type) || isFloat($3.type)) {
-                $$.type = setNoErrorType();
-            }
-            else {
-                yyerror("int expected in expression of while statement");
-                $$.type = setErrorType();
-            }
-        }
-        else
-            $$.type = setErrorType();
-        quadruple temp;
-        temp.opcode = "ifz";
-        temp.op1 = "resexp";
-        $$.quad.push_back(temp);
 
-    }
+loop_statement
+	:  WHILEEXP statement
 	| FOR '(' expression_statement expression_statement ')' statement
     {
-        if (!isErrorType($3.type)) {
-            if (isInt($4.type) || isFloat($4.type) || isNoneType($4.type)) {
-                $$.type = setNoErrorType();
-            }
-            else {
-                yyerror("Type error in condition of for loop");
-                $$.type = setErrorType();
-            }
+        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
+            yyerror("Type error in condition of for loop");
         }
-        else
-            $$.type = setErrorType();
     }
 	| FOR '(' expression_statement expression_statement expression ')' statement
     {
-        if (!isErrorType($3.type)) {
-            if (isInt($4.type) || isFloat($4.type) || isNoneType($4.type)) {
-                $$.type = setNoErrorType();
-            }
-            else {
-                yyerror("Type error in condition of for loop");
-                $$.type = setErrorType();
-            }
+        if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
+            yyerror("Type error in condition of for loop");
         }
-        else
-            $$.type = setErrorType();
     }
 	;
+
+WHILEEXP
+    : WHILE '(' expression ')' {
+        if (strcmp($3.type, "num")) {
+            yyerror("int or boolean expected in expression of while statement");
+        }
+        quadruple temp;
+        temp._operator = "ifz";
+        temp._arg1 = "expres";
+        temp._arg2 = "";
+        temp._result = "";
+        quadruples.push_back(temp);
+    }
 
 labeled_statement
 	: CASE constant_expression ':' statement {
@@ -325,32 +331,93 @@ expression_statement
 */
 expression
     : assignment_expression         { $$.type = strdup($1.type); }
-    | logical_expression            { $$.type = strdup("int"); }
-    | relational_expression         { $$.type = strdup("int"); }
-    ; 
+    | logical_expression            { $$.type = strdup("num"); }
+    | relational_expression         { $$.type = strdup("num"); }
+    ;
 
 assignment_expression
-    : IDENTIFIER '=' NUM            { $$.type = strdup($3.type); }
-    | IDENTIFIER '=' IDENTIFIER     { $$.type = strdup($1.type); }
-    ; 
+    : IDENTIFIER '=' NUM
+    {
+        $$.type = strdup($3.type);
+        quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+        quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+    }
+    | IDENTIFIER '=' IDENTIFIER
+    {
+        $$.type = strdup($1.type);
+        quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+        quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+    }
+    ;
 
 logical_expression
-    : IDENTIFIER OR IDENTIFIER
-    | NUM OR IDENTIFIER
-    | IDENTIFIER OR NUM
-    | NUM OR NUM
+    : IDENTIFIER logical_operation IDENTIFIER
+    {
+        string temp = get_next_temp();
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("=", temp, "", "expres"));
+    }
+    | NUM logical_operation IDENTIFIER
+    {
+        string temp = get_next_temp();
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("=", temp, "", "expres"));
+    }
+    | IDENTIFIER logical_operation NUM
+    {
+        string temp = get_next_temp();
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("=", temp, "", "expres"));
+    }
+    | NUM logical_operation NUM
+    {
+        string temp = get_next_temp();
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("=", temp, "", "expres"));
+    }
+    ;
+
+logical_operation
+    : OR
+    {
+        $$.sval = strdup($1.sval);
+    }
+    | AND
+    {
+        $$.sval = strdup($1.sval);
+    }
     ;
 
 relational_expression
-    : IDENTIFIER '>' IDENTIFIER
-    | NUM '>' IDENTIFIER
-    | IDENTIFIER '>' NUM
-    | NUM '>' NUM
+    : IDENTIFIER REL_OP IDENTIFIER
+    {
+        string temp = get_next_temp();
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("=", temp, "", "expres"));
+    }
+    | NUM REL_OP IDENTIFIER
+    {
+        string temp = get_next_temp();
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("=", temp, "", "expres"));
+    }
+    | IDENTIFIER REL_OP NUM
+    {
+        string temp = get_next_temp();
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("=", temp, "", "expres"));
+    }
+    | NUM REL_OP NUM
+    {
+        string temp = get_next_temp();
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("=", temp, "", "expres"));
+    }
     ;
 
 constant_expression
     : NUM                           { $$.type = strdup("num"); }
-    ; 
+    ;
 %%
 
 int main(int argc, char **argv) {
@@ -372,7 +439,13 @@ int main(int argc, char **argv) {
     while(!feof(yyin))  {
         yyparse();
     }
-  
+
+    cout << "Intermediate Code in Quadruple Format:" << "\n";
+    for(int i = 0; i < quadruples.size(); ++i){
+        quadruple quad = quadruples[i];
+        cout << setw(2) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
+    }
+
 }
 
 void yyerror(const char *s) {
@@ -406,3 +479,6 @@ char* setErrorType() {
 char* setNoErrorType() {
     return strdup("NoErrorType");
 }
+  // might as well halt now:
+//   printf("Invalid Syntax\n");
+//   exit(-1);

@@ -56,7 +56,11 @@ extern int yydebug;
     WHILE = 266,
     SWITCH = 267,
     CASE = 268,
-    DEFAULT = 269
+    DEFAULT = 269,
+    BREAK = 270,
+    CONTINUE = 271,
+    AND = 272,
+    REL_OP = 273
   };
 #endif
 
@@ -65,15 +69,16 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 96 "c_lang.y" /* yacc.c:1909  */
+#line 126 "c_lang.y" /* yacc.c:1909  */
 
     struct {
+        struct indexlist * indexlist;
         char* type;
         double val;
         char* sval;
     } type_id;
 
-#line 77 "c_lang.tab.h" /* yacc.c:1909  */
+#line 82 "c_lang.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

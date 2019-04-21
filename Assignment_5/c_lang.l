@@ -25,16 +25,16 @@ c_lang.l
 \{                        { yylval.type_id.sval = strdup(yytext); return '{'  ; }
 \}                        { yylval.type_id.sval = strdup(yytext); return '}'  ; }
 =                         { yylval.type_id.sval = strdup(yytext); return '='  ; }
-:                         { yylval.type_id.sval = strdup(yytext); return ':'  ; } 
-;                         { yylval.type_id.sval = strdup(yytext); return ';'  ; } 
-((\|\|)|or)               { yylval.type_id.sval = strdup(yytext); return OR; } 
-((<=)|(>=)|<|>)           { yylval.type_id.sval = strdup(yytext); return '>'; } 
-'                         { yylval.type_id.sval = strdup(yytext); return '\''; } 
-\"                        { yylval.type_id.sval = strdup(yytext); return '"'; } 
+:                         { yylval.type_id.sval = strdup(yytext); return ':'  ; }
+;                         { yylval.type_id.sval = strdup(yytext); return ';'  ; }
+((\|\|)|or)               { yylval.type_id.sval = strdup(yytext); return OR; }
+((&&)|and)                { yylval.type_id.sval = strdup(yytext); return AND; }
+((<=)|(>=)|<|>|(==))      { yylval.type_id.sval = strdup(yytext); return REL_OP; }
+'                         { yylval.type_id.sval = strdup(yytext); return '\''; }
+\"                        { yylval.type_id.sval = strdup(yytext); return '"'; }
 ,                         { yylval.type_id.sval = strdup(yytext); return ','; }
-([0-9]+)   { yylval.type_id.val = atoi(yytext); yylval.type_id.type = strdup("int"); return NUM; } 
-([0-9]+\.[0-9]+)   { yylval.type_id.val = atoi(yytext); yylval.type_id.type = strdup("float"); return NUM; } 
-[a-zA-Z0-9_]+             { yylval.type_id.sval = strdup(yytext); yylval.type_id.type = strdup("int"); return IDENTIFIER; } 
+([0-9]+\.[0-9]+|[0-9]+)   { yylval.type_id.sval = strdup(yytext); yylval.type_id.type = strdup("num"); return NUM; }
+([a-zA-Z_][a-zA-Z0-9_]*)  { yylval.type_id.sval = (char *)malloc(strlen(yytext + 2) * sizeof(char)); strcpy(yylval.type_id.sval + 1, yytext); yylval.type_id.sval[0] = '_'; yylval.type_id.type = strdup("num"); return IDENTIFIER; }
 .                         ;
 \n                        ;
 %%

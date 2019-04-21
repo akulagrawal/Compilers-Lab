@@ -1,0 +1,5 @@
+int main(){
+while(a<4){
+	a=1;
+}
+}
