@@ -819,9 +819,21 @@ if_exp
             }
         }
 
-        $$.index = quadruples.size();
-        $$.val = $3.val + 1;
-        quadruples.push_back(quadruple("if0", "expres", "", ""));
+        $$.index = quadruples.size() + 1;
+        $$.val = $3.val + 2;
+
+        // // Patch all short-circuit jumps.
+        // for(int i = 0; i < quadruples.size(); ++i){
+        //     if(quadruples[i]._operator == "ifF" || quadruples[i]._operator == "ifT"){
+        //         if(quadruples[i]._result == ""){
+        //             quadruples[i]._result = to_string($$.index);
+        //         }
+        //     }
+        // }
+
+        quadruples.push_back(quadruple("=", string($3.sval), "", "expres"));
+        quadruples.push_back(quadruple("ifF", "expres", "", ""));
+
     }
 
 else_mark
@@ -930,41 +942,39 @@ expression_cover
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
+        $$.type = $1.type;
     }
-    | '(' expression ')'
+    | '(' expression_cover ')'
     {
         $$.val = $2.val;
         $$.sval = $2.sval;
+        $$.type = $2.type;
     }
 
 expression
     : assignment_expression
     {
-        $$.val = $1.val + 1;
+        $$.val = $1.val;
         $$.sval = $1.sval;
         $$.type = strdup($1.type);
-        quadruples.push_back(quadruple("=", $1.sval, "", "expres"));
     }
     | logical_expression
     {
-        $$.val = $1.val + 1;
+        $$.val = $1.val;
         $$.sval = $1.sval;
         $$.type = strdup("int");
-        quadruples.push_back(quadruple("=", $1.sval, "", "expres"));
     }
     | relational_expression
     {
-        $$.val = $1.val + 1;
+        $$.val = $1.val;
         $$.sval = $1.sval;
         $$.type = strdup("int");
-        quadruples.push_back(quadruple("=", $1.sval, "", "expres"));
     }
     | arithmetic_expression
     {
-        $$.val = $1.val + 1;
+        $$.val = $1.val;
         $$.sval = $1.sval;
         $$.type = strdup("int");
-        quadruples.push_back(quadruple("=", $1.sval, "", "expres"));
     }
     ;
 
@@ -983,20 +993,28 @@ assignment_expression
 logical_expression
     : expression_cover logical_operation expression_cover
     {
-        $$.val = $1.val + $3.val + 1;
+        $$.val = $1.val + $2.val + $3.val + 1;
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples[$2.index]._result = to_string($2.index + $3.val + 1);
+        quadruples[$2.index]._arg1 = $1.sval;
     }
     ;
 
 logical_operation
     : OR
     {
+        $$.val = 1;
+        $$.index = quadruples.size();
+        quadruples.push_back(quadruple("ifT", "", "", ""));
         $$.sval = strdup($1.sval);
     }
     | AND
     {
+        $$.val = 1;
+        $$.index = quadruples.size();
+        quadruples.push_back(quadruple("ifF", "", "", ""));
         $$.sval = strdup($1.sval);
     }
     ;
@@ -1004,11 +1022,11 @@ logical_operation
 relational_expression
     : expression_cover REL_OP expression_cover
     {
-        $$.val = $1.val + $3.val + 1;
+        $$.type = setIntType();
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
+        $$.val = $1.val + $3.val + 1;
         quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
-        $$.type = setIntType();
     }
     ;
 
