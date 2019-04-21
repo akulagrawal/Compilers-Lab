@@ -2,3 +2,6 @@ assign,x,2,p
 assign,y,3,p
 assign,z,0,p
 /,x,y,z
+ifz,z,,6
+assign,a,1,p
+assign,b,5,p
