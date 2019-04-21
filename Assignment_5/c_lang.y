@@ -32,20 +32,22 @@
         list<var_record> parameters;
         list<var_record> local_variables;
 
-        void insert_parameter(string parameter_name, string type, int level = 0){
+        void insert_parameter(string parameter_name, string type, int level = 1){
             parameters.push_back(var_record(parameter_name, type, true, level));
         }
 
-        void insert_variable(string var_name, string type, int level = 0){
+        void insert_variable(string var_name, string type, int level = 2){
             local_variables.push_back(var_record(var_name, type, false, level));
         }
 
-        var_record& search_param(string parameter_name) {
+        bool search_param(string parameter_name, var_record *&r) {
             for(auto it = parameters.begin(); it != parameters.end(); ++it){
                 if(it -> name == parameter_name){
-                    return *it;
+                    r = &(*it);
+                    return true;
                 }
             }
+            return false;
         }
 
         var_record& search_variable(string var_name) {
@@ -60,13 +62,19 @@
     struct symbol_table {
         unordered_map<string, function_record> entries;
 
-        function_record* insert_function(string function_name) {
-            function_record *r = new function_record();
-            entries[function_name] = *r;
-            return r;
+        void insert_function(string function_name, string datatype, list<var_record> active_func_param_list) {
+            function_record r;
+            r.function_return_type = datatype;
+
+            // Add param_list_declaration to symbol_table corresponding to active function
+            for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+                r.insert_parameter(it->name, it->type, it->level);
+            }
+            active_func_param_list.clear();
+            entries[function_name] = r;
         }
 
-        bool search_function(string function_name, function_record *function) {
+        bool search_function(string function_name, function_record *&function) {
             // If function exists in symbol table
             if (entries.count(function_name)) {
                 // Set function = pointer to function in symbol table
@@ -124,12 +132,15 @@
 		string name;
 		string type;
 		string value;
+        string function_name;
+        int level;
+
 		bool isarray;
 		int startoffset;
 		int endoffset;
 		vector<string> dimension;
 
-		variable(string v_name, string v_type, string v_value, bool v_isarray, vector<string> v_dimension){
+		variable(string v_name, string v_type, string v_value, bool v_isarray, vector<string> v_dimension, string v_func_name = "", int v_level = 0){
 			this->name = v_name;
 			this->type = v_type;
 			this->value = v_value;
@@ -137,6 +148,8 @@
 			this->dimension = v_dimension;
 			this->startoffset = 0;
 			this->endoffset = -1;
+            this->function_name = v_func_name;
+            this->level = v_level;
 		}
 
 	};
@@ -229,6 +242,29 @@
 			}
 			return -1;
 		}
+
+        bool search_var(string varname, int &cur_level, string functionName, string &datatype) {
+            vector<int> position;
+            for (int i = 0; i < tab.size(); ++i) {
+                if (tab[i].name == varname && tab[i].function_name == functionName)
+                    position.push_back(i);
+                else if (tab[i].name == varname && tab[i].function_name == "")
+                    position.push_back(i);
+            }
+            if (position.empty())
+                return false;
+            else {
+                int pos_with_max_level = 0;
+                int max_level = 0;
+                for (int i = 0; i < position.size(); i++) {
+                    if (tab[position[i]].level > max_level)
+                        pos_with_max_level = position[i];
+                }
+                cur_level = max_level;
+                datatype = tab[pos_with_max_level].type;
+            }
+            return true;
+        }
 	};
 
 	ab_symbol_table ab_symtab = ab_symbol_table();
@@ -325,6 +361,7 @@
     extern void reset_active_function();
     extern void errorLine(string errorMsg);
     extern bool isVariableInSymtab(string varname);
+    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag);
 %}
 
 %union {
@@ -410,13 +447,7 @@ function_head
             $$.type = setErrorType();
         }
         else {
-            r = symtab.insert_function($2.sval);
-            r->function_return_type = $1.sval;
-
-            // Add param_list_declaration to symbol_table corresponding to active function
-            for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
-                r->insert_parameter(it->name, it->type, it->level);
-            }
+            symtab.insert_function($2.sval, $1.sval, active_func_param_list);
             $$.type = strdup($1.sval);
         }
 
@@ -434,13 +465,7 @@ function_head
             $$.type = setErrorType();
         }
         else {
-            r = symtab.insert_function($2.sval);
-            r->function_return_type = $1.sval;
-
-            // Add param_list_declaration to symbol_table corresponding to active function
-            for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
-                r->insert_parameter(it->name, it->type, it->level);
-            }
+            symtab.insert_function($2.sval, $1.sval, active_func_param_list);
             $$.type = strdup($1.sval);
         }
 
@@ -453,12 +478,11 @@ function_head
 
         // Check if function already exists
         if (symtab.search_function($2.sval, r)) {
-            cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+            errorLine("Redeclaration of function : " + string($2.sval));
             $$.type = setErrorType();
         }
         else {
-            r = symtab.insert_function($2.sval);
-            r->function_return_type = $1.sval;
+            symtab.insert_function($2.sval, $1.sval, active_func_param_list);
             $$.type = strdup($1.sval);
         }
         set_active_function($2.sval);
@@ -474,7 +498,8 @@ function_head
             $$.type = setErrorType();
         }
         else {
-            r = symtab.insert_function($2.sval);
+            active_func_param_list.clear();
+            symtab.insert_function($2.sval, $1.sval, active_func_param_list);
             r->function_return_type = $1.sval;
             $$.type = strdup($1.sval);
         }
@@ -594,8 +619,12 @@ function_call
 
     | TYPE IDENTIFIER '=' IDENTIFIER '(' ')' ';'
     {
-        function_record *r;
         string functionName = $4.sval;
+        string datatype;
+        bool isExists = checkForVariable($2.sval, datatype, active_func_name, level, false);
+        $1.sval = strdup(datatype.c_str());
+
+        function_record *r;
 
         // search for function declaration
         if (symtab.search_function(functionName, r)) {
@@ -626,11 +655,50 @@ function_call
             $$.type = setErrorType();
         }
     }
+    | IDENTIFIER '=' IDENTIFIER '(' ')' ';'
+    {
+        string functionName = $3.sval;
+        string datatype;
+        function_record *r;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+
+        // search for function declaration
+        if (symtab.search_function(functionName, r)) {
+
+            // If function's return type is ErrorType
+            if (!isErrorType(r->function_return_type)) {
+
+                // Check if param_list_declaration is empty
+                if (r->parameters.empty())  {
+                    string return_type = r->function_return_type;
+                    if ( !isMatch(datatype, return_type) ) {
+                        errorLine("incompatible types when initializing type " + string(datatype) + " using type " + return_type);
+                        $$.type = setErrorType();
+                    }
+                    else
+                        $$.type = strdup(return_type.c_str());
+                }
+                else {
+                    // Error
+                    errorLine("Too many arguments to function '" + functionName + "'");
+                    $$.type = setErrorType();
+                }
+            }
+        }
+        else {
+            // Function not found
+            errorLine("Function " + string(functionName) + " is not declared");
+            $$.type = setErrorType();
+        }
+    }
     | TYPE IDENTIFIER '=' IDENTIFIER '(' arg_list ')' ';'
     {
+        string temp_data_type;
+        bool isExists = checkForVariable($2.sval, temp_data_type, active_func_name, level, false);
+        $1.sval = strdup(temp_data_type.c_str());
+        
         function_record *r;
         string functionName = $4.sval;
-
         // search for function declaration
         if (symtab.search_function(functionName, r)) {
 
@@ -643,6 +711,8 @@ function_call
                     $$.type = setErrorType();
                 }
                 else if (r->parameters.size() < $6.len) {
+                    cout << $6.len << endl;
+                    cout << r->parameters.size() << endl;
                     cout << "Too many arguments to function '" << functionName << "'\n";
                     $$.type = setErrorType();
                 }
@@ -670,7 +740,63 @@ function_call
                         }
                         else
                             $$.type = strdup(return_type.c_str());
+                    }
+                }
+            }
+        }
+        else {
+            // Function not found
+            errorLine("Function " + functionName + " is not declared");
+            $$.type = setErrorType();
+        }
+    }
+    | IDENTIFIER '=' IDENTIFIER '(' arg_list ')' ';'
+    {
+        string datatype;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+        function_record *r;
+        string functionName = $3.sval;
+
+        // search for function declaration
+        if (symtab.search_function(functionName, r)) {
+
+            // If function's return type is ErrorType
+            if (!isErrorType(r->function_return_type)) {
+
+                // Check if param_list_declaration matches with arg_list
+                if (r->parameters.size() > $5.len) {
+                    cout << "Too few arguments to function '" << functionName << "'\n";
+                    $$.type = setErrorType();
+                }
+                else if (r->parameters.size() < $5.len) {
+                    cout << "Too many arguments to function '" << functionName << "'\n";
+                    $$.type = setErrorType();
+                }
+                else {
+                    // Match the datatypes of param_list_declaration and arg_list
+                    auto param_it = r->parameters.begin();
+                    auto arg_it = called_arg_list.begin();
+                    bool matched = true;
+                    while (param_it != r->parameters.end()) {
+
+                        if (!isMatch(param_it->type, arg_it->type)) {
+                            errorLine("datatype mismatch for calling function : " + functionName);
+                            $$.type = setErrorType();
+                            matched = false;
+                            break;
                         }
+                        param_it ++;
+                        arg_it ++;
+                    }
+                    if (matched) {
+                        string return_type = r->function_return_type;
+                        if ( !isMatch(datatype, return_type) ) {
+                            errorLine("incompatible types when initializing type " + string(datatype) + " using type " + return_type);
+                            $$.type = setErrorType();
+                        }
+                        else
+                            $$.type = strdup(return_type.c_str());
+                    }
                 }
             }
         }
@@ -685,17 +811,29 @@ function_call
 arg_list
     : IDENTIFIER
     {
+        string datatype;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+
         called_arg_list.clear();
         $$.len = 1;
 
         // Search IDENTIFIER in the symbol_table
         // If found, Get the datatype of IDENTIFIER from symbol_table
+        if (!isExists) {
+            errorLine(string($1.sval) + " is not declared.");
+            $$.type = setErrorType();
 
-        $$.type = setNoErrorType();
-        string datatype = $1.type;
+            $$.type = setNoErrorType();
 
-        var_record arg($1.sval, datatype, /* is_parameter = */ false, level) ;
-        called_arg_list.push_back(arg);
+            var_record arg($1.sval, datatype, /* is_parameter = */ false, level) ;
+            called_arg_list.push_back(arg);
+        }
+        else {
+            $$.type = setNoErrorType();
+
+            var_record arg($1.sval, datatype, /* is_parameter = */ false, level) ;
+            called_arg_list.push_back(arg);
+        }
     }
     | NUM
     {
@@ -713,13 +851,24 @@ arg_list
         // Search IDENTIFIER in the symbol_table
         // If found, Get the datatype of IDENTIFIER from symbol_table
 
-        string datatype = $3.type;
-        $$.type = setNoErrorType();
+        string datatype;
+        bool isExists = checkForVariable($3.sval, datatype, active_func_name, level, true);
 
-        var_record arg($3.sval, datatype, /* is_parameter = */ false, level) ;
+        if (!isExists) {
+            errorLine(string($3.sval) + " is not declared.");
+            $$.type = setErrorType();
 
-        called_arg_list.push_back(arg);
-        $$.len = $1.len + 1;
+            var_record arg($3.sval, datatype, /* is_parameter = */ false, level) ;
+            called_arg_list.push_back(arg);
+            $$.len = $1.len + 1;
+        }
+        else {
+            $$.type = setNoErrorType();
+
+            var_record arg($3.sval, datatype, /* is_parameter = */ false, level) ;
+            called_arg_list.push_back(arg);
+            $$.len = $1.len + 1;
+        }
 
         if (isErrorType($1.type)) {
             $$.type = setErrorType();
@@ -1123,14 +1272,14 @@ id_arr
     : IDENTIFIER
     {
     	//abhishek //assignment quad = 0;
-    	variable v = variable($1.sval, "type", "0", false, dummy);
+    	variable v = variable($1.sval, "type", "0", false, dummy, active_func_name, level);
     	if(ab_symtab.search(v.name) == -1)
     		ab_symtab.insertintosymtab(v);
 	}
 	| IDENTIFIER '=' arithmetic_expression
     {
 		//abhishek //assignment quad = exprvalue; //here we dump the expression as value of id
-		variable v = variable($1.sval, "type", $3.sval, false, dummy);
+		variable v = variable($1.sval, "type", $3.sval, false, dummy, active_func_name, level);
 		if(ab_symtab.search(v.name) == -1)
 			ab_symtab.insertintosymtab(v);
 	}
@@ -1140,7 +1289,7 @@ id_arr
     	//here seperate values should be assigned to seperate elements
     	//not done as of now
         vector<string> dim = makedimlist($2.sval);
-        variable v = variable($1.sval, "type", "0", true, dim);
+        variable v = variable($1.sval, "type", "0", true, dim, active_func_name, level);
     	if(ab_symtab.search(v.name) == -1)
     		ab_symtab.insertintosymtab(v);
     }
@@ -1274,4 +1423,85 @@ bool isVariableInSymtab(string varname) {
         return false;
     else
         return true;
+}
+// If flag = false : check for case like ----- int a = 3;
+// If flag = true : check for case like  ----- a = 3;
+// Return false if error
+// else return true
+bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag) {
+    
+    // ab_symtab.printsymtab();
+    
+    if (!flag) {
+        function_record *r;
+        bool error = false;
+
+        // Check if variable is already declared
+        int cur_level_of_var;
+        if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
+            if (cur_level_of_var == cur_level) {
+                error = true;
+                errorLine("Variable already declared in same scope : " + string(var_name));
+                return false;
+            }
+        }
+        if (cur_level == 2) {
+            function_record *func;
+            var_record *r;
+            if ( symtab.search_function(active_func, func) ) {
+                if(func->search_param(var_name, r)) {
+                    error = true;
+                    errorLine("Redeclaration of parameter '" + string(var_name) + "' as variable" );
+                    return false;
+                }
+            }
+        }
+        if (!error) {
+            variable newVar(var_name, datatype, "0", false, dummy, active_func, cur_level);            
+            ab_symtab.insertintosymtab(newVar);
+            return true;
+        }
+    }
+    else {
+    // If flag = true : check for case like  ----- a = 3;
+    // Variable should be declared somewhere
+
+        function_record *r;
+        bool error = true;
+        bool found = false;
+
+        // Check if variable is already declared in variable
+        int cur_level_of_var;
+        if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
+            found = true;
+            if (cur_level_of_var == cur_level) {
+                error = false;
+                // Variable already declared in same scope
+                return true;
+            }
+        }
+        if (found) {
+            if (cur_level_of_var > 0)
+                return true;
+        }
+        if (cur_level == 2) {
+            function_record *func;
+            var_record *r;
+            if ( symtab.search_function(active_func, func) ) {
+                if(func->search_param(var_name, r)) {
+                    error = false;
+                    // "Declared as parameter"
+                    datatype = r->type;
+                    return true;
+                }
+            }
+            else if (found) {
+                return true;
+            }
+        }
+        if (error) {
+            errorLine("Variable : " + var_name + " is not declared");
+            return false;
+        }
+    }
 }
