@@ -127,6 +127,7 @@
 		bool isarray;
 		int startoffset;
 		int endoffset;
+        int quadindex; // the quadruple for declaration
 		vector<string> dimension;
 
 		variable(string v_name, string v_type, string v_value, bool v_isarray, vector<string> v_dimension){
@@ -145,7 +146,7 @@
 		public:
 		vector <variable> tab;
 
-		void insertintosymtab(variable v){
+		void insertintosymtab(variable v, int index){
 
 			if(tab.size() == 0)
 				v.startoffset = 0;
@@ -167,7 +168,8 @@
 			else
 				mul *= SIZE_FLOAT;
 
-			v.endoffset = v.startoffset +mul;
+			v.endoffset = v.startoffset + mul;
+            v.quadindex = index;
 			tab.push_back(v);
 		}
 
@@ -216,6 +218,7 @@
 				for (int j = 0; j < tab.size(); ++j){
 					if(tab[j].name == var_names[i]){
 						tab[j].type = strdup(v_type);
+                        quadruples[tab[j].quadindex]._arg1 = string(tab[j].type);
 						break;
 					}
 				}
@@ -1099,13 +1102,13 @@ arithmetic_factor
 	}
 	| IDENTIFIER
     {
-        // if (!isVariableInSymtab($1.sval)) {
-        //     errorLine("Variable " + string($1.sval) + " is not declared");
-        //     $$.type = setErrorType();
-        // }
-        // else {
-        //     $$.type = strdup(ab_symtab.tab[ab_symtab.search($1.sval)].type.c_str());
-        // }
+        if (!isVariableInSymtab($1.sval)) {
+            errorLine("Variable " + string($1.sval) + " is not declared");
+            $$.type = setErrorType();
+        }
+        else {
+            $$.type = strdup(ab_symtab.tab[ab_symtab.search($1.sval)].type.c_str());
+        }
 
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
@@ -1129,18 +1132,22 @@ variable_declaration_statement
         ab_symtab.patch($1.sval, $2.sval);
         vector<string> dim = makedimlist($2.sval);
 		checksanity(dim);
-		// makecorrect(dim);
-		cout<<endl;
+
+        // Patch types now.
+
 	}
     ;
 
 name_list
     : id_arr
+    {
+        $$.sval = $1.sval;
+    }
 	| id_arr ',' name_list
     {
         $$.sval=$1.sval;
         strcat($$.sval,",");
-        strcat($$.sval,$3.sval);
+        strcat($$.sval, $3.sval);
 	}
     ;
 
@@ -1149,10 +1156,11 @@ id_arr
     {
     	variable v = variable($1.sval, "type", "0", false, dummy);
     	if(ab_symtab.search(v.name) == -1){
-            ab_symtab.insertintosymtab(v);
             $$.index = quadruples.size();
             $$.val = 1;
+            $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
+            ab_symtab.insertintosymtab(v, $$.index);
         }
 	}
 	| IDENTIFIER '=' arithmetic_expression
@@ -1160,10 +1168,11 @@ id_arr
 		//abhishek //assignment quad = exprvalue; //here we dump the expression as value of id
 		variable v = variable($1.sval, "type", $3.sval, false, dummy);
 		if(ab_symtab.search(v.name) == -1){
-            ab_symtab.insertintosymtab(v);
             $$.index = quadruples.size();
             $$.val = 1;
+            $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "expres", $1.sval));
+            ab_symtab.insertintosymtab(v, $$.index);
         }
 	}
 	| IDENTIFIER bracket_dimlist
@@ -1171,13 +1180,15 @@ id_arr
     	//abhishek //assignment quad = 0;
     	//here seperate values should be assigned to seperate elements
     	//not done as of now
+
         vector<string> dim = makedimlist($2.sval);
         variable v = variable($1.sval, "type", "0", true, dim);
     	if(ab_symtab.search(v.name) == -1){
-            ab_symtab.insertintosymtab(v);
             $$.index = quadruples.size();
             $$.val = 1 + $2.val;
+            $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "expres", $1.sval));
+            ab_symtab.insertintosymtab(v, $$.index);
         }
     }
 	;
@@ -1185,13 +1196,18 @@ id_arr
 bracket_dimlist
     : '[' NUM ']'
     {
+        $$=$2;
         $$.val = 1;
         quadruples.push_back(quadruple("=", string($2.sval), "",  "expres"));
 	}
 	| '[' NUM ']' bracket_dimlist
     {
+        $$=$2;
         $$.val = $4.val + 1;
         quadruples.push_back(quadruple("*", string($2.sval), "expres",  "expres"));
+
+		strcat($$.sval,",");
+		strcat($$.sval,$4.sval);
 	}
 
 %%
