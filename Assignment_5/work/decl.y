@@ -309,7 +309,7 @@ one_dec:	type name_list	{
 								symtab.patch($1, $2);
 								vector<string> dim = makedimlist($2);
 								checksanity(dim);
-								makecorrect(dim);
+								// makecorrect(dim);
 								cout<<endl;
 							}
 			;
@@ -334,7 +334,7 @@ id_arr:		id 						{
 									}
 
 	|		id EQUAL expr			{
-										//abhishek //assignment quad = exprvalue;
+										//abhishek //assignment quad = exprvalue; //here we dump the expreseeion as value of id
 										variable v = variable($1, "type", $3, false, dummy);
 										if(symtab.search(v.name) == -1)
 											symtab.insertintosymtab(v);	
@@ -353,12 +353,15 @@ id_arr:		id 						{
 
 expr:		id 
 	|		id OP expr				{
-										//abhishek //evaluvation quad = 0;
-										string s = evaluvate($1, $2, $3);
-										int n = s.length(); 
- 									    char char_array[n + 1]; 
-									    strcpy(char_array, s.c_str());
-									    $$ = strdup(char_array);
+										//abhishek //evaluvation quad;
+										// string s = evaluvate($1, $2, $3);
+										// int n = s.length(); 
+ 									//     char char_array[n + 1]; 
+									 //    strcpy(char_array, s.c_str());
+									 //    $$ = strdup(char_array);
+											
+											strcat($$,$2);
+											strcat($$,$3);
 									}
 	;
 
