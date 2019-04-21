@@ -137,7 +137,7 @@
 
 // Non Terminals
 %type <type_id> statement statement_list
-%type <type_id> labeled_statement compound_statement expression_statement conditional_statement loop_statement
+%type <type_id> labeled_statement compound_statement expression_statement conditional_statement loop_statement loopstatement loopcompound_statement loopstatement_list
 %type <type_id> expression
 %type <type_id> constant_expression logical_expression relational_expression assignment_expression
 %type <type_id> START
@@ -237,12 +237,50 @@ statement
     | function_call
 	;
 
+  loopstatement
+      : conditional_statement
+      | loop_statement
+      | labeled_statement
+      | loopcompound_statement        // Nested statement_list
+      {
+          $$.val = $1.val;
+      }
+      | expression_statement      // Expression followed by semicolon
+      {
+          $$.val = $1.val;
+      }
+      | variable_declaration_list
+      | function_call
+      | BREAK ';' {
+          $$.index= quadruples.size();
+          $$.val=1;
+
+          quadruple temp;
+          temp._operator = "jmp";
+          temp._arg1 = "";
+          temp._arg2 = "";
+          temp._result = "";
+          quadruples.push_back(temp);
+      }
+      |CONTINUE ';' {
+          $$.val=1;
+          quadruple temp;
+          temp._operator = "ctn";
+          temp._arg1 = "";
+          temp._arg2 = "";
+          temp._result = "";
+          quadruples.push_back(temp);
+      }
+      ;
+
+
 conditional_statement
 	: if_exp  statement
     {
         $$.val = $1.val + $2.val;
         int gotoindex = $1.index;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
+        
     }
     | if_exp statement else_mark statement
     {
@@ -281,34 +319,84 @@ else_mark
         quadruples.push_back(quadruple("go", "", "", ""));
     }
 
-    loop_statement
-    	: WHILEEXP statement
+loop_statement
+    	: WHILEEXP loopstatement
       {
 
       $$.val = $1.val + $2.val;
         int gotoindex = $1.index;
-        cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
+      //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
 
+        for(int i =gotoindex+1;i<gotoindex + $2.val + 1;i++ )
+        {
+          //string s=jmp;
+          if(quadruples[i]._operator=="jmp")
+          {
+            quadruples[i]._result=quadruples[gotoindex]._result;
+          }
+          if(quadruples[i]._operator=="ctn")
+          {
+            quadruples[i]._result=to_string(gotoindex-1);
+          }
+          if((quadruples[i]._operator=="ifz"))
+          {
+            break;
+          }
+        }
+
       }
-    	| FOREXP ')' statement
+    	| FOREXP ')' loopstatement
       {
         $$.val = $1.val + $3.val;
           int gotoindex = $1.index;
-          cout<<"$1.index :"<<$1.index<<" $2.val= "<<$3.val<<endl;
+        //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$3.val<<endl;
           quadruples[gotoindex]._result = to_string(gotoindex + $3.val + 1);
+          for(int i =gotoindex+1;i<gotoindex + $3.val + 1;i++ )
+          {
+            //string s=jmp;
+            if(quadruples[i]._operator=="jmp")
+            {
+              quadruples[i]._result=quadruples[gotoindex]._result;
+            }
+            if(quadruples[i]._operator=="ctn")
+            {
+              quadruples[i]._result=to_string(gotoindex-1);
+            }
+            if((quadruples[i]._operator=="ifz"))
+            {
+              break;
+            }
+          }
       }
-        | FOREXP expression ')' statement
+        | FOREXP expression ')' loopstatement
         {
           $$.val = $1.val + $2.val+$4.val;
             int gotoindex = $1.index;
             cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
             quadruples[gotoindex]._result = to_string(gotoindex + $2.val+ $4.val + 1);
+
+            for(int i =gotoindex+1;i<gotoindex + $2.val+ $4.val + 1;i++ )
+            {
+              //string s=jmp;
+              if(quadruples[i]._operator=="jmp")
+              {
+                quadruples[i]._result=quadruples[gotoindex]._result;
+              }
+              if(quadruples[i]._operator=="ctn")
+              {
+                quadruples[i]._result=to_string(gotoindex-1);
+              }
+              if((quadruples[i]._operator=="ifz"))
+              {
+                break;
+              }
+            }
         }
     	;
 
 
-    FOREXP
+FOREXP
         : FOR '(' expression_statement expression_statement {
             if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
                 yyerror("Type error in condition of for loop");
@@ -324,7 +412,7 @@ else_mark
         }
         ;
 
-    WHILEEXP
+WHILEEXP
         : WHILE '(' expression ')' {
             if (strcmp($3.type, "num")) {
                 yyerror("int or boolean expected in expression of while statement");
@@ -418,6 +506,28 @@ assignment_expression
         $$.type = strdup($1.type);
         quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
         quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+    }
+    ;
+
+loopcompound_statement
+    : '{' '}'
+    {
+        $$.val = 0;
+    }
+    | '{' loopstatement_list '}'
+    {
+        $$.val = $2.val;
+    }
+    ;
+
+loopstatement_list
+    :   loopstatement
+    {
+        $$.val = $1.val;
+    }
+    |   loopstatement_list loopstatement
+    {
+        $$.val = $1.val + $2.val;
     }
     ;
 
