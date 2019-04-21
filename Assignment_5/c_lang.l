@@ -19,7 +19,7 @@ c_lang.l
 (default)                 { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return DEFAULT; }
 (int)                     { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return TYPE; }
 (float)                   { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return TYPE; }
-(void)                   { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return VOID; }
+(void)                    { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return VOID; }
 \(                        { yylval.type_id.sval = strdup(yytext); return '('  ; }
 \)                        { yylval.type_id.sval = strdup(yytext); return ')'  ; }
 \{                        { yylval.type_id.sval = strdup(yytext); return '{'  ; }
@@ -29,6 +29,10 @@ c_lang.l
 =                         { yylval.type_id.sval = strdup(yytext); return '='  ; }
 :                         { yylval.type_id.sval = strdup(yytext); return ':'  ; }
 ;                         { yylval.type_id.sval = strdup(yytext); return ';'  ; }
+\+                         { yylval.type_id.sval = strdup(yytext); return '+'  ; }
+\-                         { yylval.type_id.sval = strdup(yytext); return '-'  ; }
+\*                         { yylval.type_id.sval = strdup(yytext); return '*'  ; }
+\/                         { yylval.type_id.sval = strdup(yytext); return '/'  ; }
 ((\|\|)|or)               { yylval.type_id.sval = strdup(yytext); return OR; }
 ((&&)|and)                { yylval.type_id.sval = strdup(yytext); return AND; }
 ((<=)|(>=)|<|>|(==))      { yylval.type_id.sval = strdup(yytext); return REL_OP; }
