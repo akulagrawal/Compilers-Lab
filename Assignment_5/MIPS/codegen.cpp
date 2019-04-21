@@ -109,15 +109,58 @@ int main()
 			//	cout<<"ERROR: Register overflow\n";
 			//	exit(1);
 			//}
-			if(!mapmem[row[1]] || !mapmem[row[2]]) {
-				cout<<"ERROR: Variable Unassigned\n";
-				exit(1);
-			}
 			int x = memory[mapmem[row[1]]];
 			int y = memory[mapmem[row[2]]];
 			v.push_back("lw $t0, " + to_hex(mapmem[row[1]]) + "($0)");
 			v.push_back("lw $t1, " + to_hex(mapmem[row[2]]) + "($0)");
 			v.push_back("add $v0, $t0, $t1");
+			int z = getmem(row[3]);
+			v.push_back("sw $v0, " + to_hex(z) + "($0)");
+		}
+		if(row[0] == "-") {
+			//int x = getfree();
+			//int y = getfree();
+			//if(x < 0 || y < 0) {
+			//	cout<<"ERROR: Register overflow\n";
+			//	exit(1);
+			//}
+			int x = memory[mapmem[row[1]]];
+			int y = memory[mapmem[row[2]]];
+			v.push_back("lw $t0, " + to_hex(mapmem[row[1]]) + "($0)");
+			v.push_back("lw $t1, " + to_hex(mapmem[row[2]]) + "($0)");
+			v.push_back("sub $v0, $t0, $t1");
+			int z = getmem(row[3]);
+			v.push_back("sw $v0, " + to_hex(z) + "($0)");
+		}
+		if(row[0] == "*") {
+			//int x = getfree();
+			//int y = getfree();
+			//if(x < 0 || y < 0) {
+			//	cout<<"ERROR: Register overflow\n";
+			//	exit(1);
+			//}
+			int x = memory[mapmem[row[1]]];
+			int y = memory[mapmem[row[2]]];
+			v.push_back("lw $t0, " + to_hex(mapmem[row[1]]) + "($0)");
+			v.push_back("lw $t1, " + to_hex(mapmem[row[2]]) + "($0)");
+			v.push_back("mult $t0, $t1");
+			v.push_back("mflo $v0");
+			int z = getmem(row[3]);
+			v.push_back("sw $v0, " + to_hex(z) + "($0)");
+		}
+		if(row[0] == "/") {
+			//int x = getfree();
+			//int y = getfree();
+			//if(x < 0 || y < 0) {
+			//	cout<<"ERROR: Register overflow\n";
+			//	exit(1);
+			//}
+			int x = memory[mapmem[row[1]]];
+			int y = memory[mapmem[row[2]]];
+			v.push_back("lw $t0, " + to_hex(mapmem[row[1]]) + "($0)");
+			v.push_back("lw $t1, " + to_hex(mapmem[row[2]]) + "($0)");
+			v.push_back("div $t0, $t1");
+			v.push_back("mflo $v0");
 			int z = getmem(row[3]);
 			v.push_back("sw $v0, " + to_hex(z) + "($0)");
 		}

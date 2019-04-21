@@ -1,4 +1,4 @@
 assign,x,2,p
 assign,y,3,p
 assign,z,0,p
-+,x,y,z
+/,x,y,z
