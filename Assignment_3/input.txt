@@ -1,19 +1,30 @@
 /*
-Lines with...
 Objects: 1
-Classes: 2
+Classes: 3
 Constructors: 0
-Inherited Classes: 1
+Inherited Classes: 2
 */
+
+
+/*
+afa
+/
+afef
+efe
+*/
+
+/*
+System.out.println("class Calculation {
+   }"+z);*/
 
 class Calculation {
    int z;
-
+	
    public void addition(int x, int y) {
       z = x + y;
       System.out.println("The sum of the given numbers:"+z);
    }
-
+	
    public void Subtraction(int x, int y) {
       z = x - y;
       System.out.println("The difference between the given numbers:"+z);
@@ -25,7 +36,7 @@ public class My_Calculation extends Calculation {
       z = x * y;
       System.out.println("The product of the given numbers:"+z);
    }
-
+	
    public static void main(String args[]) {
       int a = 20, b = 10;
       My_Calculation demo = new My_Calculation();
@@ -33,4 +44,8 @@ public class My_Calculation extends Calculation {
       demo.Subtraction(a, b);
       demo.multiplication(a, b);
    }
+}
+
+public class My_Calculation22 extends Calculation {
+   
 }
