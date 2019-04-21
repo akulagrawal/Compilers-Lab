@@ -1,6 +1,5 @@
-assign,x,2,p
-assign,y,3,p
-assign,z,0,p
-ifF,z,,5
-assign,a,1,p
-assign,b,5,p
+=,x,2,p
+=,y,3,p
+=,z,0,p
+DECL,a,b,z
+=,a,x,p
