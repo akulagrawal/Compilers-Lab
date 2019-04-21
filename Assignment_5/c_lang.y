@@ -265,6 +265,18 @@
             }
             return true;
         }
+
+        void delete_var_from_level(string function_name, int level) {
+            for (auto it = tab.begin(); it != tab.end(); ) {
+                auto next = it + 1;
+                if (it->function_name == function_name && it->level == level) {
+                    tab.erase(it);
+                    it = next;
+                }
+                else
+                    it++;
+            }
+        }
 	};
 
 	ab_symbol_table ab_symtab = ab_symbol_table();
@@ -360,8 +372,11 @@
     extern char* setNoErrorType();
     extern void reset_active_function();
     extern void errorLine(string errorMsg);
+    extern void warning(string warningMsg);
     extern bool isVariableInSymtab(string varname);
     extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag);
+    extern void delete_var_list(string function_name, int level);
+    extern bool isCompatible(string type1, string type2);
 %}
 
 %union {
@@ -422,10 +437,8 @@ function_declaration
         level --;
         reset_active_function();
         if (!isErrorType($1.type)) {
-            if (!isNoneType($3.type)) {
-                if (!(isMatch($1.type, $3.type)))
-                    cout << "Type mismatch of return type between " << $$.type << " and " << $3.type << endl;
-            }
+            if (!(isMatch($1.type, $3.type)));
+                // cout << "Type mismatch of return type between " << $$.type << " and " << $3.type << endl;
         }
     }
 	| function_head '{' '}'
@@ -635,7 +648,7 @@ function_call
                 // Check if param_list_declaration is empty
                 if (r->parameters.empty())  {
                     string return_type = r->function_return_type;
-                    if ( !isMatch($1.type, return_type) ) {
+                    if ( !isCompatible(string($1.type), return_type) ) {
                         errorLine("incompatible types when initializing type " + string($1.type) + " using type " + return_type);
                         $$.type = setErrorType();
                     }
@@ -671,7 +684,7 @@ function_call
                 // Check if param_list_declaration is empty
                 if (r->parameters.empty())  {
                     string return_type = r->function_return_type;
-                    if ( !isMatch(datatype, return_type) ) {
+                    if ( !isCompatible(datatype, return_type) ) {
                         errorLine("incompatible types when initializing type " + string(datatype) + " using type " + return_type);
                         $$.type = setErrorType();
                     }
@@ -734,7 +747,7 @@ function_call
                     }
                     if (matched) {
                         string return_type = r->function_return_type;
-                        if ( !isMatch($1.type, return_type) ) {
+                        if ( !isCompatible(string($1.type), return_type) ) {
                             errorLine("incompatible types when initializing type " + string($1.type) + " using type " + return_type);
                             $$.type = setErrorType();
                         }
@@ -790,7 +803,7 @@ function_call
                     }
                     if (matched) {
                         string return_type = r->function_return_type;
-                        if ( !isMatch(datatype, return_type) ) {
+                        if ( !isCompatible(datatype, return_type) ) {
                             errorLine("incompatible types when initializing type " + string(datatype) + " using type " + return_type);
                             $$.type = setErrorType();
                         }
@@ -906,22 +919,31 @@ statement
 	;
 
 conditional_statement
-	: if_exp  statement
+	: if_exp statement
     {
+        delete_var_list(active_func_name, level);
+        level --;
+        
         $$.val = $1.val + $2.val;
         int gotoindex = $1.index;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
     }
     | if_exp statement else_mark statement
     {
+        delete_var_list(active_func_name, level);
+        level --;
+        
         $$.val = $1.val + $2.val + $3.val + $4.val;
         int gotoindex1 = $1.index;
         quadruples[gotoindex1]._result = to_string(gotoindex1 + $2.val + $3.val + 1);
         int gotoindex2 = $3.index;
         quadruples[gotoindex2]._result = to_string(gotoindex2 + $4.val + 1);
     }
-	| SWITCH '(' expression ')' statement
+	| SWITCH '(' expression ')' { level ++; } statement
     {
+        delete_var_list(active_func_name, level);
+        level --;
+        
         if (!isErrorType($3.type)) {
             if ( isInt($3.type) || isFloat($3.type) ) {
                 $$.type = setNoErrorType();
@@ -934,8 +956,11 @@ conditional_statement
         else
             $$.type = setErrorType();
     }
-	| SWITCH '(' expression ')' labeled_statement
+	| SWITCH '(' expression ')' { level ++; } labeled_statement
     {
+        delete_var_list(active_func_name, level);
+        level --;
+
         if (!isErrorType($3.type)) {
             if (isInt($3.type)) {
                 $$.type = setNoErrorType();
@@ -966,6 +991,8 @@ if_exp
         $$.index = quadruples.size();
         $$.val = $3.val + 1;
         quadruples.push_back(quadruple("if0", "expres", "", ""));
+
+        level ++;
     }
 
 else_mark
@@ -977,8 +1004,12 @@ else_mark
     }
 
 loop_statement
-	: WHILE '(' expression ')' statement
+	: WHILE '(' expression ')' { level ++; } statement
     {
+
+        delete_var_list(active_func_name, level);
+        level --;
+        
         if (!isErrorType($3.type)) {
             if (isInt($3.type) || isFloat($3.type)) {
                 $$.type = setNoErrorType();
@@ -991,38 +1022,36 @@ loop_statement
         else
             $$.type = setErrorType();
     }
-	| FOR '(' expression_statement expression_statement ')' statement
+	| FOR_WITH_BR expression_statement expression_statement ')' statement
     {
-        if (!isErrorType($3.type)) {
-            if (isInt($4.type) || isFloat($4.type) || isNoneType($4.type)) {
-                $$.type = setNoErrorType();
-            }
-            else {
-                yyerror("Type error in condition of for loop");
-                $$.type = setErrorType();
-            }
-        }
-        else
-            $$.type = setErrorType();
+        delete_var_list(active_func_name, level);
+        level --;
+        
+        $$.type = setNoErrorType();
     }
-	| FOR '(' expression_statement expression_statement expression ')' statement
+	| FOR_WITH_BR expression_statement expression_statement expression ')' statement
     {
-        if (!isErrorType($3.type)) {
-            if (isInt($4.type) || isFloat($4.type) || isNoneType($4.type)) {
-                $$.type = setNoErrorType();
-            }
-            else {
-                yyerror("Type error in condition of for loop");
-                $$.type = setErrorType();
-            }
-        }
-        else
-            $$.type = setErrorType();
+
+        delete_var_list(active_func_name, level);
+        level --;
+        
+        $$.type = setNoErrorType();
     }
 	;
 
+FOR_WITH_BR
+    : FOR '('
+    {
+        level ++;
+    }
+    ;
+
 labeled_statement
-	: CASE NUM ':' statement {
+	: CASE NUM ':' { level ++; } statement {
+
+        delete_var_list(active_func_name, level);
+        level --;
+        
         if (!isMatch($2.type, "int")) {
             yyerror("int expected in switch case");
         }
@@ -1035,9 +1064,11 @@ compound_statement
     {
         $$.val = 0;
     }
-	| '{' statement_list '}'
+	| '{' { level ++; } statement_list '}'
     {
-        $$.val = $2.val;
+        $$.val = $3.val;
+        delete_var_list(active_func_name, level);
+        level --;
     }
 	;
 
@@ -1095,35 +1126,103 @@ expression
 assignment_expression
     : IDENTIFIER '=' NUM
     {
-        $$.val = 2;
-        $$.type = strdup($3.type);
-        quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
-        quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+        string datatype;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+        if (!isExists) {
+            errorLine("Variable " + string($1.sval) + " does not exists.");
+            $$.type = setErrorType();
+        }
+        else {
+            $$.val = 2;
+            if (!isMatch(datatype, string($3.type))) {
+                warning("Implicit Type conversion from " + string($3.type) + " to " + datatype);
+            }
+            $$.type = strdup($3.type);
+            quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+            quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+        }
     }
     | IDENTIFIER '=' IDENTIFIER
     {
-        $$.val = 2;
-        $$.type = strdup($1.type);
-        quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
-        quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+        string datatype1;
+        bool isExists1 = checkForVariable($1.sval, datatype1, active_func_name, level, true);
+        bool flag = true;
+
+        if (!isExists1) {
+            errorLine("Variable " + string($1.sval) + " does not exists.");
+            flag = false;
+        }
+        string datatype2;
+        bool isExists2 = checkForVariable($3.sval, datatype2, active_func_name, level, true);
+
+        if (!isExists2) {
+            errorLine("Variable " + string($3.sval) + " does not exists.");
+            flag = false;
+        }
+
+        if (flag) {
+            $$.val = 2;
+            if (!isMatch(datatype1, datatype2)) {
+                warning("Implicit Type conversion from " + datatype2 + " to " + datatype1);
+            }
+            $$.val = 2;
+            $$.type = strdup(datatype1.c_str());
+            quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+            quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+        }
+        else
+            $$.type = setErrorType();
     }
     ;
 
 logical_expression
     : IDENTIFIER logical_operation IDENTIFIER
     {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        string datatype1;
+        bool isExists1 = checkForVariable($1.sval, datatype1, active_func_name, level, true);
+        bool flag = true;
+
+        if (!isExists1) {
+            errorLine("Variable " + string($1.sval) + " does not exists.");
+            flag = false;
+        }
+        string datatype2;
+        bool isExists2 = checkForVariable($3.sval, datatype2, active_func_name, level, true);
+
+        if (!isExists2) {
+            errorLine("Variable " + string($3.sval) + " does not exists.");
+            flag = false;
+        }
+
+        if (flag) {
+            $$.val = 1;
+            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        }
     }
     | NUM logical_operation IDENTIFIER
     {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        string datatype;
+        bool isExists = checkForVariable($3.sval, datatype, active_func_name, level, true);
+        if (!isExists) {
+            errorLine("Variable " + string($3.sval) + " does not exists.");
+        }
+        else {
+            $$.val = 1;
+            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        }
+
     }
     | IDENTIFIER logical_operation NUM
     {
-        $$.val = 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        string datatype;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+        if (!isExists) {
+            errorLine("Variable " + string($1.sval) + " does not exists.");
+        }
+        else {
+            $$.val = 1;
+            quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+        }
     }
     | NUM logical_operation NUM
     {
@@ -1146,14 +1245,22 @@ logical_operation
 relational_expression
     : IDENTIFIER REL_OP IDENTIFIER
     {
-        if (!isVariableInSymtab($1.sval)) {
+        $$.type = setNoErrorType();
+        string datatype1;
+        bool isExists1 = checkForVariable($1.sval, datatype1, active_func_name, level, true);
+
+        if (!isExists1) {
             errorLine("Variable " + string($1.sval) + " is not declared");
             $$.type = setErrorType();
         }
-        if (!isVariableInSymtab($3.sval)) {
+        string datatype2;
+        bool isExists2 = checkForVariable($3.sval, datatype2, active_func_name, level, true);
+
+        if (!isExists2) {
             errorLine("Variable " + string($3.sval) + " is not declared");
             $$.type = setErrorType();
         }
+        
         if (!isErrorType($$.type)) {
             $$.val = 1;
             quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
@@ -1162,7 +1269,9 @@ relational_expression
     }
     | NUM REL_OP IDENTIFIER
     {
-        if (!isVariableInSymtab($3.sval)) {
+        string datatype;
+        bool isExists = checkForVariable($3.sval, datatype, active_func_name, level, true);
+        if (!isExists) {
             errorLine("Variable " + string($3.sval) + " is not declared");
             $$.type = setErrorType();
         }
@@ -1174,7 +1283,9 @@ relational_expression
     }
     | IDENTIFIER REL_OP NUM
     {
-        if (!isVariableInSymtab($1.sval)) {
+        string datatype;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+        if (!isExists) {
             errorLine("Variable " + string($1.sval) + " is not declared");
             $$.type = setErrorType();
         }
@@ -1234,12 +1345,14 @@ factor
 	}
 	| IDENTIFIER
     {
-        if (!isVariableInSymtab($1.sval)) {
+        string datatype;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+        if (!isExists) {
             errorLine("Variable " + string($1.sval) + " is not declared");
             $$.type = setErrorType();
         }
         else {
-            $$.type = strdup(ab_symtab.tab[ab_symtab.search($1.sval)].type.c_str());
+            $$.type = strdup(datatype.c_str());
         }
     }
     | NUM
@@ -1418,6 +1531,9 @@ void reset_active_function() {
 void errorLine(string errorMsg) {
     cout << "Error at line " << lineNo << " : " << errorMsg << endl;
 }
+void warning(string warningMsg) {
+    cout << "Warning at line " << lineNo << " : " << warningMsg << endl;
+}
 bool isVariableInSymtab(string varname) {
     if(ab_symtab.search(varname) == -1)
         return false;
@@ -1504,4 +1620,18 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             return false;
         }
     }
+}
+void delete_var_list(string function_name, int level) {   
+    ab_symtab.delete_var_from_level(function_name, level);
+}
+bool isCompatible(string type1, string type2) {
+    return true;
+    cout << type1 << " " << type2 << endl;
+    if (type1 == type2)
+        return true;
+    if ( type1 == "float" && type2 == "int" )
+        return true;
+    if ( type2 == "float" && type1 == "int" )
+        return true;
+    return false;
 }
