@@ -741,11 +741,7 @@ statement
         $$.type = setVoidType();
         $$.val = $1.val;
     }
-    | variable_declaration_list
-    {
-        $$.type = setVoidType();
-    }
-    | function_call
+    | variable_declaration_statement
     {
         $$.type = setVoidType();
     }
@@ -1161,6 +1157,7 @@ id_arr
             $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
+            cout << "Inserted into symtab: " << string($1.sval) << " ";
         }
 
 	}
@@ -1179,6 +1176,7 @@ id_arr
             $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "expres", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
+            cout << "Inserted into symtab: " << string($1.sval) << " ";
         }
     }
 	;
@@ -1392,7 +1390,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             }
         }
         if (!varExists) {
-            errorLine("Variable : " + var_name + " is not declared");
+            // errorLine("Variable : " + var_name + " is not declared");
             return false;
         }
     }
