@@ -350,19 +350,23 @@
     // Keep track of current line number
     int lineNo = 1;
 
+    // Keep track of whether inside switch case statement
+    int insideSwitchCase = 0;
+
     extern bool isInt(const char *type);
     extern bool isFloat(const char *type);
     extern bool isBoolean(const char *type);
     extern bool isErrorType(const char *type);
-    extern bool isNoneType(const char *type);
+    extern bool isVoidType(const char *type);
     extern bool isMatch(const char *str1, const char *str2);
     extern void set_active_function(const char *str);
+    extern char* setVoidType();
 
     extern bool isInt(string type);
     extern bool isFloat(string type);
     extern bool isBoolean(string type);
     extern bool isErrorType(string type);
-    extern bool isNoneType(string type);
+    extern bool isVoidType(string type);
     extern bool isMatch(string str1, string str2);
     extern void set_active_function(string str);
 
@@ -377,6 +381,7 @@
     extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag);
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
+    extern string Variable(string str);
 %}
 
 %union {
@@ -418,6 +423,7 @@
 %token <type_id> IF ELSE
 %token <type_id> FOR WHILE
 %token <type_id> SWITCH CASE DEFAULT
+%token <type_id> RETURN
 
 // Starting Non Terminal
 %start START
@@ -428,7 +434,6 @@ START
     | variable_declaration_list
 	| START function_declaration
     | START variable_declaration_list
-    | expression
 	;
 
 function_declaration
@@ -437,8 +442,9 @@ function_declaration
         level --;
         reset_active_function();
         if (!isErrorType($1.type)) {
-            if (!(isMatch($1.type, $3.type)));
-                // cout << "Type mismatch of return type between " << $$.type << " and " << $3.type << endl;
+            if (isVoidType($1.type) && !isVoidType($3.type)) {
+                warning("'return' with a value '" + string($3.type) + "', in function returning void");
+            }
         }
     }
 	| function_head '{' '}'
@@ -455,7 +461,7 @@ function_head
 
         // Check if function already exists
         if (symtab.search_function($2.sval, r)) {
-            cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+            errorLine("Redeclaration of function '" + Variable(string($2.sval)) + "'");
             r->function_return_type = setErrorType();
             $$.type = setErrorType();
         }
@@ -473,7 +479,7 @@ function_head
 
         // Check if function already exists
         if (symtab.search_function($2.sval, r)) {
-            cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+            errorLine("Redeclaration of function '" + Variable(string($2.sval)) + "'");
             r->function_return_type = setErrorType();
             $$.type = setErrorType();
         }
@@ -491,7 +497,7 @@ function_head
 
         // Check if function already exists
         if (symtab.search_function($2.sval, r)) {
-            errorLine("Redeclaration of function : " + string($2.sval));
+            errorLine("Redeclaration of function '" + Variable(string($2.sval)) + "'");
             $$.type = setErrorType();
         }
         else {
@@ -507,7 +513,7 @@ function_head
 
         // Check if function already exists
         if (symtab.search_function($2.sval, r)) {
-            cout << "Error : Redeclaration of function : " << $2.sval << " in line : " << lineNo << endl;
+            errorLine("Redeclaration of function '" + Variable(string($2.sval)) + "'");
             $$.type = setErrorType();
         }
         else {
@@ -527,7 +533,7 @@ param_list_declaration
         // Check if variable is repeated in parameter list
         for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
             if (it -> name == $3.sval) {
-                cout << "Redeclaration of parameter " << $3.sval << endl;
+                errorLine("Redeclaration of parameter '" + Variable(string($3.sval)) + "'");
                 $$.type = setErrorType();
                 found = true;
                 break;
@@ -575,14 +581,14 @@ function_call
                 }
                 else {
                     // Error
-                    cout << "Too many arguments to function '" << functionName << "'\n";
+                    errorLine("Too many arguments to function '" + Variable(string(functionName)) + "'");
                     $$.type = setErrorType();
                 }
             }
         }
         else {
             // Function not found
-            cout << "Function " << functionName << " is not declared\n";
+            errorLine("Function '" + Variable(string(functionName)) + "' is not declared");
             $$.type = setErrorType();
         }
     }
@@ -599,11 +605,11 @@ function_call
 
                 // Check if param_list_declaration matches with arg_list
                 if (r->parameters.size() > $3.len) {
-                    cout << "Too few arguments to function '" << functionName << "'\n";
+                    errorLine("Too few arguments to function '" + Variable(functionName) + "'");
                     $$.type = setErrorType();
                 }
                 else if (r->parameters.size() < $3.len) {
-                    cout << "Too many arguments to function '" << functionName << "'\n";
+                    errorLine("Too many arguments to function '" + Variable(functionName) + "'");
                     $$.type = setErrorType();
                 }
                 else {
@@ -613,7 +619,7 @@ function_call
                     while (param_it != r->parameters.end()) {
 
                         if (!isMatch(param_it->type, arg_it->type)) {
-                            errorLine("datatype mismatch for calling function : " + functionName);
+                            errorLine("datatype mismatch for calling function '" + Variable(functionName) + "'");
                             $$.type = setErrorType();
                             break;
                         }
@@ -625,7 +631,7 @@ function_call
         }
         else {
             // Function not found
-            errorLine("Function " + functionName + " is not declared");
+            errorLine("Function '" + functionName + "' is not declared");
             $$.type = setErrorType();
         }
     }
@@ -649,7 +655,7 @@ function_call
                 if (r->parameters.empty())  {
                     string return_type = r->function_return_type;
                     if ( !isCompatible(string($1.type), return_type) ) {
-                        errorLine("incompatible types when initializing type " + string($1.type) + " using type " + return_type);
+                        errorLine("incompatible types when initializing type '" + string($1.type) + "' using type '" + return_type + "'");
                         $$.type = setErrorType();
                     }
                     else
@@ -657,14 +663,14 @@ function_call
                 }
                 else {
                     // Error
-                    errorLine("Too many arguments to function '" + functionName + "'");
+                    errorLine("Too many arguments to function '" + Variable(functionName) + "'");
                     $$.type = setErrorType();
                 }
             }
         }
         else {
             // Function not found
-            errorLine("Function " + string(functionName) + " is not declared");
+            errorLine("Function '" + Variable(string(functionName)) + "' is not declared");
             $$.type = setErrorType();
         }
     }
@@ -685,7 +691,7 @@ function_call
                 if (r->parameters.empty())  {
                     string return_type = r->function_return_type;
                     if ( !isCompatible(datatype, return_type) ) {
-                        errorLine("incompatible types when initializing type " + string(datatype) + " using type " + return_type);
+                        errorLine("incompatible types when initializing type '" + string(datatype) + "' using type '" + return_type+"'");
                         $$.type = setErrorType();
                     }
                     else
@@ -693,14 +699,14 @@ function_call
                 }
                 else {
                     // Error
-                    errorLine("Too many arguments to function '" + functionName + "'");
+                    errorLine("Too many arguments to function '" + Variable(functionName) + "'");
                     $$.type = setErrorType();
                 }
             }
         }
         else {
             // Function not found
-            errorLine("Function " + string(functionName) + " is not declared");
+            errorLine("Function '" + Variable(string(functionName)) + "' is not declared");
             $$.type = setErrorType();
         }
     }
@@ -720,13 +726,11 @@ function_call
 
                 // Check if param_list_declaration matches with arg_list
                 if (r->parameters.size() > $6.len) {
-                    cout << "Too few arguments to function '" << functionName << "'\n";
+                    errorLine("Too few arguments to function '" + Variable(functionName) + "'");
                     $$.type = setErrorType();
                 }
                 else if (r->parameters.size() < $6.len) {
-                    cout << $6.len << endl;
-                    cout << r->parameters.size() << endl;
-                    cout << "Too many arguments to function '" << functionName << "'\n";
+                    errorLine("Too many arguments to function '" + Variable(functionName) + "'");
                     $$.type = setErrorType();
                 }
                 else {
@@ -737,7 +741,7 @@ function_call
                     while (param_it != r->parameters.end()) {
 
                         if (!isMatch(param_it->type, arg_it->type)) {
-                            errorLine("datatype mismatch for calling function : " + functionName);
+                            errorLine("datatype mismatch for calling function '" + Variable(functionName)+"'");
                             $$.type = setErrorType();
                             matched = false;
                             break;
@@ -748,7 +752,7 @@ function_call
                     if (matched) {
                         string return_type = r->function_return_type;
                         if ( !isCompatible(string($1.type), return_type) ) {
-                            errorLine("incompatible types when initializing type " + string($1.type) + " using type " + return_type);
+                            errorLine("incompatible types when initializing type '" + string($1.type) + "' using type '" + return_type+"'");
                             $$.type = setErrorType();
                         }
                         else
@@ -759,7 +763,7 @@ function_call
         }
         else {
             // Function not found
-            errorLine("Function " + functionName + " is not declared");
+            errorLine("Function '" + Variable(functionName) + "' is not declared");
             $$.type = setErrorType();
         }
     }
@@ -778,11 +782,11 @@ function_call
 
                 // Check if param_list_declaration matches with arg_list
                 if (r->parameters.size() > $5.len) {
-                    cout << "Too few arguments to function '" << functionName << "'\n";
+                    errorLine("Too few arguments to function '" + Variable(functionName) + "'");
                     $$.type = setErrorType();
                 }
                 else if (r->parameters.size() < $5.len) {
-                    cout << "Too many arguments to function '" << functionName << "'\n";
+                    errorLine("Too many arguments to function '" + Variable(functionName) + "'");
                     $$.type = setErrorType();
                 }
                 else {
@@ -793,7 +797,7 @@ function_call
                     while (param_it != r->parameters.end()) {
 
                         if (!isMatch(param_it->type, arg_it->type)) {
-                            errorLine("datatype mismatch for calling function : " + functionName);
+                            errorLine("datatype mismatch for calling function '" + Variable(functionName)+"'");
                             $$.type = setErrorType();
                             matched = false;
                             break;
@@ -804,7 +808,7 @@ function_call
                     if (matched) {
                         string return_type = r->function_return_type;
                         if ( !isCompatible(datatype, return_type) ) {
-                            errorLine("incompatible types when initializing type " + string(datatype) + " using type " + return_type);
+                            errorLine("incompatible types when initializing type '" + string(datatype) + "' using type '" + return_type+"'");
                             $$.type = setErrorType();
                         }
                         else
@@ -815,7 +819,7 @@ function_call
         }
         else {
             // Function not found
-            errorLine("Function " + functionName + " is not declared");
+            errorLine("Function '" + Variable(functionName) + "' is not declared");
             $$.type = setErrorType();
         }
     }
@@ -833,7 +837,7 @@ arg_list
         // Search IDENTIFIER in the symbol_table
         // If found, Get the datatype of IDENTIFIER from symbol_table
         if (!isExists) {
-            errorLine(string($1.sval) + " is not declared.");
+            errorLine("'"+Variable(string($1.sval)) + "' is not declared.");
             $$.type = setErrorType();
 
             $$.type = setNoErrorType();
@@ -868,7 +872,7 @@ arg_list
         bool isExists = checkForVariable($3.sval, datatype, active_func_name, level, true);
 
         if (!isExists) {
-            errorLine(string($3.sval) + " is not declared.");
+            errorLine("'"+Variable(string($3.sval)) + "' is not declared.");
             $$.type = setErrorType();
 
             var_record arg($3.sval, datatype, /* is_parameter = */ false, level) ;
@@ -905,17 +909,46 @@ arg_list
 
 statement
     : conditional_statement
+    {
+        $$.type = strdup($1.type);
+    }
     | loop_statement
+    {
+        $$.type = strdup($1.type);
+    }
     | compound_statement        // Nested statement_list
     {
+        $$.type = strdup($1.type);
         $$.val = $1.val;
     }
 	| expression_statement      // Expression followed by semicolon
     {
+        $$.type = setVoidType();
         $$.val = $1.val;
     }
     | variable_declaration_list
+    {
+        $$.type = setVoidType();
+    }
     | function_call
+    {
+        $$.type = setVoidType();
+    }
+    | RETURN expression_statement
+    {
+        if (isInsideFunc())
+            $$.type = strdup($2.type);
+        else {
+            errorLine("Return out of function scope");
+        }
+    }
+    | labeled_statement
+    {
+        if (!insideSwitchCase) 
+            errorLine("Label conditions not inside switch statement");
+
+        $$.type = strdup($1.type);
+    }
 	;
 
 conditional_statement
@@ -927,6 +960,7 @@ conditional_statement
         $$.val = $1.val + $2.val;
         int gotoindex = $1.index;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
+        $$.type = strdup($2.type);
     }
     | if_exp statement else_mark statement
     {
@@ -938,41 +972,23 @@ conditional_statement
         quadruples[gotoindex1]._result = to_string(gotoindex1 + $2.val + $3.val + 1);
         int gotoindex2 = $3.index;
         quadruples[gotoindex2]._result = to_string(gotoindex2 + $4.val + 1);
+
+        if ( !isVoidType($2.type) )
+            $$.type = strdup($2.type);
+        else
+            $$.type = strdup($4.type);
     }
-	| SWITCH '(' expression ')' { level ++; } statement
+	| SWITCH '(' expression ')' { level ++; insideSwitchCase ++; } statement
     {
         delete_var_list(active_func_name, level);
         level --;
         
-        if (!isErrorType($3.type)) {
-            if ( isInt($3.type) || isFloat($3.type) ) {
-                $$.type = setNoErrorType();
-            }
-            else {
-                yyerror("int expected in expression of if-else");
-                $$.type = setErrorType();
-            }
-        }
-        else
-            $$.type = setErrorType();
-    }
-	| SWITCH '(' expression ')' { level ++; } labeled_statement
-    {
-        delete_var_list(active_func_name, level);
-        level --;
-
-        if (!isErrorType($3.type)) {
-            if (isInt($3.type)) {
-                $$.type = setNoErrorType();
-            }
-            else {
-                yyerror("int expected in expression of switch case");
-                $$.type = setErrorType();
-            }
-        }
-        else
-            $$.type = setErrorType();
-    }
+        if ( !isInt($3.type) && !isFloat($3.type) )
+            errorLine("int expected in expression of if-else");
+            
+        $$.type = strdup($6.type);
+        insideSwitchCase --;
+    }    
 	;
 
 if_exp
@@ -983,7 +999,7 @@ if_exp
                 $$.type = setNoErrorType();
             }
             else {
-                yyerror("int expected in expression of if-else");
+                errorLine("int expected in expression of if-else");
                 $$.type = setErrorType();
             }
         }
@@ -1010,24 +1026,17 @@ loop_statement
         delete_var_list(active_func_name, level);
         level --;
         
-        if (!isErrorType($3.type)) {
-            if (isInt($3.type) || isFloat($3.type)) {
-                $$.type = setNoErrorType();
-            }
-            else {
-                yyerror("int expected in expression of while statement");
-                $$.type = setErrorType();
-            }
-        }
-        else
-            $$.type = setErrorType();
+        if (!isInt($3.type) && !isFloat($3.type))
+            errorLine("int expected in expression of while statement");
+                
+        $$.type = strdup($6.type);
     }
 	| FOR_WITH_BR expression_statement expression_statement ')' statement
     {
         delete_var_list(active_func_name, level);
         level --;
         
-        $$.type = setNoErrorType();
+        $$.type = strdup($5.type);
     }
 	| FOR_WITH_BR expression_statement expression_statement expression ')' statement
     {
@@ -1035,7 +1044,7 @@ loop_statement
         delete_var_list(active_func_name, level);
         level --;
         
-        $$.type = setNoErrorType();
+        $$.type = strdup($6.type);
     }
 	;
 
@@ -1047,28 +1056,35 @@ FOR_WITH_BR
     ;
 
 labeled_statement
-	: CASE NUM ':' { level ++; } statement {
-
+	: CASE NUM ':' { level ++; } statement 
+    {
         delete_var_list(active_func_name, level);
         level --;
         
         if (!isMatch($2.type, "int")) {
-            yyerror("int expected in switch case");
+            errorLine("int expected in switch case");
         }
+
+        $$.type = strdup($5.type);
     }
 	| DEFAULT ':' statement
+    {
+        $$.type = strdup($3.type);
+    }
 	;
 
 compound_statement
 	: '{' '}'
     {
         $$.val = 0;
+        $$.type = setVoidType();
     }
 	| '{' { level ++; } statement_list '}'
     {
         $$.val = $3.val;
         delete_var_list(active_func_name, level);
         level --;
+        $$.type = strdup($3.type);
     }
 	;
 
@@ -1076,10 +1092,15 @@ statement_list
 	: statement
     {
         $$.val = $1.val;
+        $$.type = strdup($1.type);
     }
 	| statement_list statement
     {
         $$.val = $1.val + $2.val;
+        if (!isVoidType($1.type))
+            $$.type = strdup($1.type);
+        else
+            $$.type = strdup($2.type);
     }
 	;
 
@@ -1087,7 +1108,7 @@ expression_statement
 	: ';'
     {
         $$.val = 0;
-        $$.type = strdup("NoneType");
+        $$.type = setVoidType();
     }
 	| expression ';'
     {
@@ -1129,7 +1150,7 @@ assignment_expression
         string datatype;
         bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
         if (!isExists) {
-            errorLine("Variable " + string($1.sval) + " does not exists.");
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
         else {
@@ -1149,14 +1170,14 @@ assignment_expression
         bool flag = true;
 
         if (!isExists1) {
-            errorLine("Variable " + string($1.sval) + " does not exists.");
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             flag = false;
         }
         string datatype2;
         bool isExists2 = checkForVariable($3.sval, datatype2, active_func_name, level, true);
 
         if (!isExists2) {
-            errorLine("Variable " + string($3.sval) + " does not exists.");
+            errorLine("Variable '" + Variable(string($3.sval)) + "' is not declared");
             flag = false;
         }
 
@@ -1183,14 +1204,14 @@ logical_expression
         bool flag = true;
 
         if (!isExists1) {
-            errorLine("Variable " + string($1.sval) + " does not exists.");
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             flag = false;
         }
         string datatype2;
         bool isExists2 = checkForVariable($3.sval, datatype2, active_func_name, level, true);
 
         if (!isExists2) {
-            errorLine("Variable " + string($3.sval) + " does not exists.");
+            errorLine("Variable '" + Variable(string($3.sval)) + "' is not declared");
             flag = false;
         }
 
@@ -1204,7 +1225,7 @@ logical_expression
         string datatype;
         bool isExists = checkForVariable($3.sval, datatype, active_func_name, level, true);
         if (!isExists) {
-            errorLine("Variable " + string($3.sval) + " does not exists.");
+            errorLine("Variable '" + Variable(string($3.sval)) + "' is not declared");
         }
         else {
             $$.val = 1;
@@ -1217,7 +1238,7 @@ logical_expression
         string datatype;
         bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
         if (!isExists) {
-            errorLine("Variable " + string($1.sval) + " does not exists.");
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
         }
         else {
             $$.val = 1;
@@ -1250,14 +1271,14 @@ relational_expression
         bool isExists1 = checkForVariable($1.sval, datatype1, active_func_name, level, true);
 
         if (!isExists1) {
-            errorLine("Variable " + string($1.sval) + " is not declared");
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
         string datatype2;
         bool isExists2 = checkForVariable($3.sval, datatype2, active_func_name, level, true);
 
         if (!isExists2) {
-            errorLine("Variable " + string($3.sval) + " is not declared");
+            errorLine("Variable '" + Variable(string($3.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
         
@@ -1272,7 +1293,7 @@ relational_expression
         string datatype;
         bool isExists = checkForVariable($3.sval, datatype, active_func_name, level, true);
         if (!isExists) {
-            errorLine("Variable " + string($3.sval) + " is not declared");
+            errorLine("Variable '" + Variable(string($3.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
         else {
@@ -1286,7 +1307,7 @@ relational_expression
         string datatype;
         bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
         if (!isExists) {
-            errorLine("Variable " + string($1.sval) + " is not declared");
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
         else {
@@ -1308,14 +1329,14 @@ arithmetic_expression
     {
         $$.type = setIntType();
 		//evaluvation quad factor+term and $$ = that result
-		cout<<$1.sval<<" + "<<$3.sval<<endl;
+		// cout<<$1.sval<<" + "<<$3.sval<<endl;
 	}
 
 	| term '-' arithmetic_expression
     {
         $$.type = setIntType();
 									//evaluvation quad factor-term and $$ = that result
-									cout<<$1.sval<<" - "<<$3.sval<<endl;
+									// cout<<$1.sval<<" - "<<$3.sval<<endl;
 								}
 	|		term
     {
@@ -1327,12 +1348,12 @@ term
     : factor '*' term
     {
 		//evaluvation quad factor*term and $$ = that result
-		cout<<$1.sval<<" * "<<$3.sval<<endl;
+		// cout<<$1.sval<<" * "<<$3.sval<<endl;
 	}
 	| factor '/' term
     {
 		//evaluvation quad factor/term and $$ = that result
-		cout<<$1.sval<<" / "<<$3.sval<<endl;
+		// cout<<$1.sval<<" / "<<$3.sval<<endl;
 	}
 	| factor
 	;
@@ -1348,7 +1369,7 @@ factor
         string datatype;
         bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
         if (!isExists) {
-            errorLine("Variable " + string($1.sval) + " is not declared");
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
         else {
@@ -1367,7 +1388,7 @@ variable_declaration_list
         vector<string> dim = makedimlist($2.sval);
 		checksanity(dim);
 		// makecorrect(dim);
-		cout<<endl;
+		// cout<<endl;
 	}
     ;
 
@@ -1451,8 +1472,7 @@ int main(int argc, char **argv) {
 }
 
 void yyerror(const char *s) {
-  print("", s);
-//   exit(-1);
+    errorLine(string(s));
 }
 
 bool isInt(const char *type) {
@@ -1471,8 +1491,8 @@ bool isErrorType(const char *type) {
     if (isMatch(type, "ErrorType"))    return true;
     else                        return false;
 }
-bool isNoneType(const char *type) {
-    if (isMatch(type, "NoneType"))    return true;
+bool isVoidType(const char *type) {
+    if (isMatch(type, "void"))    return true;
     else                        return false;
 }
 bool isMatch(const char *str1, const char *str2) {
@@ -1498,8 +1518,8 @@ bool isErrorType(string type) {
     if (isMatch(type, "ErrorType"))    return true;
     else                        return false;
 }
-bool isNoneType(string type) {
-    if (isMatch(type, "NoneType"))    return true;
+bool isVoidType(string type) {
+    if (isMatch(type, "void"))    return true;
     else                        return false;
 }
 bool isMatch(string str1, string str2) {
@@ -1516,8 +1536,8 @@ char* setErrorType() {
 char* setNoErrorType() {
     return strdup("NoErrorType");
 }
-char* setNoneType() {
-    return strdup("NoneType");
+char* setVoidType() {
+    return strdup("void");
 }
 char* setIntType() {
     return strdup("int");
@@ -1557,7 +1577,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
         if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
             if (cur_level_of_var == cur_level) {
                 error = true;
-                errorLine("Variable already declared in same scope : " + string(var_name));
+                errorLine("Variable already declared in same scope '" + Variable(string(var_name))+"'");
                 return false;
             }
         }
@@ -1567,7 +1587,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             if ( symtab.search_function(active_func, func) ) {
                 if(func->search_param(var_name, r)) {
                     error = true;
-                    errorLine("Redeclaration of parameter '" + string(var_name) + "' as variable" );
+                    errorLine("Redeclaration of parameter '" + Variable(string(var_name)) + "' as variable" );
                     return false;
                 }
             }
@@ -1616,7 +1636,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             }
         }
         if (error) {
-            errorLine("Variable : " + var_name + " is not declared");
+            errorLine("Variable '" + Variable(var_name) + "' is not declared");
             return false;
         }
     }
@@ -1634,4 +1654,9 @@ bool isCompatible(string type1, string type2) {
     if ( type2 == "float" && type1 == "int" )
         return true;
     return false;
+}
+string Variable(string str) {
+    if (str == "")
+        return "";
+    return str.substr(1);
 }
