@@ -254,14 +254,17 @@
                 else if (tab[i].name == varname && tab[i].function_name == "")
                     position.push_back(i);
             }
-            if (position.empty())
+            if (position.empty()) {
                 return false;
+            }
             else {
                 int pos_with_max_level = 0;
                 int max_level = 0;
                 for (int i = 0; i < position.size(); i++) {
-                    if (tab[position[i]].level > max_level)
+                    if (tab[position[i]].level > max_level) {
                         pos_with_max_level = position[i];
+                        max_level = tab[position[i]].level;
+                    }
                 }
                 cur_level = max_level;
                 datatype = tab[pos_with_max_level].type;
@@ -271,10 +274,8 @@
 
         void delete_var_from_level(string function_name, int level) {
             for (auto it = tab.begin(); it != tab.end(); ) {
-                auto next = it + 1;
                 if (it->function_name == function_name && it->level == level) {
-                    tab.erase(it);
-                    it = next;
+                    it = tab.erase(it);
                 }
                 else
                     it++;
@@ -304,7 +305,6 @@
 		}
 		return ans;
 	}
-
 
     // Stores active function name
     string active_func_name;
@@ -422,15 +422,17 @@ function_declaration
                 warning("'return' with a value '" + string($3.type) + "', in function returning void");
             }
         }
+        level --;
     }
 	| function_head '{' '}'
     {
         reset_active_function();
+        level--;
     }
 	;
 
 function_head
-    : TYPE IDENTIFIER '(' param_list_declaration ')'
+    : TYPE IDENTIFIER '(' { level ++; } param_list_declaration ')'
     {
         quadruples.push_back(quadruple("label", string($2.sval), to_string($4.len), ""));
 
@@ -451,7 +453,7 @@ function_head
         $$.sval = $2.sval;
         set_active_function($2.sval);
     }
-    | VOID IDENTIFIER '(' param_list_declaration ')'
+    | VOID IDENTIFIER '(' { level ++; } param_list_declaration ')'
     {
         quadruples.push_back(quadruple("label", string($2.sval), to_string($4.len), ""));
 
@@ -476,7 +478,7 @@ function_head
     {
         quadruples.push_back(quadruple("label", string($2.sval), to_string(0), ""));
 
-        level ++;
+        level += 2;
         function_record *r;
 
         // Check if function already exists
@@ -496,7 +498,7 @@ function_head
     {
         quadruples.push_back(quadruple("label", string($2.sval), to_string(0), ""));
 
-        level ++;
+        level += 2;
         function_record *r;
 
         // Check if function already exists
@@ -507,7 +509,6 @@ function_head
         else {
             active_func_param_list.clear();
             symtab.insert_function($2.sval, $1.sval, active_func_param_list);
-            r->function_return_type = $1.sval;
             $$.type = strdup($1.sval);
         }
 
@@ -621,7 +622,7 @@ function_call
         }
         else {
             // Function not found
-            errorLine("Function '" + functionName + "' is not declared");
+            errorLine("Function '" + Variable(functionName) + "' is not declared");
             $$.type = setErrorType();
         }
     }
@@ -1143,7 +1144,7 @@ id_arr
             $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
-            cout << "Inserted into symtab: " << string($1.sval) << " ";
+            // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
 
 	}
@@ -1162,7 +1163,7 @@ id_arr
             $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "expres", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
-            cout << "Inserted into symtab: " << string($1.sval) << " ";
+            // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
     }
 	;
@@ -1357,7 +1358,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
         bool varExists = false;
         bool found = false;
 
-        // Check if variable is already declared in variable
+        // Check if variable is already declared as a variable (either global or local within a function)
         int cur_level_of_var;
         if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
             found = true;
