@@ -254,14 +254,17 @@
                 else if (tab[i].name == varname && tab[i].function_name == "")
                     position.push_back(i);
             }
-            if (position.empty())
+            if (position.empty()) {
                 return false;
+            }
             else {
                 int pos_with_max_level = 0;
                 int max_level = 0;
                 for (int i = 0; i < position.size(); i++) {
-                    if (tab[position[i]].level > max_level)
+                    if (tab[position[i]].level > max_level) {
                         pos_with_max_level = position[i];
+                        max_level = tab[position[i]].level;
+                    }
                 }
                 cur_level = max_level;
                 datatype = tab[pos_with_max_level].type;
@@ -271,10 +274,8 @@
 
         void delete_var_from_level(string function_name, int level) {
             for (auto it = tab.begin(); it != tab.end(); ) {
-                auto next = it + 1;
                 if (it->function_name == function_name && it->level == level) {
-                    tab.erase(it);
-                    it = next;
+                    it = tab.erase(it);
                 }
                 else
                     it++;
@@ -303,36 +304,6 @@
 			ans.push_back(var_name);
 		}
 		return ans;
-	}
-
-	void checksanity(vector<string> dim)
-	{
-		for (int i = 0; i < dim.size(); ++i)
-		{
-			int index = ab_symtab.search(dim[i]);
-			if(ab_symtab.tab[index].isarray)
-			{
-				for(int j=0;j < ab_symtab.tab[index].dimension.size();j++)
-				{
-					if(isNumber(ab_symtab.tab[index].dimension[j]))
-						continue;
-					int dim_index = ab_symtab.search(ab_symtab.tab[index].dimension[j]);
-
-					if(dim_index<0){
-						cout<<"Variable: "<<ab_symtab.tab[index].dimension[j]<<" not declared"<<endl;
-					}
-					else
-					{
-						if(ab_symtab.tab[dim_index].type != "i"){
-							cout<<"Variable: "<<ab_symtab.tab[dim_index].name<<" must be of type int"<<endl;
-						}
-						if(ab_symtab.tab[dim_index].isarray){
-							cout<<"Variable: "<<ab_symtab.tab[dim_index].name<<" is array type"<<endl;
-						}
-					}
-				}
-			}
-		}
 	}
 
     // Stores active function name
@@ -449,15 +420,17 @@ function_declaration
                 warning("'return' with a value '" + string($3.type) + "', in function returning void");
             }
         }
+        level --;
     }
 	| function_head '{' '}'
     {
         reset_active_function();
+        level--;
     }
 	;
 
 function_head
-    : TYPE IDENTIFIER '(' param_list_declaration ')'
+    : TYPE IDENTIFIER '(' { level ++; } param_list_declaration ')'
     {
         level ++;
         function_record *r;
@@ -475,7 +448,7 @@ function_head
 
         set_active_function($2.sval);
     }
-    | VOID IDENTIFIER '(' param_list_declaration ')'
+    | VOID IDENTIFIER '(' { level ++; } param_list_declaration ')'
     {
         level ++;
         function_record *r;
@@ -495,7 +468,7 @@ function_head
     }
     | TYPE IDENTIFIER '(' ')'
     {
-        level ++;
+        level += 2;
         function_record *r;
 
         // Check if function already exists
@@ -511,7 +484,7 @@ function_head
     }
     | VOID IDENTIFIER '(' ')'
     {
-        level ++;
+        level += 2;
         function_record *r;
 
         // Check if function already exists
@@ -522,7 +495,6 @@ function_head
         else {
             active_func_param_list.clear();
             symtab.insert_function($2.sval, $1.sval, active_func_param_list);
-            r->function_return_type = $1.sval;
             $$.type = strdup($1.sval);
         }
         set_active_function($2.sval);
@@ -634,7 +606,7 @@ function_call
         }
         else {
             // Function not found
-            errorLine("Function '" + functionName + "' is not declared");
+            errorLine("Function '" + Variable(functionName) + "' is not declared");
             $$.type = setErrorType();
         }
     }
@@ -742,10 +714,6 @@ statement
         $$.val = $1.val;
     }
     | variable_declaration_statement
-    {
-        $$.type = setVoidType();
-    }
-    | function_call
     {
         $$.type = setVoidType();
     }
@@ -1132,7 +1100,6 @@ variable_declaration_statement
 		$$ = $1;
         ab_symtab.patch($1.sval, $2.sval);
         vector<string> dim = makedimlist($2.sval);
-		checksanity(dim);
 	}
     ;
 
@@ -1161,6 +1128,7 @@ id_arr
             $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
+            // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
 
 	}
@@ -1179,6 +1147,7 @@ id_arr
             $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", "expres", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
+            // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
     }
 	;
@@ -1362,7 +1331,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
         bool varExists = false;
         bool found = false;
 
-        // Check if variable is already declared in variable
+        // Check if variable is already declared as a variable (either global or local within a function)
         int cur_level_of_var;
         if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
             found = true;
@@ -1392,7 +1361,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             }
         }
         if (!varExists) {
-            errorLine("Variable : " + var_name + " is not declared");
+            // errorLine("Variable : " + var_name + " is not declared");
             return false;
         }
     }
