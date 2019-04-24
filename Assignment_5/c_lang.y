@@ -305,35 +305,6 @@
 		return ans;
 	}
 
-	void checksanity(vector<string> dim)
-	{
-		for (int i = 0; i < dim.size(); ++i)
-		{
-			int index = ab_symtab.search(dim[i]);
-			if(ab_symtab.tab[index].isarray)
-			{
-				for(int j=0;j < ab_symtab.tab[index].dimension.size();j++)
-				{
-					if(isNumber(ab_symtab.tab[index].dimension[j]))
-						continue;
-					int dim_index = ab_symtab.search(ab_symtab.tab[index].dimension[j]);
-
-					if(dim_index<0){
-						cout<<"Variable: "<<ab_symtab.tab[index].dimension[j]<<" not declared"<<endl;
-					}
-					else
-					{
-						if(ab_symtab.tab[dim_index].type != "i"){
-							cout<<"Variable: "<<ab_symtab.tab[dim_index].name<<" must be of type int"<<endl;
-						}
-						if(ab_symtab.tab[dim_index].isarray){
-							cout<<"Variable: "<<ab_symtab.tab[dim_index].name<<" is array type"<<endl;
-						}
-					}
-				}
-			}
-		}
-	}
 
     // Stores active function name
     string active_func_name;
@@ -442,6 +413,8 @@ START
 function_declaration
 	: function_head '{' statement_list '}'
     {
+        quadruples.push_back(quadruple("end", string($1.sval), "", ""));
+
         level --;
         reset_active_function();
         if (!isErrorType($1.type)) {
@@ -459,6 +432,8 @@ function_declaration
 function_head
     : TYPE IDENTIFIER '(' param_list_declaration ')'
     {
+        quadruples.push_back(quadruple("label", string($2.sval), to_string($4.len), ""));
+
         level ++;
         function_record *r;
 
@@ -473,10 +448,13 @@ function_head
             $$.type = strdup($1.sval);
         }
 
+        $$.sval = $2.sval;
         set_active_function($2.sval);
     }
     | VOID IDENTIFIER '(' param_list_declaration ')'
     {
+        quadruples.push_back(quadruple("label", string($2.sval), to_string($4.len), ""));
+
         level ++;
         function_record *r;
 
@@ -491,10 +469,13 @@ function_head
             $$.type = strdup($1.sval);
         }
 
+        $$.sval = $2.sval;
         set_active_function($2.sval);
     }
     | TYPE IDENTIFIER '(' ')'
     {
+        quadruples.push_back(quadruple("label", string($2.sval), to_string(0), ""));
+
         level ++;
         function_record *r;
 
@@ -507,10 +488,14 @@ function_head
             symtab.insert_function($2.sval, $1.sval, active_func_param_list);
             $$.type = strdup($1.sval);
         }
+
+        $$.sval = $2.sval;
         set_active_function($2.sval);
     }
     | VOID IDENTIFIER '(' ')'
     {
+        quadruples.push_back(quadruple("label", string($2.sval), to_string(0), ""));
+
         level ++;
         function_record *r;
 
@@ -525,6 +510,8 @@ function_head
             r->function_return_type = $1.sval;
             $$.type = strdup($1.sval);
         }
+
+        $$.sval = $2.sval;
         set_active_function($2.sval);
     }
     ;
@@ -1128,7 +1115,6 @@ variable_declaration_statement
 		$$ = $1;
         ab_symtab.patch($1.sval, $2.sval);
         vector<string> dim = makedimlist($2.sval);
-		checksanity(dim);
 	}
     ;
 
@@ -1184,12 +1170,22 @@ id_arr
 bracket_dimlist
     : '[' NUM ']'
     {
+        if(string($2.type) == "float"){
+            errorLine("Float cannot be passed as a dimension to an array.");
+            return 1;
+        }
+
         $$=$2;
         $$.val = 1;
         quadruples.push_back(quadruple("=", string($2.sval), "",  "expres"));
 	}
 	| '[' NUM ']' bracket_dimlist
     {
+        if(string($2.type) == "float"){
+            errorLine("Float cannot be passed as a dimension to an array.");
+            return 1;
+        }
+
         $$=$2;
         $$.val = $4.val + 1;
         quadruples.push_back(quadruple("*", string($2.sval), "expres",  "expres"));
@@ -1323,8 +1319,9 @@ bool isVariableInSymtab(string varname) {
 // else return true
 bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag) {
 
-    // ab_symtab.printsymtab();
+    ab_symtab.printsymtab();
 
+    cout << "broooo Im at " << active_func << "\n";
     if (!flag) {
         function_record *r;
         bool varExists = false;
