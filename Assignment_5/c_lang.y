@@ -741,7 +741,7 @@ statement
         $$.type = setVoidType();
         $$.val = $1.val;
     }
-    | variable_declaration_list
+    | variable_declaration_statement
     {
         $$.type = setVoidType();
     }
