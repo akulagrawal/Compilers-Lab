@@ -434,7 +434,7 @@ function_declaration
 function_head
     : TYPE IDENTIFIER '(' { level ++; } param_list_declaration ')'
     {
-        quadruples.push_back(quadruple("label", string($2.sval), to_string($4.len), ""));
+        quadruples.push_back(quadruple("label", string($2.sval), to_string($5.len), ""));
 
         level ++;
         function_record *r;
@@ -455,7 +455,7 @@ function_head
     }
     | VOID IDENTIFIER '(' { level ++; } param_list_declaration ')'
     {
-        quadruples.push_back(quadruple("label", string($2.sval), to_string($4.len), ""));
+        quadruples.push_back(quadruple("label", string($2.sval), to_string($5.len), ""));
 
         level ++;
         function_record *r;
@@ -809,7 +809,6 @@ if_exp
         quadruples.push_back(quadruple("=", string($3.sval), "", "expres"));
         quadruples.push_back(quadruple("ifF", "expres", "", ""));
         level ++;
-
     }
 
 else_mark
@@ -1148,8 +1147,19 @@ id_arr
         }
 
 	}
-	| assignment_expression
+	| IDENTIFIER '=' arithmetic_expression
     {
+        string datatype;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false);
+        if (!isExists) {
+            variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
+            $$.index = quadruples.size();
+            $$.val = 1;
+            $$.sval = $1.sval;
+            quadruples.push_back(quadruple("assign", "(type)", $3.sval, $1.sval));
+            ab_symtab.insertintosymtab(newVar, $$.index);
+            // cout << "Inserted into symtab : " << string($1.sval) << " ";
+        }
 	}
 	| IDENTIFIER bracket_dimlist
     {
@@ -1320,9 +1330,6 @@ bool isVariableInSymtab(string varname) {
 // else return true
 bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag) {
 
-    ab_symtab.printsymtab();
-
-    cout << "broooo Im at " << active_func << "\n";
     if (!flag) {
         function_record *r;
         bool varExists = false;
@@ -1332,7 +1339,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
         if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
             if (cur_level_of_var == cur_level) {
                 varExists = true;
-                errorLine("Variable already declared in same scope : " + string(var_name));
+                errorLine("Variable already declared in same scope : " + Variable(string(var_name)));
                 return varExists;
             }
         }
@@ -1342,7 +1349,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             if ( symtab.search_function(active_func, func) ) {
                 if(func->search_param(var_name, r)) {
                     varExists = true;
-                    errorLine("Redeclaration of parameter '" + string(var_name) + "' as variable" );
+                    errorLine("Redeclaration of parameter '" + Variable(string(var_name)) + "' as variable" );
                     return varExists;
                 }
             }
