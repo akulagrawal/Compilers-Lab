@@ -557,6 +557,8 @@ param_declaration
 function_call
     : IDENTIFIER '(' ')'
     {
+        quadruples.push_back(quadruple("call", $1.sval, "", ""));
+
         function_record *r;
         string functionName = $1.sval;
 
@@ -614,9 +616,14 @@ function_call
                             $$.type = setErrorType();
                             break;
                         }
+
+                        quadruples.push_back(quadruple("push", $1.sval, param_it -> name, arg_it -> name));
+
                         param_it ++;
                         arg_it ++;
                     }
+
+                    quadruples.push_back(quadruple("call", $1.sval, "", ""));
                 }
             }
         }
@@ -629,33 +636,7 @@ function_call
     ;
 
 arg_list
-    : IDENTIFIER
-    {
-        string datatype;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
-
-        called_arg_list.clear();
-        $$.len = 1;
-
-        // Search IDENTIFIER in the symbol_table
-        // If found, Get the datatype of IDENTIFIER from symbol_table
-        if (!isExists) {
-            errorLine("'"+Variable(string($1.sval)) + "' is not declared.");
-            $$.type = setErrorType();
-
-            $$.type = setNoErrorType();
-
-            var_record arg($1.sval, datatype, /* is_parameter = */ false, level) ;
-            called_arg_list.push_back(arg);
-        }
-        else {
-            $$.type = setNoErrorType();
-
-            var_record arg($1.sval, datatype, /* is_parameter = */ false, level) ;
-            called_arg_list.push_back(arg);
-        }
-    }
-    | NUM
+    : arithmetic_expression
     {
         called_arg_list.clear();
         $$.len = 1;
@@ -663,38 +644,10 @@ arg_list
         $$.type = setNoErrorType();
         string datatype = $1.type;
 
-        var_record arg($1.sval, datatype, /* is_parameter = */ false, level) ;
+        var_record arg($1.sval, datatype, false, level) ;
         called_arg_list.push_back(arg);
     }
-    | arg_list ',' IDENTIFIER
-    {
-        // Search IDENTIFIER in the symbol_table
-        // If found, Get the datatype of IDENTIFIER from symbol_table
-
-        string datatype;
-        bool isExists = checkForVariable($3.sval, datatype, active_func_name, level, true);
-
-        if (!isExists) {
-            errorLine("'"+Variable(string($3.sval)) + "' is not declared.");
-            $$.type = setErrorType();
-
-            var_record arg($3.sval, datatype, /* is_parameter = */ false, level) ;
-            called_arg_list.push_back(arg);
-            $$.len = $1.len + 1;
-        }
-        else {
-            $$.type = setNoErrorType();
-
-            var_record arg($3.sval, datatype, /* is_parameter = */ false, level) ;
-            called_arg_list.push_back(arg);
-            $$.len = $1.len + 1;
-        }
-
-        if (isErrorType($1.type)) {
-            $$.type = setErrorType();
-        }
-    }
-    | arg_list ',' NUM
+    | arg_list ',' arithmetic_expression
     {
         string datatype = $3.type;
         $$.type = setNoErrorType();
@@ -918,8 +871,7 @@ expression_statement
 	;
 
 /*
-    Expressions.
-    Expecting: Logical & Relational and Arithmetic Expressions
+    Assignment, Logical, Relational and Arithmetic Expressions
 */
 expression_cover
     : expression
