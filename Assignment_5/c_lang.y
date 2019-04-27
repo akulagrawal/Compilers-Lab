@@ -432,11 +432,6 @@ function_declaration
         delete_var_list(active_func_name, level);
         level --;
         reset_active_function();
-        if (!isErrorType($1.type)) {
-            if (isVoidType($1.type) && !isVoidType($4.type)) {
-                warning("'return' with a value '" + string($4.type) + "', in function returning void");
-            }
-        }
         level --;
     }
 	| function_head '{' '}'
@@ -586,6 +581,7 @@ function_call
     {
         function_record *r;
         string functionName = $1.sval;
+        $$.val = 0;
 
         // search for function declaration
         if (symtab.search_function(functionName, r)) {
@@ -600,11 +596,14 @@ function_call
                 else {
                     // Error
                     errorLine("Too few arguments to function '" + Variable(string(functionName)) + "'");
-                    $$.type = setErrorType();
+                    $$.type = strdup(r->function_return_type.c_str());
                 }
 
                 quadruples.push_back(quadruple("call", $1.sval, "", ""));
+                $$.val += 1;
             }
+            else
+                $$.type = setErrorType();
         }
         else {
             // Function not found
@@ -616,6 +615,7 @@ function_call
     {
         function_record *r;
         string functionName = $1.sval;
+        $$.val = 0;
 
         // search for function declaration
         if (symtab.search_function(functionName, r)) {
@@ -623,36 +623,50 @@ function_call
             // If function's return type is ErrorType
             if (!isErrorType(r->function_return_type)) {
 
+                $$.type = strdup(r->function_return_type.c_str());
                 // Check if param_list_declaration matches with arg_list
                 if (r->parameters.size() > $3.len) {
                     errorLine("Too few arguments to function '" + Variable(functionName) + "'");
-                    $$.type = setErrorType();
                 }
                 else if (r->parameters.size() < $3.len) {
                     errorLine("Too many arguments to function '" + Variable(functionName) + "'");
-                    $$.type = setErrorType();
                 }
                 else {
                     // Match the datatypes of param_list_declaration and arg_list
-                    auto param_it = r->parameters.begin();
-                    auto arg_it = called_arg_list.begin();
-                    while (param_it != r->parameters.end()) {
+                    auto param_it = r->parameters.rbegin();
+                    auto arg_it = called_arg_list.rbegin();
+                    while (param_it != r->parameters.rend()) {
 
                         if (!isMatch(param_it->type, arg_it->type)) {
                             errorLine("datatype mismatch for calling function '" + Variable(functionName) + "'");
-                            $$.type = setErrorType();
                             break;
                         }
 
                         quadruples.push_back(quadruple("push", arg_it -> name, $1.sval, param_it -> name));
+                        $$.val += 1;
 
                         param_it ++;
                         arg_it ++;
                     }
+                    // auto delete_it = called_arg_list.begin();
+                    // int count = 1;
+                    // while (delete_it != called_arg_list.end()) {
+                    //     if (count)
+                    //     count ++;
+                    //     delete_it ++;
+                    // }
+                    // Delete from 'size-$3.len' to 'size'
+                    auto delete_it = called_arg_list.begin();
+                    advance(delete_it, called_arg_list.size() - $3.len);
+
+                    called_arg_list.erase(delete_it, called_arg_list.end());
 
                     quadruples.push_back(quadruple("call", $1.sval, "", ""));
+                    $$.val += 1;
                 }
             }
+            else
+                $$.type = setErrorType();
         }
         else {
             // Function not found
@@ -665,7 +679,6 @@ function_call
 arg_list
     : arithmetic_expression
     {
-        called_arg_list.clear();
         $$.len = 1;
 
         $$.type = setNoErrorType();
@@ -683,6 +696,12 @@ arg_list
 
         called_arg_list.push_back(arg);
         $$.len = $1.len + 1;
+
+        cout << "Called args are: ";
+        for(auto it = called_arg_list.begin(); it != called_arg_list.end(); ++it){
+            cout << it -> name << " ";
+        }
+        cout << "\n";
 
         if (isErrorType($1.type)) {
             $$.type = setErrorType();
@@ -718,6 +737,12 @@ statement
         if (isInsideFunc()){
             $$.type = strdup($2.type);
             $$.index = quadruples.size();
+
+            function_record *func;
+            symtab.search_function(active_func_name, func);
+
+            if (!isMatch(func->function_return_type, $2.type))
+                warning("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
             quadruples.push_back(quadruple("=", string($2.sval), "", "(funcvar)"));
         }
         else {
@@ -923,19 +948,19 @@ expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = strdup("int");
+        $$.type = setIntType();
     }
     | relational_expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = strdup("int");
+        $$.type = setIntType();
     }
     | arithmetic_expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = strdup("int");
+        $$.type = $1.type;
     }
     ;
 
@@ -950,15 +975,22 @@ assignment_expression
             $$.type = setErrorType();
         }
         else {
-            if (!isMatch(datatype, string($3.type))) {
-                warning("Implicit type conversion from " + string($3.type) + " to " + datatype);
+            if (!isErrorType($3.type)) {
+
+                if (isVoidType($3.type)) {
+                    errorLine("void value not ignored as it ought to be");
+                }
+                else if (!isMatch(datatype, string($3.type))) {
+                    warning("Implicit type conversion from " + string($3.type) + " to " + datatype);
+                }
+                $$.val = $3.val + 2;
+                $$.type = strdup($3.type);
+                string temp = get_next_temp();
+                $$.sval = strdup(temp.c_str());
+                quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+                quadruples.push_back(quadruple("=", string($3.sval), "", temp));
+
             }
-            $$.val = $3.val + 2;
-            $$.type = strdup($3.type);
-            string temp = get_next_temp();
-            $$.sval = strdup(temp.c_str());
-            quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
-            quadruples.push_back(quadruple("=", string($3.sval), "", temp));
         }
     }
     ;
@@ -1006,7 +1038,7 @@ relational_expression
 arithmetic_expression
     : arithmetic_term '+' arithmetic_expression
     {
-        $$.type = setIntType();
+        $$.type = $1.type;
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
@@ -1014,7 +1046,7 @@ arithmetic_expression
     }
 	| arithmetic_term '-' arithmetic_expression
     {
-        $$.type = setIntType();
+        $$.type = $1.type;
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
@@ -1032,6 +1064,7 @@ arithmetic_term
     : arithmetic_factor '*' arithmetic_term
     {
         string temp = get_next_temp();
+        $$.type = $1.type;
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
         quadruples.push_back(quadruple("*", string($1.sval), string($3.sval), temp));
@@ -1039,12 +1072,14 @@ arithmetic_term
 	| arithmetic_factor '/' arithmetic_term
     {
         string temp = get_next_temp();
+        $$.type = $1.type;
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
         quadruples.push_back(quadruple("/", string($1.sval), string($3.sval), temp));
     }
 	| arithmetic_factor
     {
+        $$.type = $1.type;
         $$.sval = $1.sval;
         $$.val = $1.val;
     }
@@ -1054,6 +1089,7 @@ arithmetic_factor
     : '(' arithmetic_expression ')'
     {
         string temp = get_next_temp();
+        $$.type = $2.type;
         $$.sval = strdup(temp.c_str());
         $$.val = $2.val + 1;
         quadruples.push_back(quadruple("=", $2.sval, "",  temp));
