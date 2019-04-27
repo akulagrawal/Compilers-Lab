@@ -413,6 +413,7 @@ START
 function_declaration
 	: function_head '{' statement_list '}'
     {
+        delete_var_list(active_func_name, level);
         level --;
         reset_active_function();
         if (!isErrorType($1.type)) {
@@ -424,8 +425,9 @@ function_declaration
     }
 	| function_head '{' '}'
     {
-        reset_active_function();
+        delete_var_list(active_func_name, level);
         level--;
+        reset_active_function();
     }
 	;
 
@@ -737,9 +739,6 @@ statement
 conditional_statement
 	: if_exp statement
     {
-        delete_var_list(active_func_name, level);
-        level --;
-
         $$.val = $1.val + $2.val;
         int gotoindex = $1.index;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
@@ -747,9 +746,6 @@ conditional_statement
     }
     | if_exp statement else_mark statement
     {
-        delete_var_list(active_func_name, level);
-        level --;
-
         $$.val = $1.val + $2.val + $3.val + $4.val;
         int gotoindex1 = $1.index;
         quadruples[gotoindex1]._result = to_string(gotoindex1 + $2.val + $3.val + 1);
@@ -792,7 +788,7 @@ if_exp
 
         quadruples.push_back(quadruple("=", string($3.sval), "", "expres"));
         quadruples.push_back(quadruple("ifF", "expres", "", ""));
-        level ++;
+        // level ++;
 
     }
 
@@ -1342,10 +1338,13 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             }
         }
         if (found) {
+            // If the variable is not global
             if (cur_level_of_var > 0)
                 return true;
         }
-        if (cur_level == 2) {
+
+        // Now, either variable is not declared, or declared in parameters or declared in global scope
+        {
             function_record *func;
             var_record *r;
             if ( symtab.search_function(active_func, func) ) {
@@ -1360,6 +1359,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
                 return true;
             }
         }
+            
         if (!varExists) {
             // errorLine("Variable : " + var_name + " is not declared");
             return false;
