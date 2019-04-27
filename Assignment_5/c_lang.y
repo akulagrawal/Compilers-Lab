@@ -63,15 +63,16 @@
         unordered_map<string, function_record> entries;
 
         void insert_function(string function_name, string datatype, list<var_record> active_func_param_list) {
-            function_record r;
-            r.function_return_type = datatype;
+            function_record * r = new function_record;
+            r -> function_return_type = datatype;
 
             // Add param_list_declaration to symbol_table corresponding to active function
             for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
-                r.insert_parameter(it->name, it->type, it->level);
+                r -> insert_parameter(it->name, it->type, it->level);
             }
+
             active_func_param_list.clear();
-            entries[function_name] = r;
+            entries[function_name] = *r;
         }
 
         bool search_function(string function_name, function_record *&function) {
@@ -378,7 +379,7 @@
 %type <type_id> logical_expression relational_expression assignment_expression arithmetic_expression
 %type <type_id> START
 
-%type <type_id> function_declaration function_head
+%type <type_id> function_declaration function_head function_result_assignment
 %type <type_id> param_list_declaration param_declaration
 %type <type_id> function_call arg_list
 %type <type_id> variable_declaration_statement
@@ -411,16 +412,29 @@ START
 	;
 
 function_declaration
-	: function_head '{' statement_list '}'
+	: function_head '{' function_result_assignment statement_list '}'
     {
+        // get a variable assigned to this function to be returned.
+        string temp = "t" + string($1.sval);
+
+        // update type of this variable.
+        quadruples[$3.index]._arg1 = $1.type;
+
+        // update quads with (funcvar) which need to be filled in.
+        for(int index = $3.index; index < quadruples.size(); ++index){
+            if(quadruples[index]._result == "(funcvar)"){
+                quadruples[index]._result = temp;
+            }
+        }
+
         quadruples.push_back(quadruple("end", string($1.sval), "", ""));
 
         delete_var_list(active_func_name, level);
         level --;
         reset_active_function();
         if (!isErrorType($1.type)) {
-            if (isVoidType($1.type) && !isVoidType($3.type)) {
-                warning("'return' with a value '" + string($3.type) + "', in function returning void");
+            if (isVoidType($1.type) && !isVoidType($4.type)) {
+                warning("'return' with a value '" + string($4.type) + "', in function returning void");
             }
         }
         level --;
@@ -432,6 +446,13 @@ function_declaration
         reset_active_function();
     }
 	;
+
+function_result_assignment
+    : %empty// Assign a variable for the return value of this function.
+    {
+        $$.index = quadruples.size();
+        quadruples.push_back(quadruple("assign", "(type)", "0", "(funcvar)"));
+    }
 
 function_head
     : TYPE IDENTIFIER '(' { level ++; } param_list_declaration ')'
@@ -483,6 +504,8 @@ function_head
         level += 2;
         function_record *r;
 
+        active_func_param_list.clear();
+
         // Check if function already exists
         if (symtab.search_function($2.sval, r)) {
             errorLine("Redeclaration of function '" + Variable(string($2.sval)) + "'");
@@ -502,6 +525,8 @@ function_head
 
         level += 2;
         function_record *r;
+
+        active_func_param_list.clear();
 
         // Check if function already exists
         if (symtab.search_function($2.sval, r)) {
@@ -559,8 +584,6 @@ param_declaration
 function_call
     : IDENTIFIER '(' ')'
     {
-        quadruples.push_back(quadruple("call", $1.sval, "", ""));
-
         function_record *r;
         string functionName = $1.sval;
 
@@ -576,9 +599,11 @@ function_call
                 }
                 else {
                     // Error
-                    errorLine("Too many arguments to function '" + Variable(string(functionName)) + "'");
+                    errorLine("Too few arguments to function '" + Variable(string(functionName)) + "'");
                     $$.type = setErrorType();
                 }
+
+                quadruples.push_back(quadruple("call", $1.sval, "", ""));
             }
         }
         else {
@@ -619,7 +644,7 @@ function_call
                             break;
                         }
 
-                        quadruples.push_back(quadruple("push", $1.sval, param_it -> name, arg_it -> name));
+                        quadruples.push_back(quadruple("push", arg_it -> name, $1.sval, param_it -> name));
 
                         param_it ++;
                         arg_it ++;
@@ -690,8 +715,11 @@ statement
     }
     | RETURN expression_statement
     {
-        if (isInsideFunc())
+        if (isInsideFunc()){
             $$.type = strdup($2.type);
+            $$.index = quadruples.size();
+            quadruples.push_back(quadruple("=", string($2.sval), "", "(funcvar)"));
+        }
         else {
             errorLine("Return out of function scope");
         }
@@ -1052,7 +1080,8 @@ arithmetic_factor
     | function_call
     {
         $$.type = $1.type;
-        $$.sval = $1.sval;
+        $$.sval = (char *)malloc((strlen($1.sval) + 2) * sizeof(char));
+        strcpy($$.sval + 1, $1.sval); $$.sval[0] = 't';
         $$.val = $1.val;
     }
 	;
@@ -1176,10 +1205,12 @@ int main(int argc, char **argv) {
         yyparse();
     }
 
-    cout << "Intermediate Code in Quadruple Format:" << "\n";
-    for(int i = 0; i < quadruples.size(); ++i){
-        quadruple quad = quadruples[i];
-        cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
+    if(!errorFound){
+        cout << "Intermediate Code in Quadruple Format:" << "\n";
+        for(int i = 0; i < quadruples.size(); ++i){
+            quadruple quad = quadruples[i];
+            cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
+        }
     }
 
 }
@@ -1262,6 +1293,7 @@ void reset_active_function() {
     active_func_name = "";
 }
 void errorLine(string errorMsg) {
+    errorFound = true;
     cout << "Error at line " << lineNo << " : " << errorMsg << endl;
 }
 void warning(string warningMsg) {
