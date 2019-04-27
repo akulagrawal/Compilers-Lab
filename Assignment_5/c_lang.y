@@ -115,10 +115,16 @@
     };
 
     /* Temporary variables for intermediate code. */
-    int curr_temp = 0;
-    string get_next_temp(){
-        curr_temp += 1;
-        return "t" + std::to_string(curr_temp);
+    int glob_temp = 0;
+    map<string, int> func_temps;
+    string get_next_temp(string func_name = ""){
+        if(func_name == ""){
+            glob_temp += 1;
+            return "t" + std::to_string(glob_temp);
+        } else {
+            func_temps[func_name] += 1;
+            return "t" + func_name + std::to_string(func_temps[func_name]);
+        }
     }
 
     /* abhishek */
@@ -615,7 +621,7 @@ function_call
     {
         function_record *r;
         string functionName = $1.sval;
-        $$.val = 0;
+        $$.val = $3.val;
 
         // search for function declaration
         if (symtab.search_function(functionName, r)) {
@@ -648,14 +654,7 @@ function_call
                         param_it ++;
                         arg_it ++;
                     }
-                    // auto delete_it = called_arg_list.begin();
-                    // int count = 1;
-                    // while (delete_it != called_arg_list.end()) {
-                    //     if (count)
-                    //     count ++;
-                    //     delete_it ++;
-                    // }
-                    // Delete from 'size-$3.len' to 'size'
+
                     auto delete_it = called_arg_list.begin();
                     advance(delete_it, called_arg_list.size() - $3.len);
 
@@ -680,7 +679,7 @@ arg_list
     : arithmetic_expression
     {
         $$.len = 1;
-
+        $$.val = $1.val;
         $$.type = setNoErrorType();
         string datatype = $1.type;
 
@@ -689,6 +688,7 @@ arg_list
     }
     | arg_list ',' arithmetic_expression
     {
+        $$.val = $1.val + $3.val;
         string datatype = $3.type;
         $$.type = setNoErrorType();
 
@@ -697,11 +697,11 @@ arg_list
         called_arg_list.push_back(arg);
         $$.len = $1.len + 1;
 
-        cout << "Called args are: ";
-        for(auto it = called_arg_list.begin(); it != called_arg_list.end(); ++it){
-            cout << it -> name << " ";
-        }
-        cout << "\n";
+        // cout << "Called args are: ";
+        // for(auto it = called_arg_list.begin(); it != called_arg_list.end(); ++it){
+        //     cout << it -> name << " ";
+        // }
+        // cout << "\n";
 
         if (isErrorType($1.type)) {
             $$.type = setErrorType();
@@ -737,12 +737,14 @@ statement
         if (isInsideFunc()){
             $$.type = strdup($2.type);
             $$.index = quadruples.size();
+            $$.val = 1;
 
             function_record *func;
             symtab.search_function(active_func_name, func);
 
             if (!isMatch(func->function_return_type, $2.type))
                 warning("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
+
             quadruples.push_back(quadruple("=", string($2.sval), "", "(funcvar)"));
         }
         else {
@@ -1116,9 +1118,13 @@ arithmetic_factor
     | function_call
     {
         $$.type = $1.type;
-        $$.sval = (char *)malloc((strlen($1.sval) + 2) * sizeof(char));
-        strcpy($$.sval + 1, $1.sval); $$.sval[0] = 't';
-        $$.val = $1.val;
+        string temp = get_next_temp(string($1.sval));
+        $$.sval = strdup(temp.c_str());
+        $$.val = $1.val + 1;
+
+        cout << $$.val << "\n";
+        quadruples.push_back(quadruple("=", "t" + string($1.sval), "",  temp));
+
     }
 	;
 
@@ -1129,16 +1135,21 @@ variable_declaration_statement
 		$$ = $1;
         ab_symtab.patch($1.sval, $2.sval);
         vector<string> dim = makedimlist($2.sval);
+
+        $$.val = $2.val;
+        // cout << $$.val << " quads handled by declaration. \n";
 	}
     ;
 
 name_list
     : id_arr
     {
+        $$.val = $1.val;
         $$.sval = $1.sval;
     }
 	| id_arr ',' name_list
     {
+        $$.val = $1.val;
         $$.sval=$1.sval;
         strcat($$.sval,",");
         strcat($$.sval, $3.sval);
@@ -1168,7 +1179,7 @@ id_arr
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
             $$.index = quadruples.size();
-            $$.val = 1;
+            $$.val = 1 + $3.val;
             $$.sval = $1.sval;
             quadruples.push_back(quadruple("assign", "(type)", $3.sval, $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
@@ -1243,9 +1254,10 @@ int main(int argc, char **argv) {
 
     if(!errorFound){
         cout << "Intermediate Code in Quadruple Format:" << "\n";
+        cout << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(7) << "ARG1" << " | " << setw(7) << "ARG2" << " | " << setw(7) << "RESULT" << "\n";
         for(int i = 0; i < quadruples.size(); ++i){
             quadruple quad = quadruples[i];
-            cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
+            cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(7) << quad._arg1 << " | " << setw(7) << quad._arg2 << " | " << setw(7) << quad._result << "\n";
         }
     }
 
