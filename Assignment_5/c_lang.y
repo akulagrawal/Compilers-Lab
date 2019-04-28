@@ -452,7 +452,7 @@ function_result_assignment
     : %empty// Assign a variable for the return value of this function.
     {
         $$.index = quadruples.size();
-        quadruples.push_back(quadruple("assign", "(type)", "0", "(funcvar)"));
+        quadruples.push_back(quadruple("assign", "(type)", "1", "(funcvar)"));
     }
 
 function_head
@@ -1120,11 +1120,11 @@ arithmetic_factor
         $$.type = $1.type;
         string temp = get_next_temp(string($1.sval));
         $$.sval = strdup(temp.c_str());
-        $$.val = $1.val + 1;
+        $$.val = $1.val + 2;
 
-        cout << $$.val << "\n";
-        quadruples.push_back(quadruple("=", "t" + string($1.sval), "",  temp));
-
+        // cout << $$.val << "\n";
+        quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
+        quadruples.push_back(quadruple("=", "t" + string($1.val), "",  temp));
     }
 	;
 
