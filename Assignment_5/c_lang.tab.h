@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_BISON_DBMS_TAB_H_INCLUDED
-# define YY_YY_BISON_DBMS_TAB_H_INCLUDED
+#ifndef YY_YY_C_LANG_TAB_H_INCLUDED
+# define YY_YY_C_LANG_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -45,27 +45,23 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    SELECT = 258,
-    PROJECT = 259,
-    CARTESIAN_PRODUCT = 260,
-    EQUI_JOIN = 261,
-    AND = 262,
-    LT_EQ = 263,
-    EQ = 264,
-    NEQ = 265,
-    LP = 266,
-    RP = 267,
-    LAB = 268,
-    RAB = 269,
-    SIC = 270,
-    DIC = 271,
-    COMMA = 272,
-    SEMI = 273,
-    NUM = 274,
-    ID = 275,
-    DOT = 276,
-    MINUS = 277,
-    ARITH_OP = 278
+    NUM = 258,
+    IDENTIFIER = 259,
+    TYPE = 260,
+    VOID = 261,
+    OR = 262,
+    AND = 263,
+    REL_OP = 264,
+    IF = 265,
+    ELSE = 266,
+    FOR = 267,
+    WHILE = 268,
+    SWITCH = 269,
+    CASE = 270,
+    DEFAULT = 271,
+    BREAK = 272,
+    CONTINUE = 273,
+    RETURN = 274
   };
 #endif
 
@@ -74,17 +70,18 @@ extern int yydebug;
 
 union YYSTYPE
 {
-<<<<<<< HEAD
-#line 36 "bison_dbms.y" /* yacc.c:1909  */
-=======
-#line 60 "bison_dbms.y" /* yacc.c:1909  */
->>>>>>> shimona
+#line 372 "c_lang.y" /* yacc.c:1909  */
 
-    int ival;
-    float fval;
-    char *sval;
+    struct {
+        struct indexlist * indexlist;
+        char* type;
+        int val;
+        int index;
+        int len;
+        char* sval;
+    } type_id;
 
-#line 84 "bison_dbms.tab.h" /* yacc.c:1909  */
+#line 85 "c_lang.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -97,4 +94,4 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_BISON_DBMS_TAB_H_INCLUDED  */
+#endif /* !YY_YY_C_LANG_TAB_H_INCLUDED  */

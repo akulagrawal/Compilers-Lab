@@ -5,11 +5,14 @@
     #include <string.h>
     #define print(str, val) \
     printf("%s %s\n", str, val);
+<<<<<<< HEAD
+=======
     #define TRUE 1
     #define FALSE 0
 
     #define NUMBER 1
     #define STRING 0
+>>>>>>> shimona
 
     // Declare stuff from Flex that Bison needs to know about:
     extern int yylex();
@@ -28,6 +31,8 @@
     char column[30][30];
     int num_column = 0;
     int position = 0;
+<<<<<<< HEAD
+=======
     char condition[100][50];
     int condition_ptr = 0;
     // --------------------------------------------------------------------
@@ -47,6 +52,7 @@
     extern void readcsv(char* name);
     extern int isnum(char *);
     
+>>>>>>> shimona
 %}
 
 // Bison fundamentally works by asking flex to get the next token, which it
@@ -87,17 +93,27 @@
 %token <sval> MINUS
 %token <sval> ARITH_OP
 
+<<<<<<< HEAD
+=======
 %type <sval> LP_NT
 %type <sval> RP_NT
+>>>>>>> shimona
 %type <sval> STMT_LIST
 %type <sval> STMT
 %type <sval> EXPR
 %type <sval> TABLE
 %type <sval> CONDITION
+<<<<<<< HEAD
+%type <sval> CONDITION_LIST_FINAL
+%type <sval> CONDITION_LIST
+%type <sval> OP
+%type <sval> TERM
+=======
 %type <sval> CONDITION_LIST
 %type <sval> LOGICAL_OP
 %type <sval> OP
 %type <sval> ARITHMETIC
+>>>>>>> shimona
 %type <sval> ATTR_LIST
 %type <sval> ATTR
 
@@ -106,6 +122,33 @@
 STMT_LIST:    STMT
     |         STMT STMT_LIST    ;
 
+<<<<<<< HEAD
+STMT:   SELECT LAB CONDITION_LIST_FINAL RAB LP TABLE RP SEMI    {
+
+            printf("Valid Syntax \n");
+
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
+
+            // Set if conditions to filter the rows
+            // Get the condition
+            char condition[1024];
+            strcpy(condition, $3);
+
+            // printf("Condition = %s\n", condition);
+
+            // Open the file in which table exists
+            fprintf(file_in, "\ttableName = \"%s\";\n", $6);
+            fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
+            // fprintf(file_in, "\tprintColumnNames();\n");
+            // Iterate over each row of table
+            fprintf(file_in, "\tfor(int j = 0; j < getNumRows(tableName); j++) {\n");
+
+                // Put if condition
+                fprintf(file_in, "\t\tif (%s) {\n", condition);
+
+                    fprintf(file_in, "\t\t\tprintRow(0, j);\n");
+=======
 STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
 
             int condition_it = 0;
@@ -187,6 +230,7 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
                 fprintf(file_in, ") {\n");
 
                     fprintf(file_in, "\t\t\tprintRow(0, j); cout << endl; \n");
+>>>>>>> shimona
 
             fprintf(file_in, "\t\t}\n");
             fprintf(file_in, "\t}\n");
@@ -197,10 +241,28 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
     |   PROJECT LAB ATTR_LIST RAB LP TABLE RP SEMI     {
             printf("Valid Syntax \n");
             int i = 0;
+<<<<<<< HEAD
+            for (i = 0; i < position; i++) {
+                printf("%s ,", column[i]);
+            }
+=======
+>>>>>>> shimona
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
 
+<<<<<<< HEAD
+            // Construct vector of columnNames
+            fprintf(file_in, "\tvector<string> columnNames;\n");
+
+            for (i = 0; i < position; i++) {
+                fprintf(file_in, "\tcolumnNames.push_back(\"%s\");\n", column[i]);
+            }
+
+            fprintf(file_in, "\tfor(int i = 0; i < getNumRows(a);i++){\n");
+            fprintf(file_in, "\t\tfor(int k = 0; k < columnNames.size();k++)\n");
+            fprintf(file_in, "\t\t\tcout<<setw(20)<<getVal(0,i, columnNames[k])<<\" \";\n");
+=======
             // Open the file in which table exists
             fprintf(file_in, "\tstring tableName = \"%s\";\n", $6);
             fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
@@ -225,11 +287,72 @@ STMT:   SELECT LAB CONDITION_LIST RAB LP TABLE RP SEMI    {
             fprintf(file_in, "\tfor(int i = 0; i < getNumRows(tableName);i++){\n");
             fprintf(file_in, "\t\tfor(int k = 0; k < columnNames.size();k++)\n");
             fprintf(file_in, "\t\t\tcout<<setw(14)<<getVal(0,i, columnNames[k]);\n");
+>>>>>>> shimona
             fprintf(file_in, "\t\tcout<<\"\\n\";\n\t}\n");
 
             insert_footer(file_in);
             fclose(file_in);
         }
+<<<<<<< HEAD
+    |   LP TABLE RP JOIN LP TABLE RP SEMI   {
+           printf("Valid Syntax \n");
+        }
+    |   error SEMI  {
+           yyerrok;
+           eat_till_semi();
+        }    ;
+
+JOIN:    CARTESIAN_PRODUCT {
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
+            fprintf(file_in, "\tint r0 = getNumRows(0);\n");
+            fprintf(file_in, "\tint r1 = getNumRows(1);\n");
+            fprintf(file_in, "\tfor(int i = 0; i < r0;i++){\n");
+            fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++){\n");
+            fprintf(file_in, "\t\t\tprintRow(0, i);\n");
+            fprintf(file_in, "\t\t\tprintRow(1, j); cout<<endl;\n\t\t}\n\t}\n");
+
+            insert_footer(file_in);
+            fclose(file_in);
+
+        }
+    |    EQUI_JOIN LAB CONDITION_LIST_EQ RAB    ;
+
+TABLE:   ID    ;
+
+CONDITION_LIST_FINAL:   CONDITION_LIST ;
+
+CONDITION_LIST: CONDITION AND CONDITION_LIST     { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); }
+    |           CONDITION
+
+CONDITION:      LP CONDITION_LIST RP { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); }
+    |           TERM OP EXPR  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); } ;
+
+CONDITION_LIST_EQ: CONDITION_EQ AND CONDITION_LIST_EQ
+    |           CONDITION_EQ
+
+CONDITION_EQ:      LP CONDITION_LIST_EQ RP
+    |              ID DOT ID EQ ID DOT ID    ;
+
+EXPR:   TERM ARITH_OP EXPR  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); }
+    |   TERM MINUS EXPR  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); }
+    |   TERM   ;
+
+TERM:   LP EXPR RP { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); }
+    |   NUM
+    |   MINUS NUM { strcat($$, $2); }
+    |   ID {
+            char columnName[30];
+            strcpy(columnName, "getVal( 0, j, \"");
+            strcat(columnName, $1);
+            strcat(columnName, "\")");
+            strcpy($$, columnName);
+            }
+    |   SIC NUM SIC  { strcat($$, $2); strcat($$, $3); }
+    |   SIC ID SIC { strcat($$, $2); strcat($$, $3); }
+    |   DIC NUM DIC { strcat($$, $2); strcat($$, $3); }
+    |   DIC ID DIC   { strcat($$, $2); strcat($$, $3); } ;
+=======
     |   LP TABLE RP CARTESIAN_PRODUCT LP TABLE RP SEMI   {
            printf("Valid Syntax \n");
             
@@ -469,6 +592,7 @@ ARITHMETIC: NUM ARITH_OP ARITHMETIC  { strcat($$, " "); strcat($$, $2); strcat($
     |   MINUS NUM MINUS ARITHMETIC  { strcat($$, " "); strcat($$, $2); strcat($$, " "); strcat($$, $3); strcat($$, " "); strcat($$, $4); } 
     |   MINUS NUM  { strcat($$, " "); strcat($$, $2); } 
     |   NUM  ;
+>>>>>>> shimona
 
 OP:     EQ { strcat($$, $1); }
     |   NEQ
@@ -476,7 +600,11 @@ OP:     EQ { strcat($$, $1); }
     |   RAB
     |   LT_EQ    ;
 
+<<<<<<< HEAD
+ATTR_LIST:    ATTR COMMA ATTR_LIST
+=======
 ATTR_LIST:    ATTR COMMA ATTR_LIST   
+>>>>>>> shimona
     |         ATTR  ;
 
 ATTR:   ID {
@@ -487,7 +615,11 @@ ATTR:   ID {
 
 int main(int argc, char **argv) {
 
+<<<<<<< HEAD
+    char *filename = "tests/test1.txt";
+=======
     char *filename = argv[1];
+>>>>>>> shimona
     // Open a file handle to a particular file:
     FILE *myfile = fopen(filename, "r");
     // Make sure it is valid:
@@ -502,7 +634,11 @@ int main(int argc, char **argv) {
     while(!feof(yyin))  {
         yyparse();
     }
+<<<<<<< HEAD
+
+=======
   
+>>>>>>> shimona
 }
 
 void yyerror(const char *s) {
@@ -520,6 +656,12 @@ void eat_till_semi()
 }
 
 void insert_header (FILE *filename) {
+<<<<<<< HEAD
+    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nstring tableName;\n";
+    fprintf(filename, "%s", header);
+
+=======
+>>>>>>> shimona
     FILE *fp = fopen("readcsv.cpp", "r");
     int c;
     while((c = (char)fgetc(fp)) != EOF)
@@ -530,7 +672,11 @@ void insert_header (FILE *filename) {
 }
 
 void insert_footer (FILE *filename) {
+<<<<<<< HEAD
+    char *header = "return 0;\n}\n";
+=======
     char *header = "cout << endl;\nreturn 0;\n}\n";
+>>>>>>> shimona
 
     fprintf(filename, "%s", header);
 }
@@ -544,7 +690,11 @@ void extract_column(char *table) {
     fgets(column_str, sizeof(column_str), f_in);
     printf("%s\n", schema);
     printf("%s\n", column_str);
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> shimona
     // Extract column name from column_str
     int i = 0;
     int begin = 0;
@@ -564,6 +714,8 @@ void extract_column(char *table) {
     }
     num_column = j;
 }
+<<<<<<< HEAD
+=======
 
 void readcsv(char* name)
 {
@@ -691,3 +843,4 @@ int isnum (char *text) {
     else
         return 1;
 }
+>>>>>>> shimona

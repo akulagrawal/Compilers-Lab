@@ -99,6 +99,8 @@
         string _arg2;
         string _result;
 
+        quadruple() {}
+
         quadruple(string op, string arg1, string arg2, string result){
             this -> _operator = op;
             this -> _arg1 = arg1;
@@ -333,6 +335,8 @@
 
     // Keep track of whether inside switch case statement
     int insideSwitchCase = 0;
+    // Keep track of whether inside loops
+    int insideLoop = 0;
 
     extern bool isInt(const char *type);
     extern bool isFloat(const char *type);
@@ -391,7 +395,7 @@
 %type <type_id> variable_declaration_statement
 
 %type <type_id> logical_operation
-%type <type_id> if_exp else_mark
+%type <type_id> FOREXP WHILEEXP if_exp else_mark
 %type <type_id> bracket_dimlist name_list id_arr
 %type <type_id> arithmetic_term arithmetic_factor
 
@@ -404,6 +408,7 @@
 %token <type_id> IF ELSE
 %token <type_id> FOR WHILE
 %token <type_id> SWITCH CASE DEFAULT
+%token <type_id> BREAK CONTINUE
 %token <type_id> RETURN
 
 // Starting Non Terminal
@@ -758,6 +763,26 @@ statement
 
         $$.type = strdup($1.type);
     }
+    | BREAK ';' 
+    {
+        /* Check if inside loop or switch. (to be done). */
+        if (!insideLoop && !insideSwitchCase) {
+            errorLine("break not inside loop or switch");
+        }
+        $$.index= quadruples.size();
+        $$.val=1;
+        quadruples.push_back(quadruple("jmp", "", "", "(loopend)"));
+    }
+    | CONTINUE ';' 
+    {
+        /* Check if inside loop or switch. (to be done). */
+        if (!insideLoop) {
+            errorLine("continue not inside loop.");
+        }
+        $$.val=1;
+        $$.index = quadruples.size();
+        quadruples.push_back(quadruple("jmp", "", "", "(loopstart)"));
+    }
 	;
 
 conditional_statement
@@ -821,44 +846,157 @@ else_mark
     {
         $$.val = 1;
         $$.index = quadruples.size();
-        quadruples.push_back(quadruple("go", "", "", ""));
+        quadruples.push_back(quadruple("jmp", "", "", ""));
     }
 
 loop_statement
-	: WHILE '(' expression_cover ')' { level ++; } statement
-    {
-
-        delete_var_list(active_func_name, level);
-        level --;
-
-        if (!isInt($3.type) && !isFloat($3.type))
-            errorLine("int expected in expression of while statement");
-
-        $$.type = strdup($6.type);
-    }
-	| FOR_WITH_BR expression_statement expression_statement ')' statement
+    : WHILEEXP statement
     {
         delete_var_list(active_func_name, level);
         level --;
 
-        $$.type = strdup($5.type);
-    }
-	| FOR_WITH_BR expression_statement expression_statement expression ')' statement
-    {
+        $$.type = strdup($2.type);
 
+        $$.val = $1.val + $2.val;
+        int gotoindex = $1.index;
+        //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
+        quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
+
+        for(int i =gotoindex+1;i<gotoindex + $2.val + 2 && i< quadruples.size();i++ )
+        {
+        //string s=jmp;
+        if(quadruples[i]._operator=="jmp")
+        {
+            quadruples[i]._result=quadruples[gotoindex]._result;
+        }
+        if(quadruples[i]._operator=="ctn")
+        {
+            quadruples[i]._result=to_string(gotoindex-1);
+        }
+        if((quadruples[i]._operator=="ifz"))
+        {
+            i=stoi(quadruples[i]._result);
+        }
+        }
+        quadruple temp;
+        temp._operator = "ljmp";
+        temp._arg1 = "";
+        temp._arg2 = "";
+        temp._result = to_string(gotoindex-1);
+        quadruples.push_back(temp);
+
+        insideLoop --;
+    }
+    | FOREXP ')' statement
+    {
         delete_var_list(active_func_name, level);
         level --;
 
-        $$.type = strdup($6.type);
-    }
-	;
+        $$.type = strdup($3.type);
 
-FOR_WITH_BR
-    : FOR '('
+        $$.val = $1.val + $3.val;
+        int gotoindex = $1.index;
+        //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$3.val<<endl;
+        quadruples[gotoindex]._result = to_string(gotoindex + $3.val + 2);
+
+        for(int i =gotoindex+1;i<gotoindex + $3.val + 2 && i< quadruples.size();i++ )
+        {
+            //string s=jmp;
+            if(quadruples[i]._operator=="jmp")
+            {
+            quadruples[i]._result=quadruples[gotoindex]._result;
+            }
+            if(quadruples[i]._operator=="ctn")
+            {
+            quadruples[i]._result=to_string(gotoindex-1);
+            }
+            if((quadruples[i]._operator=="ifz"))
+            {
+            i=stoi(quadruples[i]._result);
+            }
+        }
+        quadruple temp;
+        temp._operator = "ljmp";
+        temp._arg1 = "";
+        temp._arg2 = "";
+        temp._result = to_string(gotoindex-1);
+        quadruples.push_back(temp);
+
+        insideLoop --;
+    }
+    | FOREXP expression ')' statement
     {
-        level ++;
+        delete_var_list(active_func_name, level);
+        level --;
+
+        $$.type = strdup($4.type);
+
+        $$.val = $1.val + $2.val+$4.val;
+        int gotoindex = $1.index;
+        cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
+        quadruples[gotoindex]._result = to_string(gotoindex + $2.val+ $4.val + 2);
+
+
+        for(int i =gotoindex+1;i<gotoindex + $2.val+ $4.val + 2 && i< quadruples.size();i++ )
+        {
+            //string s=jmp;
+            if(quadruples[i]._operator=="jmp")
+            {
+                quadruples[i]._result=quadruples[gotoindex]._result;
+            }
+            if(quadruples[i]._operator=="ctn")
+            {
+                quadruples[i]._result=to_string(gotoindex-1);
+            }
+            if((quadruples[i]._operator=="ifz"))
+            {
+                i=stoi(quadruples[i]._result);
+            }
+        }
+        quadruple temp;
+        temp._operator = "ljmp";
+        temp._arg1 = "";
+        temp._arg2 = "";
+        temp._result = to_string(gotoindex-1);
+        quadruples.push_back(temp);
+
+        insideLoop --;
     }
     ;
+
+
+  FOREXP
+    : FOR '(' expression_statement expression_statement 
+    {
+        insideLoop ++;
+
+        $$.index = quadruples.size();
+        $$.val = $3.val+ $4.val+1;
+        quadruple temp;
+        temp._operator = "ifF";
+        temp._arg1 = string($4.sval);
+        temp._arg2 = "";
+        temp._result = "";
+        quadruples.push_back(temp);
+    }
+    ;
+
+  WHILEEXP
+    : WHILE '(' expression_cover ')' {
+
+        insideLoop ++;
+
+        $$.index = quadruples.size();
+        $$.val = $3.val+1;
+        quadruple temp;
+        temp._operator = "ifF";
+        temp._arg1 = string($3.sval);
+        temp._arg2 = "";
+        temp._result = "";
+        quadruples.push_back(temp);
+        level ++;
+    }
+
 
 labeled_statement
 	: CASE NUM ':' { level ++; } statement
@@ -1124,7 +1262,7 @@ arithmetic_factor
 
         // cout << $$.val << "\n";
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
-        quadruples.push_back(quadruple("=", "t" + to_string($1.val), "",  temp));
+        quadruples.push_back(quadruple("=", "t" + string($1.sval), "",  temp));
     }
 	;
 
