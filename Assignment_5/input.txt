@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 int main(){
 	while(q<1)
 	{
@@ -12,4 +13,27 @@ int main(){
 			}
 		a=1;
 		}
+=======
+int sum(int a, int b, int c, int d){
+    return a + b + c + d;
+}
+
+int prod(int a, int b, int c){
+    return a * b * c;
+}
+
+float one(){
+    return 1;
+}
+
+int main(int argc)
+{
+    if(argc == 1){
+        int d = 3 * 5 + 3;
+        int r = one();
+        d = sum(sum(2, 3, 1, 2), 1, sum(1, 2, 4, 5), prod(sum(1, 2, 3, 4), 1, 2));
+    } else {
+        argc = 2;
+    }
+>>>>>>> ameya
 }

@@ -1,0 +1,2691 @@
+Nonterminals useless in grammar
+
+   constant_expression
+   func_name
+   return_type
+
+
+State 27 conflicts: 1 shift/reduce
+State 38 conflicts: 1 shift/reduce
+State 90 conflicts: 1 shift/reduce
+State 94 conflicts: 1 shift/reduce
+State 144 conflicts: 3 shift/reduce
+State 145 conflicts: 3 shift/reduce
+State 150 conflicts: 3 shift/reduce
+State 161 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: START $end
+
+    1 START: function_declaration
+    2      | variable_declaration_statement
+    3      | START function_declaration
+    4      | START variable_declaration_statement
+
+    5 function_declaration: function_head '{' function_result_assignment statement_list '}'
+    6                     | function_head '{' '}'
+
+    7 function_result_assignment: %empty
+
+    8 $@1: %empty
+
+    9 function_head: TYPE IDENTIFIER '(' $@1 param_list_declaration ')'
+
+   10 $@2: %empty
+
+   11 function_head: VOID IDENTIFIER '(' $@2 param_list_declaration ')'
+   12              | TYPE IDENTIFIER '(' ')'
+   13              | VOID IDENTIFIER '(' ')'
+
+   14 param_list_declaration: param_list_declaration ',' param_declaration
+   15                       | param_declaration
+
+   16 param_declaration: TYPE IDENTIFIER
+
+   17 variable_declaration_list: variable_declaration
+
+   18 variable_declaration: datatype IDENTIFIER ';'
+
+   19 datatype: INT
+   20         | FLOAT
+
+   21 function_call: IDENTIFIER '(' ')'
+   22              | IDENTIFIER '(' arg_list ')'
+
+   23 arg_list: arithmetic_factor
+   24         | arg_list ',' arithmetic_factor
+
+   25 statement: conditional_statement
+   26          | loop_statement
+   27          | compound_statement
+   28          | expression_statement
+   29          | variable_declaration_statement
+   30          | RETURN expression_statement
+   31          | labeled_statement
+
+   32 loopstatement: loopconditional_statement
+   33              | loop_statement
+   34              | loopcompound_statement
+   35              | expression_statement
+   36              | variable_declaration_list
+   37              | labeled_statement
+   38              | BREAK ';'
+   39              | CONTINUE ';'
+
+   40 conditional_statement: if_exp statement
+   41                      | if_exp statement else_mark statement
+
+   42 $@3: %empty
+
+   43 conditional_statement: SWITCH '(' expression ')' $@3 statement
+
+   44 loopconditional_statement: if_exp loopstatement
+   45                          | if_exp loopstatement else_mark loopstatement
+
+   46 $@4: %empty
+
+   47 loopconditional_statement: SWITCH '(' expression ')' $@4 looplabeled_statement
+
+   48 else_mark: ELSE
+
+   49 $@5: %empty
+
+   50 loop_statement: WHILEEXP $@5 loopstatement
+   51               | FOREXP ')' loopstatement
+   52               | FOREXP expression ')' loopstatement
+
+   53 FOREXP: FOR '(' expression_statement expression_statement
+   54       | FOR '(' expression_statement expression_statement expression
+
+   55 WHILEEXP: WHILE '(' expression_cover ')'
+
+   56 $@6: %empty
+
+   57 looplabeled_statement: CASE NUM ':' $@6 loopstatement
+   58                      | DEFAULT ':' loopstatement
+
+   59 if_exp: IF '(' expression_cover ')'
+
+   60 $@7: %empty
+
+   61 labeled_statement: CASE NUM ':' $@7 statement
+   62                  | DEFAULT ':' statement
+
+   63 compound_statement: '{' '}'
+
+   64 $@8: %empty
+
+   65 compound_statement: '{' $@8 statement_list '}'
+
+   66 statement_list: statement
+   67               | statement_list statement
+
+   68 loopcompound_statement: '{' '}'
+
+   69 $@9: %empty
+
+   70 loopcompound_statement: '{' $@9 loopstatement_list '}'
+
+   71 loopstatement_list: loopstatement
+   72                   | loopstatement_list loopstatement
+
+   73 expression_statement: ';'
+   74                     | expression ';'
+
+   75 expression_cover: expression
+   76                 | '(' expression_cover ')'
+
+   77 expression: assignment_expression
+   78           | logical_expression
+   79           | relational_expression
+   80           | arithmetic_expression
+
+   81 assignment_expression: IDENTIFIER '=' arithmetic_expression
+
+   82 logical_expression: expression_cover logical_operation expression_cover
+
+   83 logical_operation: OR
+   84                  | AND
+
+   85 relational_expression: expression_cover REL_OP expression_cover
+
+   86 arithmetic_expression: arithmetic_term '+' arithmetic_expression
+   87                      | arithmetic_term '-' arithmetic_expression
+   88                      | arithmetic_term
+
+   89 arithmetic_term: arithmetic_factor '*' arithmetic_term
+   90                | arithmetic_factor '/' arithmetic_term
+   91                | arithmetic_factor
+
+   92 arithmetic_factor: '(' arithmetic_expression ')'
+   93                  | IDENTIFIER
+   94                  | NUM
+   95                  | function_call
+
+   96 variable_declaration_statement: TYPE name_list ';'
+
+   97 name_list: id_arr
+   98          | id_arr ',' name_list
+
+   99 id_arr: IDENTIFIER
+  100       | IDENTIFIER '=' arithmetic_expression
+  101       | IDENTIFIER bracket_dimlist
+
+  102 bracket_dimlist: '[' NUM ']'
+  103                | '[' NUM ']' bracket_dimlist
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 9 11 12 13 21 22 43 47 53 54 55 59 76 92
+')' (41) 9 11 12 13 21 22 43 47 51 52 55 59 76 92
+'*' (42) 89
+'+' (43) 86
+',' (44) 14 24 98
+'-' (45) 87
+'/' (47) 90
+':' (58) 57 58 61 62
+';' (59) 18 38 39 73 74 96
+'=' (61) 81 100
+'[' (91) 102 103
+']' (93) 102 103
+'{' (123) 5 6 63 65 68 70
+'}' (125) 5 6 63 65 68 70
+error (256)
+NUM (258) 57 61 94 102 103
+IDENTIFIER (259) 9 11 12 13 16 18 21 22 81 93 99 100 101
+INT (260) 19
+FLOAT (261) 20
+OR (262) 83
+IF (263) 59
+ELSE (264) 48
+FOR (265) 53 54
+WHILE (266) 55
+SWITCH (267) 43 47
+CASE (268) 57 61
+DEFAULT (269) 58 62
+BREAK (270) 38
+CONTINUE (271) 39
+AND (272) 84
+REL_OP (273) 85
+RETURN (274) 30
+TYPE (275) 9 12 16 96
+VOID (276) 11 13
+
+
+Nonterminals, with rules where they appear
+
+$accept (36)
+    on left: 0
+START (37)
+    on left: 1 2 3 4, on right: 0 3 4
+function_declaration (38)
+    on left: 5 6, on right: 1 3
+function_result_assignment (39)
+    on left: 7, on right: 5
+function_head (40)
+    on left: 9 11 12 13, on right: 5 6
+$@1 (41)
+    on left: 8, on right: 9
+$@2 (42)
+    on left: 10, on right: 11
+param_list_declaration (43)
+    on left: 14 15, on right: 9 11 14
+param_declaration (44)
+    on left: 16, on right: 14 15
+variable_declaration_list (45)
+    on left: 17, on right: 36
+variable_declaration (46)
+    on left: 18, on right: 17
+datatype (47)
+    on left: 19 20, on right: 18
+function_call (48)
+    on left: 21 22, on right: 95
+arg_list (49)
+    on left: 23 24, on right: 22 24
+statement (50)
+    on left: 25 26 27 28 29 30 31, on right: 40 41 43 61 62 66 67
+loopstatement (51)
+    on left: 32 33 34 35 36 37 38 39, on right: 44 45 50 51 52 57 58
+    71 72
+conditional_statement (52)
+    on left: 40 41 43, on right: 25
+$@3 (53)
+    on left: 42, on right: 43
+loopconditional_statement (54)
+    on left: 44 45 47, on right: 32
+$@4 (55)
+    on left: 46, on right: 47
+else_mark (56)
+    on left: 48, on right: 41 45
+loop_statement (57)
+    on left: 50 51 52, on right: 26 33
+$@5 (58)
+    on left: 49, on right: 50
+FOREXP (59)
+    on left: 53 54, on right: 51 52
+WHILEEXP (60)
+    on left: 55, on right: 50
+looplabeled_statement (61)
+    on left: 57 58, on right: 47
+$@6 (62)
+    on left: 56, on right: 57
+if_exp (63)
+    on left: 59, on right: 40 41 44 45
+labeled_statement (64)
+    on left: 61 62, on right: 31 37
+$@7 (65)
+    on left: 60, on right: 61
+compound_statement (66)
+    on left: 63 65, on right: 27
+$@8 (67)
+    on left: 64, on right: 65
+statement_list (68)
+    on left: 66 67, on right: 5 65 67
+loopcompound_statement (69)
+    on left: 68 70, on right: 34
+$@9 (70)
+    on left: 69, on right: 70
+loopstatement_list (71)
+    on left: 71 72, on right: 70 72
+expression_statement (72)
+    on left: 73 74, on right: 28 30 35 53 54
+expression_cover (73)
+    on left: 75 76, on right: 55 59 76 82 85
+expression (74)
+    on left: 77 78 79 80, on right: 43 47 52 54 74 75
+assignment_expression (75)
+    on left: 81, on right: 77
+logical_expression (76)
+    on left: 82, on right: 78
+logical_operation (77)
+    on left: 83 84, on right: 82
+relational_expression (78)
+    on left: 85, on right: 79
+arithmetic_expression (79)
+    on left: 86 87 88, on right: 80 81 86 87 92 100
+arithmetic_term (80)
+    on left: 89 90 91, on right: 86 87 88 89 90
+arithmetic_factor (81)
+    on left: 92 93 94 95, on right: 23 24 89 90 91
+variable_declaration_statement (82)
+    on left: 96, on right: 2 4 29
+name_list (83)
+    on left: 97 98, on right: 96 98
+id_arr (84)
+    on left: 99 100 101, on right: 97 98
+bracket_dimlist (85)
+    on left: 102 103, on right: 101 103
+
+
+State 0
+
+    0 $accept: . START $end
+
+    TYPE  shift, and go to state 1
+    VOID  shift, and go to state 2
+
+    START                           go to state 3
+    function_declaration            go to state 4
+    function_head                   go to state 5
+    variable_declaration_statement  go to state 6
+
+
+State 1
+
+    9 function_head: TYPE . IDENTIFIER '(' $@1 param_list_declaration ')'
+   12              | TYPE . IDENTIFIER '(' ')'
+   96 variable_declaration_statement: TYPE . name_list ';'
+
+    IDENTIFIER  shift, and go to state 7
+
+    name_list  go to state 8
+    id_arr     go to state 9
+
+
+State 2
+
+   11 function_head: VOID . IDENTIFIER '(' $@2 param_list_declaration ')'
+   13              | VOID . IDENTIFIER '(' ')'
+
+    IDENTIFIER  shift, and go to state 10
+
+
+State 3
+
+    0 $accept: START . $end
+    3 START: START . function_declaration
+    4      | START . variable_declaration_statement
+
+    $end  shift, and go to state 11
+    TYPE  shift, and go to state 1
+    VOID  shift, and go to state 2
+
+    function_declaration            go to state 12
+    function_head                   go to state 5
+    variable_declaration_statement  go to state 13
+
+
+State 4
+
+    1 START: function_declaration .
+
+    $default  reduce using rule 1 (START)
+
+
+State 5
+
+    5 function_declaration: function_head . '{' function_result_assignment statement_list '}'
+    6                     | function_head . '{' '}'
+
+    '{'  shift, and go to state 14
+
+
+State 6
+
+    2 START: variable_declaration_statement .
+
+    $default  reduce using rule 2 (START)
+
+
+State 7
+
+    9 function_head: TYPE IDENTIFIER . '(' $@1 param_list_declaration ')'
+   12              | TYPE IDENTIFIER . '(' ')'
+   99 id_arr: IDENTIFIER .
+  100       | IDENTIFIER . '=' arithmetic_expression
+  101       | IDENTIFIER . bracket_dimlist
+
+    '('  shift, and go to state 15
+    '='  shift, and go to state 16
+    '['  shift, and go to state 17
+
+    $default  reduce using rule 99 (id_arr)
+
+    bracket_dimlist  go to state 18
+
+
+State 8
+
+   96 variable_declaration_statement: TYPE name_list . ';'
+
+    ';'  shift, and go to state 19
+
+
+State 9
+
+   97 name_list: id_arr .
+   98          | id_arr . ',' name_list
+
+    ','  shift, and go to state 20
+
+    $default  reduce using rule 97 (name_list)
+
+
+State 10
+
+   11 function_head: VOID IDENTIFIER . '(' $@2 param_list_declaration ')'
+   13              | VOID IDENTIFIER . '(' ')'
+
+    '('  shift, and go to state 21
+
+
+State 11
+
+    0 $accept: START $end .
+
+    $default  accept
+
+
+State 12
+
+    3 START: START function_declaration .
+
+    $default  reduce using rule 3 (START)
+
+
+State 13
+
+    4 START: START variable_declaration_statement .
+
+    $default  reduce using rule 4 (START)
+
+
+State 14
+
+    5 function_declaration: function_head '{' . function_result_assignment statement_list '}'
+    6                     | function_head '{' . '}'
+
+    '}'  shift, and go to state 22
+
+    $default  reduce using rule 7 (function_result_assignment)
+
+    function_result_assignment  go to state 23
+
+
+State 15
+
+    9 function_head: TYPE IDENTIFIER '(' . $@1 param_list_declaration ')'
+   12              | TYPE IDENTIFIER '(' . ')'
+
+    ')'  shift, and go to state 24
+
+    $default  reduce using rule 8 ($@1)
+
+    $@1  go to state 25
+
+
+State 16
+
+  100 id_arr: IDENTIFIER '=' . arithmetic_expression
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+
+    function_call          go to state 29
+    arithmetic_expression  go to state 30
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 17
+
+  102 bracket_dimlist: '[' . NUM ']'
+  103                | '[' . NUM ']' bracket_dimlist
+
+    NUM  shift, and go to state 33
+
+
+State 18
+
+  101 id_arr: IDENTIFIER bracket_dimlist .
+
+    $default  reduce using rule 101 (id_arr)
+
+
+State 19
+
+   96 variable_declaration_statement: TYPE name_list ';' .
+
+    $default  reduce using rule 96 (variable_declaration_statement)
+
+
+State 20
+
+   98 name_list: id_arr ',' . name_list
+
+    IDENTIFIER  shift, and go to state 34
+
+    name_list  go to state 35
+    id_arr     go to state 9
+
+
+State 21
+
+   11 function_head: VOID IDENTIFIER '(' . $@2 param_list_declaration ')'
+   13              | VOID IDENTIFIER '(' . ')'
+
+    ')'  shift, and go to state 36
+
+    $default  reduce using rule 10 ($@2)
+
+    $@2  go to state 37
+
+
+State 22
+
+    6 function_declaration: function_head '{' '}' .
+
+    $default  reduce using rule 6 (function_declaration)
+
+
+State 23
+
+    5 function_declaration: function_head '{' function_result_assignment . statement_list '}'
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 50
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    statement_list                  go to state 58
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 24
+
+   12 function_head: TYPE IDENTIFIER '(' ')' .
+
+    $default  reduce using rule 12 (function_head)
+
+
+State 25
+
+    9 function_head: TYPE IDENTIFIER '(' $@1 . param_list_declaration ')'
+
+    TYPE  shift, and go to state 67
+
+    param_list_declaration  go to state 68
+    param_declaration       go to state 69
+
+
+State 26
+
+   94 arithmetic_factor: NUM .
+
+    $default  reduce using rule 94 (arithmetic_factor)
+
+
+State 27
+
+   21 function_call: IDENTIFIER . '(' ')'
+   22              | IDENTIFIER . '(' arg_list ')'
+   93 arithmetic_factor: IDENTIFIER .
+
+    '('  shift, and go to state 70
+
+    '('       [reduce using rule 93 (arithmetic_factor)]
+    $default  reduce using rule 93 (arithmetic_factor)
+
+
+State 28
+
+   92 arithmetic_factor: '(' . arithmetic_expression ')'
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+
+    function_call          go to state 29
+    arithmetic_expression  go to state 71
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 29
+
+   95 arithmetic_factor: function_call .
+
+    $default  reduce using rule 95 (arithmetic_factor)
+
+
+State 30
+
+  100 id_arr: IDENTIFIER '=' arithmetic_expression .
+
+    $default  reduce using rule 100 (id_arr)
+
+
+State 31
+
+   86 arithmetic_expression: arithmetic_term . '+' arithmetic_expression
+   87                      | arithmetic_term . '-' arithmetic_expression
+   88                      | arithmetic_term .
+
+    '+'  shift, and go to state 72
+    '-'  shift, and go to state 73
+
+    $default  reduce using rule 88 (arithmetic_expression)
+
+
+State 32
+
+   89 arithmetic_term: arithmetic_factor . '*' arithmetic_term
+   90                | arithmetic_factor . '/' arithmetic_term
+   91                | arithmetic_factor .
+
+    '*'  shift, and go to state 74
+    '/'  shift, and go to state 75
+
+    $default  reduce using rule 91 (arithmetic_term)
+
+
+State 33
+
+  102 bracket_dimlist: '[' NUM . ']'
+  103                | '[' NUM . ']' bracket_dimlist
+
+    ']'  shift, and go to state 76
+
+
+State 34
+
+   99 id_arr: IDENTIFIER .
+  100       | IDENTIFIER . '=' arithmetic_expression
+  101       | IDENTIFIER . bracket_dimlist
+
+    '='  shift, and go to state 16
+    '['  shift, and go to state 17
+
+    $default  reduce using rule 99 (id_arr)
+
+    bracket_dimlist  go to state 18
+
+
+State 35
+
+   98 name_list: id_arr ',' name_list .
+
+    $default  reduce using rule 98 (name_list)
+
+
+State 36
+
+   13 function_head: VOID IDENTIFIER '(' ')' .
+
+    $default  reduce using rule 13 (function_head)
+
+
+State 37
+
+   11 function_head: VOID IDENTIFIER '(' $@2 . param_list_declaration ')'
+
+    TYPE  shift, and go to state 67
+
+    param_list_declaration  go to state 77
+    param_declaration       go to state 69
+
+
+State 38
+
+   21 function_call: IDENTIFIER . '(' ')'
+   22              | IDENTIFIER . '(' arg_list ')'
+   81 assignment_expression: IDENTIFIER . '=' arithmetic_expression
+   93 arithmetic_factor: IDENTIFIER .
+
+    '('  shift, and go to state 70
+    '='  shift, and go to state 78
+
+    '('       [reduce using rule 93 (arithmetic_factor)]
+    $default  reduce using rule 93 (arithmetic_factor)
+
+
+State 39
+
+   59 if_exp: IF . '(' expression_cover ')'
+
+    '('  shift, and go to state 79
+
+
+State 40
+
+   53 FOREXP: FOR . '(' expression_statement expression_statement
+   54       | FOR . '(' expression_statement expression_statement expression
+
+    '('  shift, and go to state 80
+
+
+State 41
+
+   55 WHILEEXP: WHILE . '(' expression_cover ')'
+
+    '('  shift, and go to state 81
+
+
+State 42
+
+   43 conditional_statement: SWITCH . '(' expression ')' $@3 statement
+
+    '('  shift, and go to state 82
+
+
+State 43
+
+   61 labeled_statement: CASE . NUM ':' $@7 statement
+
+    NUM  shift, and go to state 83
+
+
+State 44
+
+   62 labeled_statement: DEFAULT . ':' statement
+
+    ':'  shift, and go to state 84
+
+
+State 45
+
+   30 statement: RETURN . expression_statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call          go to state 29
+    expression_statement   go to state 85
+    expression_cover       go to state 60
+    expression             go to state 61
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 46
+
+   96 variable_declaration_statement: TYPE . name_list ';'
+
+    IDENTIFIER  shift, and go to state 34
+
+    name_list  go to state 8
+    id_arr     go to state 9
+
+
+State 47
+
+   63 compound_statement: '{' . '}'
+   65                   | '{' . $@8 statement_list '}'
+
+    '}'  shift, and go to state 86
+
+    $default  reduce using rule 64 ($@8)
+
+    $@8  go to state 87
+
+
+State 48
+
+   76 expression_cover: '(' . expression_cover ')'
+   92 arithmetic_factor: '(' . arithmetic_expression ')'
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+
+    function_call          go to state 29
+    expression_cover       go to state 88
+    expression             go to state 89
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 90
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 49
+
+   73 expression_statement: ';' .
+
+    $default  reduce using rule 73 (expression_statement)
+
+
+State 50
+
+   66 statement_list: statement .
+
+    $default  reduce using rule 66 (statement_list)
+
+
+State 51
+
+   25 statement: conditional_statement .
+
+    $default  reduce using rule 25 (statement)
+
+
+State 52
+
+   26 statement: loop_statement .
+
+    $default  reduce using rule 26 (statement)
+
+
+State 53
+
+   51 loop_statement: FOREXP . ')' loopstatement
+   52               | FOREXP . expression ')' loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+    ')'         shift, and go to state 91
+
+    function_call          go to state 29
+    expression_cover       go to state 60
+    expression             go to state 92
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 54
+
+   50 loop_statement: WHILEEXP . $@5 loopstatement
+
+    $default  reduce using rule 49 ($@5)
+
+    $@5  go to state 93
+
+
+State 55
+
+   40 conditional_statement: if_exp . statement
+   41                      | if_exp . statement else_mark statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 94
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 56
+
+   31 statement: labeled_statement .
+
+    $default  reduce using rule 31 (statement)
+
+
+State 57
+
+   27 statement: compound_statement .
+
+    $default  reduce using rule 27 (statement)
+
+
+State 58
+
+    5 function_declaration: function_head '{' function_result_assignment statement_list . '}'
+   67 statement_list: statement_list . statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '}'         shift, and go to state 95
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 96
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 59
+
+   28 statement: expression_statement .
+
+    $default  reduce using rule 28 (statement)
+
+
+State 60
+
+   82 logical_expression: expression_cover . logical_operation expression_cover
+   85 relational_expression: expression_cover . REL_OP expression_cover
+
+    OR      shift, and go to state 97
+    AND     shift, and go to state 98
+    REL_OP  shift, and go to state 99
+
+    logical_operation  go to state 100
+
+
+State 61
+
+   74 expression_statement: expression . ';'
+   75 expression_cover: expression .
+
+    ';'  shift, and go to state 101
+
+    $default  reduce using rule 75 (expression_cover)
+
+
+State 62
+
+   77 expression: assignment_expression .
+
+    $default  reduce using rule 77 (expression)
+
+
+State 63
+
+   78 expression: logical_expression .
+
+    $default  reduce using rule 78 (expression)
+
+
+State 64
+
+   79 expression: relational_expression .
+
+    $default  reduce using rule 79 (expression)
+
+
+State 65
+
+   80 expression: arithmetic_expression .
+
+    $default  reduce using rule 80 (expression)
+
+
+State 66
+
+   29 statement: variable_declaration_statement .
+
+    $default  reduce using rule 29 (statement)
+
+
+State 67
+
+   16 param_declaration: TYPE . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 102
+
+
+State 68
+
+    9 function_head: TYPE IDENTIFIER '(' $@1 param_list_declaration . ')'
+   14 param_list_declaration: param_list_declaration . ',' param_declaration
+
+    ')'  shift, and go to state 103
+    ','  shift, and go to state 104
+
+
+State 69
+
+   15 param_list_declaration: param_declaration .
+
+    $default  reduce using rule 15 (param_list_declaration)
+
+
+State 70
+
+   21 function_call: IDENTIFIER '(' . ')'
+   22              | IDENTIFIER '(' . arg_list ')'
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+    ')'         shift, and go to state 105
+
+    function_call      go to state 29
+    arg_list           go to state 106
+    arithmetic_factor  go to state 107
+
+
+State 71
+
+   92 arithmetic_factor: '(' arithmetic_expression . ')'
+
+    ')'  shift, and go to state 108
+
+
+State 72
+
+   86 arithmetic_expression: arithmetic_term '+' . arithmetic_expression
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+
+    function_call          go to state 29
+    arithmetic_expression  go to state 109
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 73
+
+   87 arithmetic_expression: arithmetic_term '-' . arithmetic_expression
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+
+    function_call          go to state 29
+    arithmetic_expression  go to state 110
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 74
+
+   89 arithmetic_term: arithmetic_factor '*' . arithmetic_term
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+
+    function_call      go to state 29
+    arithmetic_term    go to state 111
+    arithmetic_factor  go to state 32
+
+
+State 75
+
+   90 arithmetic_term: arithmetic_factor '/' . arithmetic_term
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+
+    function_call      go to state 29
+    arithmetic_term    go to state 112
+    arithmetic_factor  go to state 32
+
+
+State 76
+
+  102 bracket_dimlist: '[' NUM ']' .
+  103                | '[' NUM ']' . bracket_dimlist
+
+    '['  shift, and go to state 17
+
+    $default  reduce using rule 102 (bracket_dimlist)
+
+    bracket_dimlist  go to state 113
+
+
+State 77
+
+   11 function_head: VOID IDENTIFIER '(' $@2 param_list_declaration . ')'
+   14 param_list_declaration: param_list_declaration . ',' param_declaration
+
+    ')'  shift, and go to state 114
+    ','  shift, and go to state 104
+
+
+State 78
+
+   81 assignment_expression: IDENTIFIER '=' . arithmetic_expression
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+
+    function_call          go to state 29
+    arithmetic_expression  go to state 115
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 79
+
+   59 if_exp: IF '(' . expression_cover ')'
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+
+    function_call          go to state 29
+    expression_cover       go to state 116
+    expression             go to state 89
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 80
+
+   53 FOREXP: FOR '(' . expression_statement expression_statement
+   54       | FOR '(' . expression_statement expression_statement expression
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call          go to state 29
+    expression_statement   go to state 117
+    expression_cover       go to state 60
+    expression             go to state 61
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 81
+
+   55 WHILEEXP: WHILE '(' . expression_cover ')'
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+
+    function_call          go to state 29
+    expression_cover       go to state 118
+    expression             go to state 89
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 82
+
+   43 conditional_statement: SWITCH '(' . expression ')' $@3 statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+
+    function_call          go to state 29
+    expression_cover       go to state 60
+    expression             go to state 119
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 83
+
+   61 labeled_statement: CASE NUM . ':' $@7 statement
+
+    ':'  shift, and go to state 120
+
+
+State 84
+
+   62 labeled_statement: DEFAULT ':' . statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 121
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 85
+
+   30 statement: RETURN expression_statement .
+
+    $default  reduce using rule 30 (statement)
+
+
+State 86
+
+   63 compound_statement: '{' '}' .
+
+    $default  reduce using rule 63 (compound_statement)
+
+
+State 87
+
+   65 compound_statement: '{' $@8 . statement_list '}'
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 50
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    statement_list                  go to state 122
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 88
+
+   76 expression_cover: '(' expression_cover . ')'
+   82 logical_expression: expression_cover . logical_operation expression_cover
+   85 relational_expression: expression_cover . REL_OP expression_cover
+
+    OR      shift, and go to state 97
+    AND     shift, and go to state 98
+    REL_OP  shift, and go to state 99
+    ')'     shift, and go to state 123
+
+    logical_operation  go to state 100
+
+
+State 89
+
+   75 expression_cover: expression .
+
+    $default  reduce using rule 75 (expression_cover)
+
+
+State 90
+
+   80 expression: arithmetic_expression .
+   92 arithmetic_factor: '(' arithmetic_expression . ')'
+
+    ')'  shift, and go to state 108
+
+    ')'       [reduce using rule 80 (expression)]
+    $default  reduce using rule 80 (expression)
+
+
+State 91
+
+   51 loop_statement: FOREXP ')' . loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 133
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 92
+
+   52 loop_statement: FOREXP expression . ')' loopstatement
+   75 expression_cover: expression .
+
+    ')'  shift, and go to state 140
+
+    $default  reduce using rule 75 (expression_cover)
+
+
+State 93
+
+   50 loop_statement: WHILEEXP $@5 . loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 141
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 94
+
+   40 conditional_statement: if_exp statement .
+   41                      | if_exp statement . else_mark statement
+
+    ELSE  shift, and go to state 142
+
+    ELSE      [reduce using rule 40 (conditional_statement)]
+    $default  reduce using rule 40 (conditional_statement)
+
+    else_mark  go to state 143
+
+
+State 95
+
+    5 function_declaration: function_head '{' function_result_assignment statement_list '}' .
+
+    $default  reduce using rule 5 (function_declaration)
+
+
+State 96
+
+   67 statement_list: statement_list statement .
+
+    $default  reduce using rule 67 (statement_list)
+
+
+State 97
+
+   83 logical_operation: OR .
+
+    $default  reduce using rule 83 (logical_operation)
+
+
+State 98
+
+   84 logical_operation: AND .
+
+    $default  reduce using rule 84 (logical_operation)
+
+
+State 99
+
+   85 relational_expression: expression_cover REL_OP . expression_cover
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+
+    function_call          go to state 29
+    expression_cover       go to state 144
+    expression             go to state 89
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 100
+
+   82 logical_expression: expression_cover logical_operation . expression_cover
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+
+    function_call          go to state 29
+    expression_cover       go to state 145
+    expression             go to state 89
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 101
+
+   74 expression_statement: expression ';' .
+
+    $default  reduce using rule 74 (expression_statement)
+
+
+State 102
+
+   16 param_declaration: TYPE IDENTIFIER .
+
+    $default  reduce using rule 16 (param_declaration)
+
+
+State 103
+
+    9 function_head: TYPE IDENTIFIER '(' $@1 param_list_declaration ')' .
+
+    $default  reduce using rule 9 (function_head)
+
+
+State 104
+
+   14 param_list_declaration: param_list_declaration ',' . param_declaration
+
+    TYPE  shift, and go to state 67
+
+    param_declaration  go to state 146
+
+
+State 105
+
+   21 function_call: IDENTIFIER '(' ')' .
+
+    $default  reduce using rule 21 (function_call)
+
+
+State 106
+
+   22 function_call: IDENTIFIER '(' arg_list . ')'
+   24 arg_list: arg_list . ',' arithmetic_factor
+
+    ')'  shift, and go to state 147
+    ','  shift, and go to state 148
+
+
+State 107
+
+   23 arg_list: arithmetic_factor .
+
+    $default  reduce using rule 23 (arg_list)
+
+
+State 108
+
+   92 arithmetic_factor: '(' arithmetic_expression ')' .
+
+    $default  reduce using rule 92 (arithmetic_factor)
+
+
+State 109
+
+   86 arithmetic_expression: arithmetic_term '+' arithmetic_expression .
+
+    $default  reduce using rule 86 (arithmetic_expression)
+
+
+State 110
+
+   87 arithmetic_expression: arithmetic_term '-' arithmetic_expression .
+
+    $default  reduce using rule 87 (arithmetic_expression)
+
+
+State 111
+
+   89 arithmetic_term: arithmetic_factor '*' arithmetic_term .
+
+    $default  reduce using rule 89 (arithmetic_term)
+
+
+State 112
+
+   90 arithmetic_term: arithmetic_factor '/' arithmetic_term .
+
+    $default  reduce using rule 90 (arithmetic_term)
+
+
+State 113
+
+  103 bracket_dimlist: '[' NUM ']' bracket_dimlist .
+
+    $default  reduce using rule 103 (bracket_dimlist)
+
+
+State 114
+
+   11 function_head: VOID IDENTIFIER '(' $@2 param_list_declaration ')' .
+
+    $default  reduce using rule 11 (function_head)
+
+
+State 115
+
+   81 assignment_expression: IDENTIFIER '=' arithmetic_expression .
+
+    $default  reduce using rule 81 (assignment_expression)
+
+
+State 116
+
+   59 if_exp: IF '(' expression_cover . ')'
+   82 logical_expression: expression_cover . logical_operation expression_cover
+   85 relational_expression: expression_cover . REL_OP expression_cover
+
+    OR      shift, and go to state 97
+    AND     shift, and go to state 98
+    REL_OP  shift, and go to state 99
+    ')'     shift, and go to state 149
+
+    logical_operation  go to state 100
+
+
+State 117
+
+   53 FOREXP: FOR '(' expression_statement . expression_statement
+   54       | FOR '(' expression_statement . expression_statement expression
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call          go to state 29
+    expression_statement   go to state 150
+    expression_cover       go to state 60
+    expression             go to state 61
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 118
+
+   55 WHILEEXP: WHILE '(' expression_cover . ')'
+   82 logical_expression: expression_cover . logical_operation expression_cover
+   85 relational_expression: expression_cover . REL_OP expression_cover
+
+    OR      shift, and go to state 97
+    AND     shift, and go to state 98
+    REL_OP  shift, and go to state 99
+    ')'     shift, and go to state 151
+
+    logical_operation  go to state 100
+
+
+State 119
+
+   43 conditional_statement: SWITCH '(' expression . ')' $@3 statement
+   75 expression_cover: expression .
+
+    ')'  shift, and go to state 152
+
+    $default  reduce using rule 75 (expression_cover)
+
+
+State 120
+
+   61 labeled_statement: CASE NUM ':' . $@7 statement
+
+    $default  reduce using rule 60 ($@7)
+
+    $@7  go to state 153
+
+
+State 121
+
+   62 labeled_statement: DEFAULT ':' statement .
+
+    $default  reduce using rule 62 (labeled_statement)
+
+
+State 122
+
+   65 compound_statement: '{' $@8 statement_list . '}'
+   67 statement_list: statement_list . statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '}'         shift, and go to state 154
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 96
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 123
+
+   76 expression_cover: '(' expression_cover ')' .
+
+    $default  reduce using rule 76 (expression_cover)
+
+
+State 124
+
+   19 datatype: INT .
+
+    $default  reduce using rule 19 (datatype)
+
+
+State 125
+
+   20 datatype: FLOAT .
+
+    $default  reduce using rule 20 (datatype)
+
+
+State 126
+
+   47 loopconditional_statement: SWITCH . '(' expression ')' $@4 looplabeled_statement
+
+    '('  shift, and go to state 155
+
+
+State 127
+
+   38 loopstatement: BREAK . ';'
+
+    ';'  shift, and go to state 156
+
+
+State 128
+
+   39 loopstatement: CONTINUE . ';'
+
+    ';'  shift, and go to state 157
+
+
+State 129
+
+   68 loopcompound_statement: '{' . '}'
+   70                       | '{' . $@9 loopstatement_list '}'
+
+    '}'  shift, and go to state 158
+
+    $default  reduce using rule 69 ($@9)
+
+    $@9  go to state 159
+
+
+State 130
+
+   36 loopstatement: variable_declaration_list .
+
+    $default  reduce using rule 36 (loopstatement)
+
+
+State 131
+
+   17 variable_declaration_list: variable_declaration .
+
+    $default  reduce using rule 17 (variable_declaration_list)
+
+
+State 132
+
+   18 variable_declaration: datatype . IDENTIFIER ';'
+
+    IDENTIFIER  shift, and go to state 160
+
+
+State 133
+
+   51 loop_statement: FOREXP ')' loopstatement .
+
+    $default  reduce using rule 51 (loop_statement)
+
+
+State 134
+
+   32 loopstatement: loopconditional_statement .
+
+    $default  reduce using rule 32 (loopstatement)
+
+
+State 135
+
+   33 loopstatement: loop_statement .
+
+    $default  reduce using rule 33 (loopstatement)
+
+
+State 136
+
+   44 loopconditional_statement: if_exp . loopstatement
+   45                          | if_exp . loopstatement else_mark loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 161
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 137
+
+   37 loopstatement: labeled_statement .
+
+    $default  reduce using rule 37 (loopstatement)
+
+
+State 138
+
+   34 loopstatement: loopcompound_statement .
+
+    $default  reduce using rule 34 (loopstatement)
+
+
+State 139
+
+   35 loopstatement: expression_statement .
+
+    $default  reduce using rule 35 (loopstatement)
+
+
+State 140
+
+   52 loop_statement: FOREXP expression ')' . loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 162
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 141
+
+   50 loop_statement: WHILEEXP $@5 loopstatement .
+
+    $default  reduce using rule 50 (loop_statement)
+
+
+State 142
+
+   48 else_mark: ELSE .
+
+    $default  reduce using rule 48 (else_mark)
+
+
+State 143
+
+   41 conditional_statement: if_exp statement else_mark . statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 163
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 144
+
+   82 logical_expression: expression_cover . logical_operation expression_cover
+   85 relational_expression: expression_cover . REL_OP expression_cover
+   85                      | expression_cover REL_OP expression_cover .
+
+    OR      shift, and go to state 97
+    AND     shift, and go to state 98
+    REL_OP  shift, and go to state 99
+
+    OR        [reduce using rule 85 (relational_expression)]
+    AND       [reduce using rule 85 (relational_expression)]
+    REL_OP    [reduce using rule 85 (relational_expression)]
+    $default  reduce using rule 85 (relational_expression)
+
+    logical_operation  go to state 100
+
+
+State 145
+
+   82 logical_expression: expression_cover . logical_operation expression_cover
+   82                   | expression_cover logical_operation expression_cover .
+   85 relational_expression: expression_cover . REL_OP expression_cover
+
+    OR      shift, and go to state 97
+    AND     shift, and go to state 98
+    REL_OP  shift, and go to state 99
+
+    OR        [reduce using rule 82 (logical_expression)]
+    AND       [reduce using rule 82 (logical_expression)]
+    REL_OP    [reduce using rule 82 (logical_expression)]
+    $default  reduce using rule 82 (logical_expression)
+
+    logical_operation  go to state 100
+
+
+State 146
+
+   14 param_list_declaration: param_list_declaration ',' param_declaration .
+
+    $default  reduce using rule 14 (param_list_declaration)
+
+
+State 147
+
+   22 function_call: IDENTIFIER '(' arg_list ')' .
+
+    $default  reduce using rule 22 (function_call)
+
+
+State 148
+
+   24 arg_list: arg_list ',' . arithmetic_factor
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 27
+    '('         shift, and go to state 28
+
+    function_call      go to state 29
+    arithmetic_factor  go to state 164
+
+
+State 149
+
+   59 if_exp: IF '(' expression_cover ')' .
+
+    $default  reduce using rule 59 (if_exp)
+
+
+State 150
+
+   53 FOREXP: FOR '(' expression_statement expression_statement .
+   54       | FOR '(' expression_statement expression_statement . expression
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+
+    NUM         [reduce using rule 53 (FOREXP)]
+    IDENTIFIER  [reduce using rule 53 (FOREXP)]
+    '('         [reduce using rule 53 (FOREXP)]
+    $default    reduce using rule 53 (FOREXP)
+
+    function_call          go to state 29
+    expression_cover       go to state 60
+    expression             go to state 165
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 151
+
+   55 WHILEEXP: WHILE '(' expression_cover ')' .
+
+    $default  reduce using rule 55 (WHILEEXP)
+
+
+State 152
+
+   43 conditional_statement: SWITCH '(' expression ')' . $@3 statement
+
+    $default  reduce using rule 42 ($@3)
+
+    $@3  go to state 166
+
+
+State 153
+
+   61 labeled_statement: CASE NUM ':' $@7 . statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 167
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 154
+
+   65 compound_statement: '{' $@8 statement_list '}' .
+
+    $default  reduce using rule 65 (compound_statement)
+
+
+State 155
+
+   47 loopconditional_statement: SWITCH '(' . expression ')' $@4 looplabeled_statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    '('         shift, and go to state 48
+
+    function_call          go to state 29
+    expression_cover       go to state 60
+    expression             go to state 168
+    assignment_expression  go to state 62
+    logical_expression     go to state 63
+    relational_expression  go to state 64
+    arithmetic_expression  go to state 65
+    arithmetic_term        go to state 31
+    arithmetic_factor      go to state 32
+
+
+State 156
+
+   38 loopstatement: BREAK ';' .
+
+    $default  reduce using rule 38 (loopstatement)
+
+
+State 157
+
+   39 loopstatement: CONTINUE ';' .
+
+    $default  reduce using rule 39 (loopstatement)
+
+
+State 158
+
+   68 loopcompound_statement: '{' '}' .
+
+    $default  reduce using rule 68 (loopcompound_statement)
+
+
+State 159
+
+   70 loopcompound_statement: '{' $@9 . loopstatement_list '}'
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 169
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    loopstatement_list         go to state 170
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 160
+
+   18 variable_declaration: datatype IDENTIFIER . ';'
+
+    ';'  shift, and go to state 171
+
+
+State 161
+
+   44 loopconditional_statement: if_exp loopstatement .
+   45                          | if_exp loopstatement . else_mark loopstatement
+
+    ELSE  shift, and go to state 142
+
+    ELSE      [reduce using rule 44 (loopconditional_statement)]
+    $default  reduce using rule 44 (loopconditional_statement)
+
+    else_mark  go to state 172
+
+
+State 162
+
+   52 loop_statement: FOREXP expression ')' loopstatement .
+
+    $default  reduce using rule 52 (loop_statement)
+
+
+State 163
+
+   41 conditional_statement: if_exp statement else_mark statement .
+
+    $default  reduce using rule 41 (conditional_statement)
+
+
+State 164
+
+   24 arg_list: arg_list ',' arithmetic_factor .
+
+    $default  reduce using rule 24 (arg_list)
+
+
+State 165
+
+   54 FOREXP: FOR '(' expression_statement expression_statement expression .
+   75 expression_cover: expression .
+
+    OR        reduce using rule 75 (expression_cover)
+    AND       reduce using rule 75 (expression_cover)
+    REL_OP    reduce using rule 75 (expression_cover)
+    $default  reduce using rule 54 (FOREXP)
+
+
+State 166
+
+   43 conditional_statement: SWITCH '(' expression ')' $@3 . statement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 42
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    RETURN      shift, and go to state 45
+    TYPE        shift, and go to state 46
+    '{'         shift, and go to state 47
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    function_call                   go to state 29
+    statement                       go to state 173
+    conditional_statement           go to state 51
+    loop_statement                  go to state 52
+    FOREXP                          go to state 53
+    WHILEEXP                        go to state 54
+    if_exp                          go to state 55
+    labeled_statement               go to state 56
+    compound_statement              go to state 57
+    expression_statement            go to state 59
+    expression_cover                go to state 60
+    expression                      go to state 61
+    assignment_expression           go to state 62
+    logical_expression              go to state 63
+    relational_expression           go to state 64
+    arithmetic_expression           go to state 65
+    arithmetic_term                 go to state 31
+    arithmetic_factor               go to state 32
+    variable_declaration_statement  go to state 66
+
+
+State 167
+
+   61 labeled_statement: CASE NUM ':' $@7 statement .
+
+    $default  reduce using rule 61 (labeled_statement)
+
+
+State 168
+
+   47 loopconditional_statement: SWITCH '(' expression . ')' $@4 looplabeled_statement
+   75 expression_cover: expression .
+
+    ')'  shift, and go to state 174
+
+    $default  reduce using rule 75 (expression_cover)
+
+
+State 169
+
+   71 loopstatement_list: loopstatement .
+
+    $default  reduce using rule 71 (loopstatement_list)
+
+
+State 170
+
+   70 loopcompound_statement: '{' $@9 loopstatement_list . '}'
+   72 loopstatement_list: loopstatement_list . loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '}'         shift, and go to state 175
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 176
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 171
+
+   18 variable_declaration: datatype IDENTIFIER ';' .
+
+    $default  reduce using rule 18 (variable_declaration)
+
+
+State 172
+
+   45 loopconditional_statement: if_exp loopstatement else_mark . loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 177
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 173
+
+   43 conditional_statement: SWITCH '(' expression ')' $@3 statement .
+
+    $default  reduce using rule 43 (conditional_statement)
+
+
+State 174
+
+   47 loopconditional_statement: SWITCH '(' expression ')' . $@4 looplabeled_statement
+
+    $default  reduce using rule 46 ($@4)
+
+    $@4  go to state 178
+
+
+State 175
+
+   70 loopcompound_statement: '{' $@9 loopstatement_list '}' .
+
+    $default  reduce using rule 70 (loopcompound_statement)
+
+
+State 176
+
+   72 loopstatement_list: loopstatement_list loopstatement .
+
+    $default  reduce using rule 72 (loopstatement_list)
+
+
+State 177
+
+   45 loopconditional_statement: if_exp loopstatement else_mark loopstatement .
+
+    $default  reduce using rule 45 (loopconditional_statement)
+
+
+State 178
+
+   47 loopconditional_statement: SWITCH '(' expression ')' $@4 . looplabeled_statement
+
+    CASE     shift, and go to state 179
+    DEFAULT  shift, and go to state 180
+
+    looplabeled_statement  go to state 181
+
+
+State 179
+
+   57 looplabeled_statement: CASE . NUM ':' $@6 loopstatement
+
+    NUM  shift, and go to state 182
+
+
+State 180
+
+   58 looplabeled_statement: DEFAULT . ':' loopstatement
+
+    ':'  shift, and go to state 183
+
+
+State 181
+
+   47 loopconditional_statement: SWITCH '(' expression ')' $@4 looplabeled_statement .
+
+    $default  reduce using rule 47 (loopconditional_statement)
+
+
+State 182
+
+   57 looplabeled_statement: CASE NUM . ':' $@6 loopstatement
+
+    ':'  shift, and go to state 184
+
+
+State 183
+
+   58 looplabeled_statement: DEFAULT ':' . loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 185
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 184
+
+   57 looplabeled_statement: CASE NUM ':' . $@6 loopstatement
+
+    $default  reduce using rule 56 ($@6)
+
+    $@6  go to state 186
+
+
+State 185
+
+   58 looplabeled_statement: DEFAULT ':' loopstatement .
+
+    $default  reduce using rule 58 (looplabeled_statement)
+
+
+State 186
+
+   57 looplabeled_statement: CASE NUM ':' $@6 . loopstatement
+
+    NUM         shift, and go to state 26
+    IDENTIFIER  shift, and go to state 38
+    INT         shift, and go to state 124
+    FLOAT       shift, and go to state 125
+    IF          shift, and go to state 39
+    FOR         shift, and go to state 40
+    WHILE       shift, and go to state 41
+    SWITCH      shift, and go to state 126
+    CASE        shift, and go to state 43
+    DEFAULT     shift, and go to state 44
+    BREAK       shift, and go to state 127
+    CONTINUE    shift, and go to state 128
+    '{'         shift, and go to state 129
+    '('         shift, and go to state 48
+    ';'         shift, and go to state 49
+
+    variable_declaration_list  go to state 130
+    variable_declaration       go to state 131
+    datatype                   go to state 132
+    function_call              go to state 29
+    loopstatement              go to state 187
+    loopconditional_statement  go to state 134
+    loop_statement             go to state 135
+    FOREXP                     go to state 53
+    WHILEEXP                   go to state 54
+    if_exp                     go to state 136
+    labeled_statement          go to state 137
+    loopcompound_statement     go to state 138
+    expression_statement       go to state 139
+    expression_cover           go to state 60
+    expression                 go to state 61
+    assignment_expression      go to state 62
+    logical_expression         go to state 63
+    relational_expression      go to state 64
+    arithmetic_expression      go to state 65
+    arithmetic_term            go to state 31
+    arithmetic_factor          go to state 32
+
+
+State 187
+
+   57 looplabeled_statement: CASE NUM ':' $@6 loopstatement .
+
+    $default  reduce using rule 57 (looplabeled_statement)

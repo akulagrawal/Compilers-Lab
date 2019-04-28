@@ -21,7 +21,14 @@ FLEX:
 	flex c_lang.l
 
 BISON:	FLEX
+<<<<<<< HEAD
 	bison -d c_lang.y
 
 clean:
 	rm -rf lex.yy.c a.out *.tab*
+=======
+	bison -d -v c_lang.y
+
+clean:
+	rm -rf lex.yy.c a.out *.tab*
+>>>>>>> ameya

@@ -1,8 +1,11 @@
 %{
     #include <bits/stdc++.h>
     #include <string>
+<<<<<<< HEAD
+=======
     #define SIZE_INT 4
     #define SIZE_FLOAT 4
+>>>>>>> ameya
     #define print(str, val) \
         std::cout << str << " " <<  val << std::endl;
 
@@ -13,9 +16,12 @@
     void yyerror(const char *s);
     using namespace std;
 
+<<<<<<< HEAD
     // Stores active function name
     string active_func_name;
 
+=======
+>>>>>>> ameya
     struct var_record {
         string name;
         string type;
@@ -35,6 +41,22 @@
         list<var_record> parameters;
         list<var_record> local_variables;
 
+<<<<<<< HEAD
+        void insert_parameter(string parameter_name, string type){
+            parameters.push_back(var_record(parameter_name, type));
+        }
+
+        void insert_variable(string var_name, string type, int level){
+            local_variables.push_back(var_record(var_name, type, false, level));
+        }
+
+        var_record& search_param(string parameter_name) {
+            for(auto it = parameters.begin(); it != parameters.end(); ++it){
+                if(it -> name == parameter_name){
+                    return *it;
+                }
+            }
+=======
         void insert_parameter(string parameter_name, string type, int level = 1){
             parameters.push_back(var_record(parameter_name, type, true, level));
         }
@@ -51,6 +73,7 @@
                 }
             }
             return false;
+>>>>>>> ameya
         }
 
         var_record& search_variable(string var_name) {
@@ -65,6 +88,14 @@
     struct symbol_table {
         unordered_map<string, function_record> entries;
 
+<<<<<<< HEAD
+        function_record& insert_function(string function_name) {
+            assert(!entries.count(function_name));
+            return entries[function_name];
+        }
+
+        bool search_function(string function_name, function_record& function) {
+=======
         void insert_function(string function_name, string datatype, list<var_record> active_func_param_list) {
             function_record * r = new function_record;
             r -> function_return_type = datatype;
@@ -79,11 +110,16 @@
         }
 
         bool search_function(string function_name, function_record *&function) {
+>>>>>>> ameya
             // If function exists in symbol table
             if (entries.count(function_name)) {
                 // Set function = pointer to function in symbol table
                 // Returns true
+<<<<<<< HEAD
+                function = entries[function_name];
+=======
                 function = &entries[function_name];
+>>>>>>> ameya
                 return true;
             }
             else {
@@ -94,6 +130,7 @@
 
     } symtab;
 
+<<<<<<< HEAD
     extern bool isInt(char *type);
     extern bool isFloat(char *type);
     extern bool isBoolean(char *type);
@@ -102,6 +139,8 @@
     extern char* setErrorType();
     extern char* setNoErrorType();
 
+=======
+>>>>>>> ameya
     /* Intermediate Code Generation. */
     /* Quadruples. */
     struct quadruple {
@@ -110,8 +149,11 @@
         string _arg2;
         string _result;
 
+<<<<<<< HEAD
         quadruple(){}
 
+=======
+>>>>>>> ameya
         quadruple(string op, string arg1, string arg2, string result){
             this -> _operator = op;
             this -> _arg1 = arg1;
@@ -128,6 +170,13 @@
     };
 
     /* Temporary variables for intermediate code. */
+<<<<<<< HEAD
+    int curr_temp = 0;
+    string get_next_temp(){
+        curr_temp += 1;
+        return "t" + std::to_string(curr_temp);
+    }
+=======
     int glob_temp = 0;
     map<string, int> func_temps;
     string get_next_temp(string func_name = ""){
@@ -376,6 +425,7 @@
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
     extern string Variable(string str);
+>>>>>>> ameya
 %}
 
 %union {
@@ -384,27 +434,31 @@
         char* type;
         int val;
         int index;
+<<<<<<< HEAD
+=======
         int len;
+>>>>>>> ameya
         char* sval;
     } type_id;
 }
+
+<<<<<<< HEAD
+%expect 2
 
 // Non Terminals
 %type <type_id> statement statement_list
 %type <type_id> labeled_statement compound_statement expression_statement conditional_statement
 %type <type_id>  loop_statement loopstatement looplabeled_statement loopcompound_statement loopstatement_list loopconditional_statement
-%type <type_id> expression expression_cover
+%type <type_id> expression
 %type <type_id> constant_expression logical_expression relational_expression assignment_expression
 %type <type_id> START
 %type <type_id> logical_operation
-%type <type_id> function_declaration function_head return_type func_name function_result_assignment
+%type <type_id> function_declaration function_head return_type func_name
 %type <type_id> param_list_declaration param_declaration
 %type <type_id> function_call arg_list
-%type <type_id> variable_declaration_list variable_declaration variable_declaration_statement
+%type <type_id> variable_declaration_list variable_declaration
 %type <type_id> datatype
 %type <type_id> FOREXP WHILEEXP if_exp else_mark
-%type <type_id> bracket_dimlist name_list id_arr
-%type <type_id> arithmetic_term arithmetic_factor arithmetic_expression
 
 // Terminals
 %token <type_id> NUM IDENTIFIER
@@ -416,7 +470,37 @@
 %token <type_id> BREAK CONTINUE
 %token <type_id> AND
 %token <type_id> REL_OP
-%token <type_id> RETURN TYPE VOID
+=======
+%expect 8       // 1. if-else
+
+// Non Terminals
+%type <type_id> statement statement_list
+%type <type_id> labeled_statement compound_statement expression_statement conditional_statement loop_statement
+%type <type_id> expression expression_cover
+%type <type_id> logical_expression relational_expression assignment_expression arithmetic_expression
+%type <type_id> START
+
+%type <type_id> function_declaration function_head function_result_assignment
+%type <type_id> param_list_declaration param_declaration
+%type <type_id> function_call arg_list
+%type <type_id> variable_declaration_statement
+
+%type <type_id> logical_operation
+%type <type_id> if_exp else_mark
+%type <type_id> bracket_dimlist name_list id_arr
+%type <type_id> arithmetic_term arithmetic_factor
+
+// Terminals
+%token <type_id> NUM IDENTIFIER
+%token <type_id> TYPE VOID
+%token <type_id> OR
+%token <type_id> AND
+%token <type_id> REL_OP
+%token <type_id> IF ELSE
+%token <type_id> FOR WHILE
+%token <type_id> SWITCH CASE DEFAULT
+%token <type_id> RETURN
+>>>>>>> ameya
 
 // Starting Non Terminal
 %start START
@@ -424,6 +508,25 @@
 %%
 START
 	: function_declaration
+<<<<<<< HEAD
+    | variable_declaration_list
+	| START function_declaration
+    | START variable_declaration_list
+	;
+
+function_declaration
+	: function_head '{' statement_list '}'
+	| function_head '{' '}'
+	;
+
+function_head
+    : datatype func_name '(' param_list_declaration ')'
+    | datatype func_name '(' ')'
+    ;
+
+func_name
+    : IDENTIFIER
+=======
     | variable_declaration_statement
 	| START function_declaration
     | START variable_declaration_statement
@@ -555,44 +658,18 @@ function_head
         $$.sval = $2.sval;
         set_active_function($2.sval);
     }
+>>>>>>> ameya
     ;
 
 param_list_declaration
     : param_list_declaration ',' param_declaration
-{
-    bool found = false;
-    // Check if variable is repeated in parameter list
-    for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
-        if (it -> name == $3.sval) {
-            errorLine("Redeclaration of parameter '" + Variable(string($3.sval)) + "'");
-            $$.type = setErrorType();
-            found = true;
-            break;
-        }
-    }
-
-    var_record param($3.sval, $3.type, /* is_parameter = */ true, level) ;
-    active_func_param_list.push_back(param);
-    $$.type = setNoErrorType();
-    $$.len = $1.len + 1;
-
-    if (isErrorType($1.type) || found) {
-        $$.type = setErrorType();
-    }
-}
-| param_declaration
-{
-    active_func_param_list.clear();
-    $$.len = 1;
-    var_record param($1.sval, $1.type, /* is_parameter = */ true, level) ;
-    active_func_param_list.push_back(param);
-    $$.type = setNoErrorType();
-}
-;
+<<<<<<< HEAD
+    | param_declaration
+    ;
 
 param_declaration
-: TYPE IDENTIFIER           { $$.type = $1.sval; $$.sval = $2.sval; }
-;
+    : datatype IDENTIFIER
+    ;
 
 variable_declaration_list
     : variable_declaration
@@ -608,214 +685,45 @@ datatype
     ;
 
 function_call
-        : IDENTIFIER '(' ')'
-        {
-            function_record *r;
-            string functionName = $1.sval;
-            $$.val = 0;
-
-            // search for function declaration
-            if (symtab.search_function(functionName, r)) {
-
-                // If function's return type is ErrorType
-                if (!isErrorType(r->function_return_type)) {
-
-                    // Check if param_list_declaration is empty
-                    if (r->parameters.empty())  {
-                        $$.type = strdup(r->function_return_type.c_str());
-                    }
-                    else {
-                        // Error
-                        errorLine("Too few arguments to function '" + Variable(string(functionName)) + "'");
-                        $$.type = strdup(r->function_return_type.c_str());
-                    }
-
-                    quadruples.push_back(quadruple("call", $1.sval, "", ""));
-                    $$.val += 1;
-                }
-                else
-                    $$.type = setErrorType();
-            }
-            else {
-                // Function not found
-                errorLine("Function '" + Variable(string(functionName)) + "' is not declared");
-                $$.type = setErrorType();
-            }
-        }
-        | IDENTIFIER '(' arg_list ')'
-        {
-            function_record *r;
-            string functionName = $1.sval;
-            $$.val = $3.val;
-
-            // search for function declaration
-            if (symtab.search_function(functionName, r)) {
-
-                // If function's return type is ErrorType
-                if (!isErrorType(r->function_return_type)) {
-
-                    $$.type = strdup(r->function_return_type.c_str());
-                    // Check if param_list_declaration matches with arg_list
-                    if (r->parameters.size() > $3.len) {
-                        errorLine("Too few arguments to function '" + Variable(functionName) + "'");
-                    }
-                    else if (r->parameters.size() < $3.len) {
-                        errorLine("Too many arguments to function '" + Variable(functionName) + "'");
-                    }
-                    else {
-                        // Match the datatypes of param_list_declaration and arg_list
-                        auto param_it = r->parameters.rbegin();
-                        auto arg_it = called_arg_list.rbegin();
-                        while (param_it != r->parameters.rend()) {
-
-                            if (!isMatch(param_it->type, arg_it->type)) {
-                                errorLine("datatype mismatch for calling function '" + Variable(functionName) + "'");
-                                break;
-                            }
-
-                            quadruples.push_back(quadruple("push", arg_it -> name, $1.sval, param_it -> name));
-                            $$.val += 1;
-
-                            param_it ++;
-                            arg_it ++;
-                        }
-
-                        auto delete_it = called_arg_list.begin();
-                        advance(delete_it, called_arg_list.size() - $3.len);
-
-                        called_arg_list.erase(delete_it, called_arg_list.end());
-
-                        quadruples.push_back(quadruple("call", $1.sval, "", ""));
-                        $$.val += 1;
-                    }
-                }
-                else
-                    $$.type = setErrorType();
-            }
-            else {
-                // Function not found
-                errorLine("Function '" + Variable(functionName) + "' is not declared");
-                $$.type = setErrorType();
-            }
-        }
-
+    : IDENTIFIER '(' ')' ';'
+    | IDENTIFIER '(' arg_list ')' ';'
+    | datatype IDENTIFIER '=' IDENTIFIER '(' ')' ';'
+    | datatype IDENTIFIER '=' IDENTIFIER '(' arg_list ')' ';'
     ;
 
 arg_list
-    : arithmetic_factor
-    {
-        $$.len = 1;
-        $$.val = $1.val;
-        $$.type = setNoErrorType();
-        string datatype = $1.type;
-
-        var_record arg($1.sval, datatype, false, level) ;
-        called_arg_list.push_back(arg);
-    }
-    |  arg_list ',' arithmetic_factor
-    {
-        $$.val = $1.val + $3.val;
-        string datatype = $1.type;
-        $$.type = setNoErrorType();
-
-        var_record arg($3.sval, datatype, /* is_parameter = */ false, level) ;
-
-        called_arg_list.push_back(arg);
-        $$.len = $3.len + 1;
-
-        // cout << "Called args are: ";
-        // for(auto it = called_arg_list.begin(); it != called_arg_list.end(); ++it){
-        //     cout << it -> name << " ";
-        // }
-        // cout << "\n";
-
-        if (isErrorType($1.type)) {
-            $$.type = setErrorType();
-        }
-    }
+    : IDENTIFIER
+    | arg_list ',' IDENTIFIER
     ;
 
 statement
       : conditional_statement
-      {
-          $$.type = strdup($1.type);
-      }
       | loop_statement
-      {
-          $$.type = strdup($1.type);
-      }
       | compound_statement        // Nested statement_list
       {
-          $$.type = strdup($1.type);
           $$.val = $1.val;
       }
   	| expression_statement      // Expression followed by semicolon
       {
-          $$.type = setVoidType();
           $$.val = $1.val;
       }
-      | variable_declaration_statement
-      {
-          $$.type = setVoidType();
-      }
-      | RETURN expression_statement
-      {
-          if (isInsideFunc()){
-              $$.type = strdup($2.type);
-              $$.index = quadruples.size();
-              $$.val = 1;
-
-              function_record *func;
-              symtab.search_function(active_func_name, func);
-
-              if (!isMatch(func->function_return_type, $2.type))
-                  warning("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
-
-              quadruples.push_back(quadruple("=", string($2.sval), "", "(funcvar)"));
-          }
-          else {
-              errorLine("Return out of function scope");
-          }
-      }
-      | labeled_statement
-      {
-          if (!insideSwitchCase)
-              errorLine("Label conditions not inside switch statement");
-
-          $$.type = strdup($1.type);
-      }
+      | variable_declaration_list
+      | function_call
   	;
 
     loopstatement
         : loopconditional_statement
-        {
-            $$.type = strdup($1.type);
-        }
         | loop_statement
-        {
-            $$.type = strdup($1.type);
-        }
         | loopcompound_statement        // Nested statement_list
         {
-            $$.type = strdup($1.type);
             $$.val = $1.val;
         }
         | expression_statement      // Expression followed by semicolon
         {
-            $$.type = setVoidType();
             $$.val = $1.val;
         }
         | variable_declaration_list
-        {
-            $$.type = setVoidType();
-        }
-        | labeled_statement
-        {
-            if (!insideSwitchCase)
-                errorLine("Label conditions not inside switch statement");
-
-            $$.type = strdup($1.type);
-        }
+        | function_call
         | BREAK ';' {
             $$.index= quadruples.size();
             $$.val=1;
@@ -845,7 +753,7 @@ statement
           $$.val = $1.val + $2.val;
           int gotoindex = $1.index;
           quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
-          $$.type = strdup($2.type);
+
       }
       | if_exp statement else_mark statement
       {
@@ -854,23 +762,15 @@ statement
           quadruples[gotoindex1]._result = to_string(gotoindex1 + $2.val + $3.val + 1);
           int gotoindex2 = $3.index;
           quadruples[gotoindex2]._result = to_string(gotoindex2 + $4.val + 1);
-          if ( !isVoidType($2.type) )
-              $$.type = strdup($2.type);
-          else
-              $$.type = strdup($4.type);
       }
-      | SWITCH '(' expression ')' { level ++; insideSwitchCase ++; } statement
-        {
-            delete_var_list(active_func_name, level);
-            level --;
+  	| SWITCH '(' expression ')' labeled_statement
+      {
+          if (strcmp($3.type, "num")) {
+              yyerror("int or boolean expected in expression of switch case");
+          }
 
-            if ( !isInt($3.type) && !isFloat($3.type) )
-                errorLine("int expected in expression of if-else");
-
-            $$.type = strdup($6.type);
-            insideSwitchCase --;
-        }
-    	;
+      }
+  	;
 
   loopconditional_statement
     	: if_exp  loopstatement
@@ -878,57 +778,36 @@ statement
             $$.val = $1.val + $2.val;
             int gotoindex = $1.index;
             quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
-            $$.type = strdup($2.type);
 
         }
         | if_exp loopstatement else_mark loopstatement
         {
-        $$.val = $1.val + $2.val + $3.val + $4.val;
-        int gotoindex1 = $1.index;
-        quadruples[gotoindex1]._result = to_string(gotoindex1 + $2.val + $3.val + 1);
-        int gotoindex2 = $3.index;
-        quadruples[gotoindex2]._result = to_string(gotoindex2 + $4.val + 1);
-
-        if ( !isVoidType($2.type) )
-            $$.type = strdup($2.type);
-        else
-            $$.type = strdup($4.type);
+            $$.val = $1.val + $2.val + $3.val + $4.val;
+            int gotoindex1 = $1.index;
+            quadruples[gotoindex1]._result = to_string(gotoindex1 + $2.val + $3.val + 1);
+            int gotoindex2 = $3.index;
+            quadruples[gotoindex2]._result = to_string(gotoindex2 + $4.val + 1);
         }
-    	| SWITCH '(' expression ')' { level ++; insideSwitchCase ++; } looplabeled_statement
+    	| SWITCH '(' expression ')' looplabeled_statement
         {
-        delete_var_list(active_func_name, level);
-        level --;
+            if (strcmp($3.type, "num")) {
+                yyerror("int or boolean expected in expression of switch case");
+            }
 
-        if ( !isInt($3.type) && !isFloat($3.type) )
-            errorLine("int expected in expression of if-else");
-
-        $$.type = strdup($6.type);
-        insideSwitchCase --;
         }
     	;
 
-  // if_exp
-  //     :   IF '(' expression ')'
-  //     {
-  //     if (!isErrorType($3.type)) {
-  //         if ( isInt($3.type) || isFloat($3.type) ) {
-  //             $$.type = setNoErrorType();
-  //         }
-  //         else {
-  //             errorLine("int expected in expression of if-else");
-  //             $$.type = setErrorType();
-  //         }
-  //     }
-  //
-  //     $$.index = quadruples.size() + 1;
-  //     $$.val = $3.val + 2;
-  //
-  //     quadruples.push_back(quadruple("=", string($3.sval), "", "expres"));
-  //     quadruples.push_back(quadruple("ifF", "expres", "", ""));
-  //         // $$.index = quadruples.size();
-  //         // $$.val = $3.val + 1;
-  //         // quadruples.push_back(quadruple("if0", "expres", "", ""));
-  //     }
+  if_exp
+      :   IF '(' expression ')'
+      {
+          if (strcmp($3.type, "num")) {
+              yyerror("int or boolean expected in expression of if-else");
+          }
+
+          $$.index = quadruples.size();
+          $$.val = $3.val + 1;
+          quadruples.push_back(quadruple("if0", "expres", "", ""));
+      }
 
   else_mark
       : ELSE
@@ -937,27 +816,19 @@ statement
           $$.index = quadruples.size();
           quadruples.push_back(quadruple("go", "", "", ""));
       }
-      ;
 
 
 
   loop_statement
-      	: WHILEEXP {level++} loopstatement
+      	: WHILEEXP loopstatement
         {
-          delete_var_list(active_func_name, level);
-          level --;
 
-          if (!isInt($3.type) && !isFloat($3.type))
-              errorLine("int expected in expression of while statement");
-
-          $$.type = strdup($3.type);
-
-        $$.val = $1.val + $3.val;
+        $$.val = $1.val + $2.val;
           int gotoindex = $1.index;
         //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
-          quadruples[gotoindex]._result = to_string(gotoindex + $3.val + 2);
+          quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
 
-          for(int i =gotoindex+1;i<gotoindex + $3.val + 2 && i< quadruples.size();i++ )
+          for(int i =gotoindex+1;i<gotoindex + $2.val + 2 && i< quadruples.size();i++ )
           {
             //string s=jmp;
             if(quadruples[i]._operator=="jmp")
@@ -1047,10 +918,6 @@ statement
 
   FOREXP
           : FOR '(' expression_statement expression_statement {
-            delete_var_list(active_func_name, level);
-          //  level --;
-
-
               if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
                   yyerror("Type error in condition of for loop");
               }
@@ -1063,27 +930,10 @@ statement
               temp._result = "";
               quadruples.push_back(temp);
           }
-          |
-          FOR '('  expression_statement expression_statement expression {
-           delete_var_list(active_func_name, level);
-          // level --;
-
-             if (strcmp($4.type, "num") && strcmp($4.type, "None")) {
-                 yyerror("Type error in condition of for loop");
-             }
-             $$.index = quadruples.size();
-             $$.val = $3.val+ $4.val+1+ $5.val ;
-             quadruple temp;
-             temp._operator = "ifz";
-             temp._arg1 = "expres";
-             temp._arg2 = "";
-             temp._result = "";
-             quadruples.push_back(temp);
-         }
           ;
 
   WHILEEXP
-          : WHILE '(' expression_cover ')' {
+          : WHILE '(' expression ')' {
               if (strcmp($3.type, "num")) {
                   yyerror("int or boolean expected in expression of while statement");
               }
@@ -1097,43 +947,271 @@ statement
               quadruples.push_back(temp);
           }
 
-// labeled_statement
-// 	: CASE NUM ':' { level ++; } statement
-//     {
-//         delete_var_list(active_func_name, level);
-//         level --;
-//
-//         if (!isMatch($2.type, "int")) {
-//             errorLine("int expected in switch case");
-//         }
-//
-//         $$.type = strdup($5.type);
-//     }
-// 	| DEFAULT ':' statement
-//     {
-//         $$.type = strdup($3.type);
-//     }
-// 	;
+labeled_statement
+	: CASE constant_expression ':' statement {
+        if (strcmp($2.type, "int")) {
+            yyerror("int expected in switch case");
+        }
+    }
+	| DEFAULT ':' statement
+	;
 
 looplabeled_statement
-  	:  CASE NUM ':' { level ++; } loopstatement
-      {
-          delete_var_list(active_func_name, level);
-          level --;
-
-          if (!isMatch($2.type, "int")) {
-              errorLine("int expected in switch case");
+  	: CASE constant_expression ':' loopstatement {
+          if (strcmp($2.type, "int")) {
+              yyerror("int expected in switch case");
           }
-
-          $$.type = strdup($5.type);
       }
   	| DEFAULT ':' loopstatement
-      {
-          $$.type = strdup($3.type);
-      }
   	;
 
+=======
+    {
+        bool found = false;
+        // Check if variable is repeated in parameter list
+        for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
+            if (it -> name == $3.sval) {
+                errorLine("Redeclaration of parameter '" + Variable(string($3.sval)) + "'");
+                $$.type = setErrorType();
+                found = true;
+                break;
+            }
+        }
 
+        var_record param($3.sval, $3.type, /* is_parameter = */ true, level) ;
+        active_func_param_list.push_back(param);
+        $$.type = setNoErrorType();
+        $$.len = $1.len + 1;
+
+        if (isErrorType($1.type) || found) {
+            $$.type = setErrorType();
+        }
+    }
+    | param_declaration
+    {
+        active_func_param_list.clear();
+        $$.len = 1;
+        var_record param($1.sval, $1.type, /* is_parameter = */ true, level) ;
+        active_func_param_list.push_back(param);
+        $$.type = setNoErrorType();
+    }
+    ;
+
+param_declaration
+    : TYPE IDENTIFIER           { $$.type = $1.sval; $$.sval = $2.sval; }
+    ;
+
+function_call
+    : IDENTIFIER '(' ')'
+    {
+        function_record *r;
+        string functionName = $1.sval;
+        $$.val = 0;
+
+        // search for function declaration
+        if (symtab.search_function(functionName, r)) {
+
+            // If function's return type is ErrorType
+            if (!isErrorType(r->function_return_type)) {
+
+                // Check if param_list_declaration is empty
+                if (r->parameters.empty())  {
+                    $$.type = strdup(r->function_return_type.c_str());
+                }
+                else {
+                    // Error
+                    errorLine("Too few arguments to function '" + Variable(string(functionName)) + "'");
+                    $$.type = strdup(r->function_return_type.c_str());
+                }
+
+                quadruples.push_back(quadruple("call", $1.sval, "", ""));
+                $$.val += 1;
+            }
+            else
+                $$.type = setErrorType();
+        }
+        else {
+            // Function not found
+            errorLine("Function '" + Variable(string(functionName)) + "' is not declared");
+            $$.type = setErrorType();
+        }
+    }
+    | IDENTIFIER '(' arg_list ')'
+    {
+        function_record *r;
+        string functionName = $1.sval;
+        $$.val = $3.val;
+
+        // search for function declaration
+        if (symtab.search_function(functionName, r)) {
+
+            // If function's return type is ErrorType
+            if (!isErrorType(r->function_return_type)) {
+
+                $$.type = strdup(r->function_return_type.c_str());
+                // Check if param_list_declaration matches with arg_list
+                if (r->parameters.size() > $3.len) {
+                    errorLine("Too few arguments to function '" + Variable(functionName) + "'");
+                }
+                else if (r->parameters.size() < $3.len) {
+                    errorLine("Too many arguments to function '" + Variable(functionName) + "'");
+                }
+                else {
+                    // Match the datatypes of param_list_declaration and arg_list
+                    auto param_it = r->parameters.rbegin();
+                    auto arg_it = called_arg_list.rbegin();
+                    while (param_it != r->parameters.rend()) {
+
+                        if (!isMatch(param_it->type, arg_it->type)) {
+                            errorLine("datatype mismatch for calling function '" + Variable(functionName) + "'");
+                            break;
+                        }
+
+                        quadruples.push_back(quadruple("push", arg_it -> name, $1.sval, param_it -> name));
+                        $$.val += 1;
+
+                        param_it ++;
+                        arg_it ++;
+                    }
+
+                    auto delete_it = called_arg_list.begin();
+                    advance(delete_it, called_arg_list.size() - $3.len);
+
+                    called_arg_list.erase(delete_it, called_arg_list.end());
+
+                    quadruples.push_back(quadruple("call", $1.sval, "", ""));
+                    $$.val += 1;
+                }
+            }
+            else
+                $$.type = setErrorType();
+        }
+        else {
+            // Function not found
+            errorLine("Function '" + Variable(functionName) + "' is not declared");
+            $$.type = setErrorType();
+        }
+    }
+    ;
+
+arg_list
+    : arithmetic_expression
+    {
+        $$.len = 1;
+        $$.val = $1.val;
+        $$.type = setNoErrorType();
+        string datatype = $1.type;
+
+        var_record arg($1.sval, datatype, false, level) ;
+        called_arg_list.push_back(arg);
+    }
+    | arg_list ',' arithmetic_expression
+    {
+        $$.val = $1.val + $3.val;
+        string datatype = $3.type;
+        $$.type = setNoErrorType();
+
+        var_record arg($3.sval, datatype, /* is_parameter = */ false, level) ;
+
+        called_arg_list.push_back(arg);
+        $$.len = $1.len + 1;
+
+        // cout << "Called args are: ";
+        // for(auto it = called_arg_list.begin(); it != called_arg_list.end(); ++it){
+        //     cout << it -> name << " ";
+        // }
+        // cout << "\n";
+
+        if (isErrorType($1.type)) {
+            $$.type = setErrorType();
+        }
+    }
+    ;
+
+statement
+    : conditional_statement
+    {
+        $$.type = strdup($1.type);
+    }
+    | loop_statement
+    {
+        $$.type = strdup($1.type);
+    }
+    | compound_statement        // Nested statement_list
+    {
+        $$.type = strdup($1.type);
+        $$.val = $1.val;
+    }
+	| expression_statement      // Expression followed by semicolon
+    {
+        $$.type = setVoidType();
+        $$.val = $1.val;
+    }
+    | variable_declaration_statement
+    {
+        $$.type = setVoidType();
+    }
+    | RETURN expression_statement
+    {
+        if (isInsideFunc()){
+            $$.type = strdup($2.type);
+            $$.index = quadruples.size();
+            $$.val = 1;
+
+            function_record *func;
+            symtab.search_function(active_func_name, func);
+
+            if (!isMatch(func->function_return_type, $2.type))
+                warning("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
+
+            quadruples.push_back(quadruple("=", string($2.sval), "", "(funcvar)"));
+        }
+        else {
+            errorLine("Return out of function scope");
+        }
+    }
+    | labeled_statement
+    {
+        if (!insideSwitchCase)
+            errorLine("Label conditions not inside switch statement");
+
+        $$.type = strdup($1.type);
+    }
+	;
+
+conditional_statement
+	: if_exp statement
+    {
+        $$.val = $1.val + $2.val;
+        int gotoindex = $1.index;
+        quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 1);
+        $$.type = strdup($2.type);
+    }
+    | if_exp statement else_mark statement
+    {
+        $$.val = $1.val + $2.val + $3.val + $4.val;
+        int gotoindex1 = $1.index;
+        quadruples[gotoindex1]._result = to_string(gotoindex1 + $2.val + $3.val + 1);
+        int gotoindex2 = $3.index;
+        quadruples[gotoindex2]._result = to_string(gotoindex2 + $4.val + 1);
+
+        if ( !isVoidType($2.type) )
+            $$.type = strdup($2.type);
+        else
+            $$.type = strdup($4.type);
+    }
+	| SWITCH '(' expression ')' { level ++; insideSwitchCase ++; } statement
+    {
+        delete_var_list(active_func_name, level);
+        level --;
+
+        if ( !isInt($3.type) && !isFloat($3.type) )
+            errorLine("int expected in expression of if-else");
+
+        $$.type = strdup($6.type);
+        insideSwitchCase --;
+    }
+	;
 
 if_exp
     :   IF '(' expression_cover ')'
@@ -1157,6 +1235,50 @@ if_exp
 
     }
 
+else_mark
+    : ELSE
+    {
+        $$.val = 1;
+        $$.index = quadruples.size();
+        quadruples.push_back(quadruple("go", "", "", ""));
+    }
+
+loop_statement
+	: WHILE '(' expression_cover ')' { level ++; } statement
+    {
+
+        delete_var_list(active_func_name, level);
+        level --;
+
+        if (!isInt($3.type) && !isFloat($3.type))
+            errorLine("int expected in expression of while statement");
+
+        $$.type = strdup($6.type);
+    }
+	| FOR_WITH_BR expression_statement expression_statement ')' statement
+    {
+        delete_var_list(active_func_name, level);
+        level --;
+
+        $$.type = strdup($5.type);
+    }
+	| FOR_WITH_BR expression_statement expression_statement expression ')' statement
+    {
+
+        delete_var_list(active_func_name, level);
+        level --;
+
+        $$.type = strdup($6.type);
+    }
+	;
+
+FOR_WITH_BR
+    : FOR '('
+    {
+        level ++;
+    }
+    ;
+
 labeled_statement
 	: CASE NUM ':' { level ++; } statement
     {
@@ -1175,10 +1297,17 @@ labeled_statement
     }
 	;
 
+>>>>>>> ameya
 compound_statement
 	: '{' '}'
     {
         $$.val = 0;
+<<<<<<< HEAD
+    }
+	| '{' statement_list '}'
+    {
+        $$.val = $2.val;
+=======
         $$.type = setVoidType();
     }
 	| '{' { level ++; } statement_list '}'
@@ -1187,6 +1316,7 @@ compound_statement
         delete_var_list(active_func_name, level);
         level --;
         $$.type = strdup($3.type);
+>>>>>>> ameya
     }
 	;
 
@@ -1194,16 +1324,15 @@ statement_list
 	: statement
     {
         $$.val = $1.val;
+<<<<<<< HEAD
+=======
         $$.type = strdup($1.type);
+>>>>>>> ameya
     }
 	| statement_list statement
     {
         $$.val = $1.val + $2.val;
-        if (!isVoidType($1.type))
-            $$.type = strdup($1.type);
-        else
-            $$.type = strdup($2.type);
-
+<<<<<<< HEAD
     }
 	;
 
@@ -1211,14 +1340,10 @@ statement_list
       : '{' '}'
       {
           $$.val = 0;
-          $$.type = setVoidType();
       }
-      | '{' { level ++; } loopstatement_list '}'
+      | '{' loopstatement_list '}'
       {
-        $$.val = $3.val;
-        delete_var_list(active_func_name, level);
-        level --;
-        $$.type = strdup($3.type);
+          $$.val = $2.val;
       }
       ;
 
@@ -1226,25 +1351,33 @@ statement_list
       :   loopstatement
       {
           $$.val = $1.val;
-            $$.type = strdup($1.type);
       }
       |   loopstatement_list loopstatement
       {
           $$.val = $1.val + $2.val;
-          if (!isVoidType($1.type))
-              $$.type = strdup($1.type);
-          else
-              $$.type = strdup($2.type);
       }
       ;
 
 
 
+=======
+        if (!isVoidType($1.type))
+            $$.type = strdup($1.type);
+        else
+            $$.type = strdup($2.type);
+    }
+	;
+
+>>>>>>> ameya
 expression_statement
 	: ';'
     {
         $$.val = 0;
+<<<<<<< HEAD
+        $$.type = strdup("None");
+=======
         $$.type = setVoidType();
+>>>>>>> ameya
     }
 	| expression ';'
     {
@@ -1254,6 +1387,10 @@ expression_statement
 	;
 
 /*
+<<<<<<< HEAD
+ Expecting: Logical & Relational and Arithmetic expression
+*/
+=======
     Assignment, Logical, Relational and Arithmetic Expressions
 */
 expression_cover
@@ -1270,22 +1407,33 @@ expression_cover
         $$.type = $2.type;
     }
 
+>>>>>>> ameya
 expression
     : assignment_expression
     {
         $$.val = $1.val;
+<<<<<<< HEAD
+=======
         $$.sval = $1.sval;
+>>>>>>> ameya
         $$.type = strdup($1.type);
     }
     | logical_expression
     {
         $$.val = $1.val;
+<<<<<<< HEAD
+        $$.type = strdup("num");
+=======
         $$.sval = $1.sval;
         $$.type = setIntType();
+>>>>>>> ameya
     }
     | relational_expression
     {
         $$.val = $1.val;
+<<<<<<< HEAD
+        $$.type = strdup("num");
+=======
         $$.sval = $1.sval;
         $$.type = setIntType();
     }
@@ -1294,10 +1442,90 @@ expression
         $$.val = $1.val;
         $$.sval = $1.sval;
         $$.type = $1.type;
+>>>>>>> ameya
     }
     ;
 
 assignment_expression
+<<<<<<< HEAD
+    : IDENTIFIER '=' NUM
+    {
+        $$.val = 2;
+        $$.type = strdup($3.type);
+        quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+        quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+    }
+    | IDENTIFIER '=' IDENTIFIER
+    {
+        $$.val = 2;
+        $$.type = strdup($1.type);
+        quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+        quadruples.push_back(quadruple("=", string($1.sval), "", "expres"));
+    }
+    ;
+
+
+logical_expression
+    : IDENTIFIER logical_operation IDENTIFIER
+    {
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+    }
+    | NUM logical_operation IDENTIFIER
+    {
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+    }
+    | IDENTIFIER logical_operation NUM
+    {
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+    }
+    | NUM logical_operation NUM
+    {
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+    }
+    ;
+
+logical_operation
+    : OR
+    {
+        $$.sval = strdup($1.sval);
+    }
+    | AND
+    {
+        $$.sval = strdup($1.sval);
+    }
+    ;
+
+relational_expression
+    : IDENTIFIER REL_OP IDENTIFIER
+    {
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+    }
+    | NUM REL_OP IDENTIFIER
+    {
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+    }
+    | IDENTIFIER REL_OP NUM
+    {
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+    }
+    | NUM REL_OP NUM
+    {
+        $$.val = 1;
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), "expres"));
+    }
+    ;
+
+constant_expression
+    : NUM                           { $$.type = strdup("num"); }
+    ;
+=======
     : IDENTIFIER '=' arithmetic_expression
     {
         string datatype;
@@ -1561,6 +1789,7 @@ bracket_dimlist
 		strcat($$.sval,$4.sval);
 	}
 
+>>>>>>> ameya
 %%
 
 int main(int argc, char **argv) {
@@ -1572,7 +1801,11 @@ int main(int argc, char **argv) {
     FILE *myfile = fopen(filename, "r");
     // Make sure it is valid:
     if (!myfile) {
+<<<<<<< HEAD
+        print("I can't open ", filename);
+=======
         print(filename, "does not exists.");
+>>>>>>> ameya
         return -1;
     }
     // Set Flex to read from it instead of defaulting to STDIN:
@@ -1583,6 +1816,12 @@ int main(int argc, char **argv) {
         yyparse();
     }
 
+<<<<<<< HEAD
+    cout << "Intermediate Code in Quadruple Format:" << "\n";
+    for(int i = 0; i < quadruples.size(); ++i){
+        quadruple quad = quadruples[i];
+        cout << setw(3) << i << "      " << setw(3) << quad._operator << " | " << setw(6) << quad._arg1 << " | " << setw(6) << quad._arg2 << " | " << setw(6) << quad._result << "\n";
+=======
     if(!errorFound){
         cout << "Intermediate Code in Quadruple Format:" << "\n";
         cout << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(7) << "ARG1" << " | " << setw(7) << "ARG2" << " | " << setw(7) << "RESULT" << "\n";
@@ -1590,11 +1829,39 @@ int main(int argc, char **argv) {
             quadruple quad = quadruples[i];
             cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(7) << quad._arg1 << " | " << setw(7) << quad._arg2 << " | " << setw(7) << quad._result << "\n";
         }
+>>>>>>> ameya
     }
 
 }
 
 void yyerror(const char *s) {
+<<<<<<< HEAD
+  print("", s);
+//   exit(-1);
+}
+
+bool isInt(char *type) {
+    if (strcmp(type, "int"))    return false;
+    else                        return true;
+}
+bool isFloat(char *type) {
+    if (strcmp(type, "float"))    return false;
+    else                        return true;
+}
+bool isBoolean(char *type) {
+    if (strcmp(type, "bool"))    return false;
+    else                        return true;
+}
+bool isErrorType(char *type) {
+    if (strcmp(type, "ErrorType"))    return false;
+    else                        return true;
+}
+bool isNoneType(char *type) {
+    if (strcmp(type, "None"))    return false;
+    else                        return true;
+}
+char* setErrorType() {
+=======
     errorLine(string(s));
 }
 
@@ -1654,11 +1921,17 @@ void set_active_function(string str) {
 
 char* setErrorType() {
     errorFound = true;
+>>>>>>> ameya
     return strdup("ErrorType");
 }
 char* setNoErrorType() {
     return strdup("NoErrorType");
 }
+<<<<<<< HEAD
+  // might as well halt now:
+//   printf("Invalid Syntax\n");
+//   exit(-1);
+=======
 char* setVoidType() {
     return strdup("void");
 }
@@ -1783,3 +2056,4 @@ string Variable(string str) {
         return "";
     return str.substr(1);
 }
+>>>>>>> ameya
