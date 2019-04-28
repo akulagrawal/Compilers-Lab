@@ -1,12 +1,22 @@
 int main(){
 	while(q<1)
 	{
-	a=1;
+		if(d=8)
+		{
+			continue;
+		}
+		while(a<2)
+		{
+			if(b=5)
+			{
+				continue;
+			}
+		}
+		if(c=7)
+		{
+			break;
+		}
 	}
 
-		for(i=1;i<5;i<5)
-		{
 
-		a=1;
-		}
 }
