@@ -1124,7 +1124,7 @@ arithmetic_factor
 
         // cout << $$.val << "\n";
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
-        quadruples.push_back(quadruple("=", "t" + string($1.val), "",  temp));
+        quadruples.push_back(quadruple("=", "t" + to_string($1.val), "",  temp));
     }
 	;
 
