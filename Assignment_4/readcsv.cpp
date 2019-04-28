@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+#include <bits/stdc++.h>
+using namespace std;
+
+>>>>>>> shimona
 #define MAX_FILES 5
 vector<string> cols[MAX_FILES];
 vector<string> data_type[MAX_FILES];
@@ -9,11 +15,14 @@ int getcol(string name, int index)
 {
 	for (int i = 0; i < cols[index].size(); ++i)
 	{
+<<<<<<< HEAD
 		if(i == cols[index].size()-1)
 		{
 			name += "\n";
 		}
 
+=======
+>>>>>>> shimona
 		if(name.compare(cols[index][i])==0)
 		{
 			return i;
@@ -32,14 +41,23 @@ int getindexfortable(string name)
 			{
 				return j;
 			}
+<<<<<<< HEAD
 		}
+=======
+		}	
+>>>>>>> shimona
 	}
 	return -1;
 }
 
+<<<<<<< HEAD
 int getNumRows(int index)
 {
 	//int index = getindexfortable(name);
+=======
+int getNumRows(string name)
+{
+	int index = getindexfortable(name);
 	if(index == -1)
 	{
 		cout<<"No such table exists"<<endl;
@@ -48,9 +66,36 @@ int getNumRows(int index)
 	return vals[index].size();
 }
 
+int getNumCols(string name)
+{
+	int index = getindexfortable(name);
+	if(index == -1)
+	{
+		cout<<"No such table exists"<<endl;
+		return -1;
+	}
+	return cols[index].size();
+}
+
+int getNumRowsCartesian(int index)
+{
+>>>>>>> shimona
+	if(index == -1)
+	{
+		cout<<"No such table exists"<<endl;
+		return -1;
+	}
+	return vals[index].size();
+}
+
+<<<<<<< HEAD
 int getNumCols(int index)
 {
 	//int index = getindexfortable(name);
+=======
+int getNumColsCartesian(int index)
+{
+>>>>>>> shimona
 	if(index == -1)
 	{
 		cout<<"No such table exists"<<endl;
@@ -67,15 +112,54 @@ void printRow(int index, int row_number)
 		return;
 	}
 	for (int i = 0; i < vals[index][row_number].size(); ++i)
+<<<<<<< HEAD
 		cout<<setw(20)<<vals[index][row_number][i]+" ";
 	return;
 	//cout<<endl;
+=======
+	{
+		cout<<setw(14)<<vals[index][row_number][i]+" ";
+	}
+}
+
+string getRow(int index, int row_number) {
+	
+	if(row_number >= vals[index].size())
+	{
+		cout<<"Row index out of bound"<<endl;
+		return "";
+	}
+
+	string concat = "";
+	string spacing = "";
+	int spacinglen = 0;
+	for (int i = 0; i < vals[index][row_number].size(); ++i)
+	{
+		spacinglen = max((14 - (int)vals[index][row_number][i].length()), 0);
+		spacing = string(spacinglen, ' ');
+		concat += spacing + vals[index][row_number][i];
+	}
+	return concat;
+}
+
+void printColumnName(string table) {
+	int index = getindexfortable(table);
+	string spacing = "";
+	int spacinglen = 0;
+	for (int i = 0; i < cols[index].size(); i++) {
+		cout<<setw(14)<<cols[index][i]+" ";
+	}
+>>>>>>> shimona
 }
 
 void readcsv(string name, int index)
 {
 	string edited_name="";
 
+<<<<<<< HEAD
+=======
+	// Removing .csv
+>>>>>>> shimona
 	for (int i = 0; i < name.length()-4; ++i)
 	{
 		edited_name += name[i];
@@ -86,6 +170,13 @@ void readcsv(string name, int index)
 	strcpy(cstr, name.c_str());
 
 	FILE* stream = fopen(cstr, "r");
+<<<<<<< HEAD
+=======
+	if (stream == NULL) {
+		cout << "Table: " << edited_name << " does not exists\n";
+		exit(0);
+	}
+>>>>>>> shimona
 	char line[1024];
 	int itr;
 	string temp = "";
@@ -97,7 +188,11 @@ void readcsv(string name, int index)
         int len = strlen(tmp);
 
         string result = "";
+<<<<<<< HEAD
        	for (int i = 0; i < len; ++i)
+=======
+       	for (int i = 0; i < len-1; ++i)
+>>>>>>> shimona
        	{
 			if(line[i] == ',')
 			{
@@ -136,7 +231,11 @@ void readcsv(string name, int index)
         int len = strlen(tmp);
 
 
+<<<<<<< HEAD
        	for (int i = 0; i < len; ++i)
+=======
+       	for (int i = 0; i < len - 1; ++i)
+>>>>>>> shimona
        	{
 			if(line[i] == ',')
 			{
@@ -150,7 +249,11 @@ void readcsv(string name, int index)
        	}
        	cols[index].push_back(temp);
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> shimona
 	temp = "";
 	while (fgets(line, 1024, stream))
 	{
@@ -158,7 +261,11 @@ void readcsv(string name, int index)
         int len = strlen(tmp);
         vector<string> storage;
 
+<<<<<<< HEAD
        	for (int i = 0; i < len; ++i)
+=======
+       	for (int i = 0; i < len - 1; ++i)
+>>>>>>> shimona
        	{
 			if(line[i] == ',')
 			{

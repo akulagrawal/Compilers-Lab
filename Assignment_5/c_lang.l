@@ -5,18 +5,18 @@ c_lang.l
 
   #define print(str, val) \
     std::cout << str << " " <<  val << std::endl;
-    
+
   extern int yylex();
 %}
 %%
-(if)                      { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return IF; } 
-(else)                    { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return ELSE; } 
-(while)                   { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return WHILE; } 
-(for)                     { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return FOR; } 
-(switch)                  { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return SWITCH; } 
-(case)                    { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return CASE; } 
+(if)                      { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return IF; }
+(else)                    { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return ELSE; }
+(while)                   { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return WHILE; }
+(for)                     { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return FOR; }
+(switch)                  { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return SWITCH; }
+(case)                    { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return CASE; }
 (default)                 { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return DEFAULT; }
-(int)                     { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return INT; } 
+(int)                     { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return INT; }
 (float)                   { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return FLOAT; }
 (break)					  { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return BREAK; }
 (continue)				  { yylval.type_id.sval = strdup(yytext); /*std::cout << yytext << std::endl;*/ return CONTINUE; }

@@ -70,6 +70,14 @@
     #include <string.h>
     #define print(str, val) \
     printf("%s %s\n", str, val);
+<<<<<<< HEAD
+=======
+    #define TRUE 1
+    #define FALSE 0
+
+    #define NUMBER 1
+    #define STRING 0
+>>>>>>> shimona
 
     // Declare stuff from Flex that Bison needs to know about:
     extern int yylex();
@@ -88,8 +96,32 @@
     char column[30][30];
     int num_column = 0;
     int position = 0;
+<<<<<<< HEAD
 
 #line 93 "bison_dbms.tab.c" /* yacc.c:339  */
+=======
+    char condition[100][50];
+    int condition_ptr = 0;
+    // --------------------------------------------------------------------
+
+    #define MAX_COLS 10
+    #define MAX_COL_LEN 10
+    #define MAX_FILES 10
+    #define MAX_FILES_LEN 10
+
+    char data_type[MAX_FILES][MAX_COLS];
+    char col_name[MAX_FILES][MAX_COLS][MAX_COL_LEN];
+    char file_name[MAX_FILES][MAX_FILES_LEN];
+    int num_files = 0;
+    extern int gettype(char* table_name, char* col);
+    extern int getcolindex(int index, char* col);
+    extern int getfileindex(char* name);
+    extern void readcsv(char* name);
+    extern int isnum(char *);
+    
+
+#line 117 "bison_dbms.tab.c" /* yacc.c:339  */
+>>>>>>> shimona
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -153,13 +185,21 @@ extern int yydebug;
 
 union YYSTYPE
 {
+<<<<<<< HEAD
 #line 36 "bison_dbms.y" /* yacc.c:355  */
+=======
+#line 60 "bison_dbms.y" /* yacc.c:355  */
+>>>>>>> shimona
 
     int ival;
     float fval;
     char *sval;
 
+<<<<<<< HEAD
 #line 163 "bison_dbms.tab.c" /* yacc.c:355  */
+=======
+#line 187 "bison_dbms.tab.c" /* yacc.c:355  */
+>>>>>>> shimona
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -176,7 +216,11 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
+<<<<<<< HEAD
 #line 180 "bison_dbms.tab.c" /* yacc.c:358  */
+=======
+#line 204 "bison_dbms.tab.c" /* yacc.c:358  */
+>>>>>>> shimona
 
 #ifdef short
 # undef short
@@ -418,16 +462,28 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  12
 /* YYLAST -- Last index in YYTABLE.  */
+<<<<<<< HEAD
 #define YYLAST   99
+=======
+#define YYLAST   89
+>>>>>>> shimona
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  24
 /* YYNNTS -- Number of nonterminals.  */
+<<<<<<< HEAD
 #define YYNNTS  15
 /* YYNRULES -- Number of rules.  */
 #define YYNRULES  38
 /* YYNSTATES -- Number of states.  */
 #define YYNSTATES  92
+=======
+#define YYNNTS  16
+/* YYNRULES -- Number of rules.  */
+#define YYNRULES  37
+/* YYNSTATES -- Number of states.  */
+#define YYNSTATES  91
+>>>>>>> shimona
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
@@ -473,12 +529,21 @@ static const yytype_uint8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
+<<<<<<< HEAD
 static const yytype_uint8 yyrline[] =
 {
        0,    80,    80,    81,    83,   115,   140,   143,   148,   162,
      164,   166,   168,   169,   171,   172,   174,   175,   177,   178,
      180,   181,   182,   184,   185,   186,   187,   194,   195,   196,
      197,   199,   200,   201,   202,   203,   205,   206,   208
+=======
+static const yytype_uint16 yyrline[] =
+{
+       0,   106,   106,   107,   109,   197,   233,   266,   416,   421,
+     423,   429,   431,   436,   437,   443,   444,   446,   447,   454,
+     458,   462,   463,   464,   466,   467,   468,   469,   470,   471,
+     473,   474,   475,   476,   477,   479,   480,   482
+>>>>>>> shimona
 };
 #endif
 
@@ -490,9 +555,15 @@ static const char *const yytname[] =
   "$end", "error", "$undefined", "SELECT", "PROJECT", "CARTESIAN_PRODUCT",
   "EQUI_JOIN", "AND", "LT_EQ", "EQ", "NEQ", "LP", "RP", "LAB", "RAB",
   "SIC", "DIC", "COMMA", "SEMI", "NUM", "ID", "DOT", "MINUS", "ARITH_OP",
+<<<<<<< HEAD
   "$accept", "STMT_LIST", "STMT", "JOIN", "TABLE", "CONDITION_LIST_FINAL",
   "CONDITION_LIST", "CONDITION", "CONDITION_LIST_EQ", "CONDITION_EQ",
   "EXPR", "TERM", "OP", "ATTR_LIST", "ATTR", YY_NULLPTR
+=======
+  "$accept", "STMT_LIST", "STMT", "TABLE", "CONDITION_LIST", "LOGICAL_OP",
+  "CONDITION", "CONDITION_LIST_EQ", "CONDITION_EQ", "LP_NT", "RP_NT",
+  "EXPR", "ARITHMETIC", "OP", "ATTR_LIST", "ATTR", YY_NULLPTR
+>>>>>>> shimona
 };
 #endif
 
@@ -507,10 +578,17 @@ static const yytype_uint16 yytoknum[] =
 };
 # endif
 
+<<<<<<< HEAD
 #define YYPACT_NINF -58
 
 #define yypact_value_is_default(Yystate) \
   (!!((Yystate) == (-58)))
+=======
+#define YYPACT_NINF -55
+
+#define yypact_value_is_default(Yystate) \
+  (!!((Yystate) == (-55)))
+>>>>>>> shimona
 
 #define YYTABLE_NINF -3
 
@@ -521,6 +599,7 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
+<<<<<<< HEAD
       38,    -9,    19,    23,   -15,    40,    34,   -58,    -1,    28,
      -58,    51,   -58,   -58,    -1,    27,    42,   -58,   -58,    31,
       50,   -58,    58,    46,   -58,    52,    53,     6,    55,    56,
@@ -531,6 +610,18 @@ static const yytype_int8 yypact[] =
       33,    61,    65,    76,    72,    70,    71,    73,    66,   -58,
       33,    74,   -58,   -58,   -58,    78,   -58,   -58,    75,    77,
       79,   -58
+=======
+      20,    -8,    27,    32,    16,    46,    11,   -55,     9,    33,
+     -55,    40,   -55,   -55,   -55,    24,    14,    47,     9,   -55,
+      41,    39,     3,   -55,   -55,   -55,   -55,   -55,    25,    48,
+     -55,     9,    45,    49,    33,    50,    51,    23,    26,    43,
+     -55,   -55,    16,   -55,   -55,   -55,    16,   -55,    16,    15,
+      42,    52,     8,     8,    28,    53,    54,    55,    56,    57,
+      47,    15,   -55,   -55,   -55,   -55,     8,     8,    58,    60,
+      61,    62,    59,    15,    45,   -55,   -55,   -55,   -55,   -55,
+      63,    16,   -55,   -55,    64,    68,    65,    67,    69,   -55,
+     -55
+>>>>>>> shimona
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -538,6 +629,7 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
+<<<<<<< HEAD
        0,     0,     0,     0,     0,     0,     0,     7,     0,     0,
       10,     0,     1,     3,     0,     0,     0,    24,    26,     0,
        0,    11,    13,     0,    38,     0,    37,     0,     0,     0,
@@ -548,20 +640,42 @@ static const yytype_uint8 yydefact[] =
        0,     0,     0,    17,     0,     0,     0,     0,     0,     9,
        0,     0,     4,     5,    18,     0,    16,     6,     0,     0,
        0,    19
+=======
+       0,     0,     0,     0,     0,     0,     0,     8,     0,     0,
+       9,     0,     1,     3,    19,     0,     0,    11,     0,    37,
+       0,    36,     0,    34,    30,    31,    32,    33,     0,     0,
+      12,     0,     0,     0,     0,     0,     0,     0,    29,     0,
+      14,    21,     0,    10,    20,    13,     0,    35,     0,     0,
+       0,     0,     0,     0,    28,     0,     0,     0,     0,     0,
+      16,     0,    23,    22,    26,    24,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    27,    25,     4,     5,     6,
+       0,     0,    15,    17,     0,     0,     0,     0,     0,     7,
+      18
+>>>>>>> shimona
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
+<<<<<<< HEAD
      -58,    84,   -58,   -58,   -37,   -58,   -13,   -58,   -57,   -58,
        0,    -8,   -58,    26,   -58
+=======
+     -55,    75,   -55,   -42,   -13,    13,   -55,   -54,   -55,   -48,
+     -11,   -55,   -50,   -55,    35,   -55
+>>>>>>> shimona
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
+<<<<<<< HEAD
       -1,     5,     6,    48,    11,    20,    21,    22,    72,    73,
       29,    61,    43,    25,    26
+=======
+      -1,     5,     6,    11,    16,    31,    17,    59,    60,    18,
+      45,    40,    41,    28,    20,    21
+>>>>>>> shimona
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -569,6 +683,7 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
+<<<<<<< HEAD
       23,    28,    38,    39,    40,    10,    30,    41,    42,     7,
       14,    46,    47,    77,    15,    16,    51,    52,    17,    18,
       68,    19,    59,    86,    58,    69,    15,    16,    74,    23,
@@ -579,10 +694,22 @@ static const yytype_int8 yytable[] =
       45,    63,    54,    57,    62,    55,    56,    64,    65,    79,
       75,    76,    78,    80,    81,    84,    85,    88,    82,    83,
       13,     0,    87,     0,     0,    89,     0,     0,    90,    91
+=======
+      55,    61,    64,    65,    56,    32,    57,    74,    35,    36,
+       7,    -2,     1,    61,     2,     3,    75,    76,    43,    82,
+      14,     1,     4,     2,     3,    61,    14,    38,    29,    15,
+      39,     4,    23,    24,    25,    58,    10,    26,    27,    85,
+       8,    37,    50,    51,    38,     9,    12,    39,    52,    53,
+      66,    67,    22,    19,    30,    33,    34,    44,    62,    42,
+      46,    48,    54,    83,    49,    68,    69,    70,    63,    47,
+      81,    72,    84,    73,     0,     0,    77,    71,    78,    79,
+      87,    13,    80,     0,    86,    89,    88,     0,     0,    90
+>>>>>>> shimona
 };
 
 static const yytype_int8 yycheck[] =
 {
+<<<<<<< HEAD
        8,    14,     8,     9,    10,    20,    14,    13,    14,    18,
       11,     5,     6,    70,    15,    16,    22,    23,    19,    20,
       57,    22,    11,    80,    37,    62,    15,    16,    65,    37,
@@ -593,6 +720,17 @@ static const yytype_int8 yycheck[] =
       17,    45,    15,    11,    11,    16,    16,    13,    11,    14,
       12,    12,    21,     7,    12,    12,    20,     9,    18,    18,
        6,    -1,    18,    -1,    -1,    20,    -1,    -1,    21,    20
+=======
+      42,    49,    52,    53,    46,    18,    48,    61,     5,     6,
+      18,     0,     1,    61,     3,     4,    66,    67,    31,    73,
+      11,     1,    11,     3,     4,    73,    11,    19,    14,    20,
+      22,    11,     8,     9,    10,    20,    20,    13,    14,    81,
+      13,    16,    19,    20,    19,    13,     0,    22,    22,    23,
+      22,    23,    12,    20,     7,    14,    17,    12,    16,    11,
+      11,    11,    19,    74,    13,    12,    12,    12,    16,    34,
+      11,    14,     9,    60,    -1,    -1,    18,    21,    18,    18,
+      12,     6,    20,    -1,    20,    18,    21,    -1,    -1,    20
+>>>>>>> shimona
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -600,6 +738,7 @@ static const yytype_int8 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,     1,     3,     4,    11,    25,    26,    18,    13,    13,
+<<<<<<< HEAD
       20,    28,     0,    25,    11,    15,    16,    19,    20,    22,
       29,    30,    31,    35,    20,    37,    38,    12,    30,    34,
       35,    19,    20,    19,    20,    19,    14,     7,     8,     9,
@@ -609,24 +748,49 @@ static const yytype_uint8 yystos[] =
       11,    20,    32,    33,    28,    12,    12,    32,    21,    14,
        7,    12,    18,    18,    12,    20,    32,    18,     9,    20,
       21,    20
+=======
+      20,    27,     0,    25,    11,    20,    28,    30,    33,    20,
+      38,    39,    12,     8,     9,    10,    13,    14,    37,    14,
+       7,    29,    28,    14,    17,     5,     6,    16,    19,    22,
+      35,    36,    11,    28,    12,    34,    11,    38,    11,    13,
+      19,    20,    22,    23,    19,    27,    27,    27,    20,    31,
+      32,    33,    16,    16,    36,    36,    22,    23,    12,    12,
+      12,    21,    14,    29,    31,    36,    36,    18,    18,    18,
+      20,    11,    31,    34,     9,    27,    20,    12,    21,    18,
+      20
+>>>>>>> shimona
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
+<<<<<<< HEAD
        0,    24,    25,    25,    26,    26,    26,    26,    27,    27,
       28,    29,    30,    30,    31,    31,    32,    32,    33,    33,
       34,    34,    34,    35,    35,    35,    35,    35,    35,    35,
       35,    36,    36,    36,    36,    36,    37,    37,    38
+=======
+       0,    24,    25,    25,    26,    26,    26,    26,    26,    27,
+      28,    28,    29,    30,    30,    31,    31,    32,    32,    33,
+      34,    35,    35,    35,    36,    36,    36,    36,    36,    36,
+      37,    37,    37,    37,    37,    38,    38,    39
+>>>>>>> shimona
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
+<<<<<<< HEAD
        0,     2,     1,     2,     8,     8,     8,     2,     1,     4,
        1,     1,     3,     1,     3,     3,     3,     1,     3,     7,
        3,     3,     1,     3,     1,     2,     1,     3,     3,     3,
        3,     1,     1,     1,     1,     1,     3,     1,     1
+=======
+       0,     2,     1,     2,     8,     8,     8,    11,     2,     1,
+       3,     1,     1,     3,     3,     3,     1,     3,     7,     1,
+       1,     1,     3,     3,     3,     4,     3,     4,     2,     1,
+       1,     1,     1,     1,     1,     3,     1,     1
+>>>>>>> shimona
 };
 
 
@@ -1303,6 +1467,7 @@ yyreduce:
   switch (yyn)
     {
         case 4:
+<<<<<<< HEAD
 #line 83 "bison_dbms.y" /* yacc.c:1646  */
     {
 
@@ -1329,6 +1494,90 @@ yyreduce:
                 fprintf(file_in, "\t\tif (%s) {\n", condition);
 
                     fprintf(file_in, "\t\t\tprintRow(0, j);\n");
+=======
+#line 109 "bison_dbms.y" /* yacc.c:1646  */
+    {
+
+            int condition_it = 0;
+
+            // Check syntax
+            printf("Valid Syntax \n");
+
+            char filename[50];
+            strcpy(filename, (yyvsp[-2].sval));
+            strcat(filename, ".csv");
+            readcsv(filename);
+
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
+
+            // Open the file in which table exists
+            fprintf(file_in, "\tstring tableName = \"%s\";\n", (yyvsp[-2].sval));
+            fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
+            // fprintf(file_in, "\tprintColumnNames();\n");
+            // Iterate over each row of table
+            fprintf(file_in, "\tprintColumnName(tableName);");
+            fprintf(file_in, "\tcout << endl;");
+
+            fprintf(file_in, "\tfor(int j = 0; j < getNumRows(tableName); j++) {\n");
+
+                // Put if condition_str
+                fprintf(file_in, "\t\tif (");
+
+                // Iterate over condition and check data type with schema
+                for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+
+                    if (strcmp(condition[condition_it], "(") == 0) {
+                        fprintf(file_in, " ( ");
+                        continue;
+                    }
+                    
+                    // Get column name
+                    char *columnName = condition[condition_it++];
+                    char *operator = condition[condition_it++];
+                    char *rhs = condition[condition_it++];
+
+                    // Both number
+                    if (gettype((yyvsp[-2].sval), columnName) == NUMBER && isnum(rhs) == TRUE) {
+                        fprintf(file_in, "stoi(getVal(0, j, \"%s\")) %s %s ", columnName, operator, rhs);
+                    }
+                    // Both string
+                    else if (gettype((yyvsp[-2].sval), columnName) == STRING && isnum(rhs) == FALSE) {
+                        if (!strcmp(operator, "==") || !strcmp(operator, "!="))
+                            fprintf(file_in, "getVal(0, j, \"%s\") %s %s ", columnName, operator, rhs);
+                        else {
+                            printf("Operator unsupported for condition %s %s %s \n", columnName, operator, rhs);
+                            exit(0);
+                        }    
+                    }
+                    else {
+                        // printf("gettype(%s) = %d\n", "name", gettype($6, "name"));
+                        printf("Datatype mismatch in schema for condition %s %s %s \n", columnName, operator, rhs);
+                        exit(0);
+                    }
+
+                    if (condition_it < condition_ptr) {
+                        while (!strcmp(condition[condition_it], ")")) {
+                            fprintf(file_in, " ) ");
+                            condition_it++;
+
+                            if (condition_it == condition_ptr){
+                                break;
+                            }
+                        }
+                        
+                        if (condition_it < condition_ptr) {
+                            char *and_or_op = condition[condition_it];
+                            fprintf(file_in, " %s ", and_or_op);
+                        }
+                    }
+                }
+
+                // Put if condition_str
+                fprintf(file_in, ") {\n");
+
+                    fprintf(file_in, "\t\t\tprintRow(0, j); cout << endl; \n");
+>>>>>>> shimona
 
             fprintf(file_in, "\t\t}\n");
             fprintf(file_in, "\t}\n");
@@ -1336,6 +1585,7 @@ yyreduce:
             insert_footer(file_in);
             fclose(file_in);
         }
+<<<<<<< HEAD
 #line 1340 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1347,10 +1597,21 @@ yyreduce:
             for (i = 0; i < position; i++) {
                 printf("%s ,", column[i]);
             }
+=======
+#line 1418 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 5:
+#line 197 "bison_dbms.y" /* yacc.c:1646  */
+    {
+            printf("Valid Syntax \n");
+            int i = 0;
+>>>>>>> shimona
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
 
+<<<<<<< HEAD
             // Construct vector of columnNames
             fprintf(file_in, "\tvector<string> columnNames;\n");
 
@@ -1361,11 +1622,38 @@ yyreduce:
             fprintf(file_in, "\tfor(int i = 0; i < getNumRows(a);i++){\n");
             fprintf(file_in, "\t\tfor(int k = 0; k < columnNames.size();k++)\n");
             fprintf(file_in, "\t\t\tcout<<getVal(0,i, columnNames[k])<<\" \";\n");
+=======
+            // Open the file in which table exists
+            fprintf(file_in, "\tstring tableName = \"%s\";\n", (yyvsp[-2].sval));
+            fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
+
+            // Construct vector of columnNames
+            fprintf(file_in, "\tvector<string> columnNames;\n");
+
+            char filename[100];
+            strcpy(filename, (yyvsp[-2].sval));
+            strcat(filename, ".csv");
+            readcsv(filename);
+            
+            for (i = 0; i < position; i++) {
+                // printf("*%s*", column[i]);
+                int temp = gettype((yyvsp[-2].sval), column[i]);
+                fprintf(file_in, "\tcolumnNames.push_back(\"%s\");\n", column[i]);
+                fprintf(file_in, "\tcout << setw(14) << \"%s\";\n", column[i]);
+            }
+
+            fprintf(file_in, "\tcout << endl;");
+
+            fprintf(file_in, "\tfor(int i = 0; i < getNumRows(tableName);i++){\n");
+            fprintf(file_in, "\t\tfor(int k = 0; k < columnNames.size();k++)\n");
+            fprintf(file_in, "\t\t\tcout<<setw(14)<<getVal(0,i, columnNames[k]);\n");
+>>>>>>> shimona
             fprintf(file_in, "\t\tcout<<\"\\n\";\n\t}\n");
 
             insert_footer(file_in);
             fclose(file_in);
         }
+<<<<<<< HEAD
 #line 1370 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1397,11 +1685,202 @@ yyreduce:
             fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++){\n");
             fprintf(file_in, "\t\t\tprintRow(0, i);\n");
             fprintf(file_in, "\t\t\tprintRow(1, j); cout<<endl;\n\t\t}\n\t}\n");
+=======
+#line 1459 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 6:
+#line 233 "bison_dbms.y" /* yacc.c:1646  */
+    {
+           printf("Valid Syntax \n");
+            
+            char filename[100];
+            strcpy(filename, (yyvsp[-6].sval));
+            strcat(filename, ".csv");
+            readcsv(filename);
+
+            strcpy(filename, (yyvsp[-2].sval));
+            strcat(filename, ".csv");
+            readcsv(filename);
+
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            insert_header(file_in);
+            fprintf(file_in, "\tstring tableName1 = \"%s\";\n", (yyvsp[-6].sval));
+            fprintf(file_in, "\treadcsv(tableName1+\".csv\", 0);\n");
+            fprintf(file_in, "\tstring tableName2 = \"%s\";\n", (yyvsp[-2].sval));
+            fprintf(file_in, "\treadcsv(tableName2+\".csv\", 1);\n");
+
+            fprintf(file_in, "\tprintColumnName(tableName1);");
+            fprintf(file_in, "\tprintColumnName(tableName2);");
+            fprintf(file_in, "\tcout << endl;");
+
+            fprintf(file_in, "\tint r0 = getNumRows(tableName1);\n");
+            fprintf(file_in, "\tint r1 = getNumRows(tableName2);\n");
+            fprintf(file_in, "\tfor(int i = 0; i < r0;i++){\n");
+            fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++){\n");
+            fprintf(file_in, "\t\t\tprintRow(getindexfortable(tableName1), i);\n");
+            fprintf(file_in, "\t\t\tprintRow(getindexfortable(tableName2), j); cout<<endl;\n\t\t}\n\t}\n");
+
+            insert_footer(file_in);
+            fclose(file_in);
+        }
+#line 1497 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 7:
+#line 266 "bison_dbms.y" /* yacc.c:1646  */
+    {
+           printf("Valid Syntax \n");
+
+            // Open both tables -> $2 and $9
+            // Extract table names from condition_list_eq (len should be 2 and should be equal to both table names)
+            // Check column names (should exists in respective tables)
+            // Perform calculation
+
+            char filename[100];
+            strcpy(filename, (yyvsp[-9].sval));
+            strcat(filename, ".csv");
+            readcsv(filename);
+
+            strcpy(filename, (yyvsp[-2].sval));
+            strcat(filename, ".csv");
+            readcsv(filename);
+
+            FILE *file_in = fopen("intermediate.cpp", "w+");
+            
+            insert_header(file_in);
+            fprintf(file_in, "\tstring tableName1 = \"%s\";\n", (yyvsp[-9].sval));
+            fprintf(file_in, "\treadcsv(tableName1+\".csv\", 0);\n");
+            fprintf(file_in, "\tstring tableName2 = \"%s\";\n", (yyvsp[-2].sval));
+            fprintf(file_in, "\treadcsv(tableName2+\".csv\", 1);\n");
+
+            // Check the table names (should be either $2 or $9)
+            int condition_it = 0;
+            for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+
+                if (strcmp(condition[condition_it], "(") == 0 || strcmp(condition[condition_it], ")") == 0 ) {
+                    continue;
+                }
+
+                if (strcmp(condition[condition_it], "and") == 0 || strcmp(condition[condition_it], "or") == 0 ) {
+                    continue;
+                }
+
+                char *table1 = condition[condition_it++];
+                char *attribute1 = condition[condition_it++];
+                char *table2 = condition[condition_it++];
+                char *attribute2 = condition[condition_it++];   // After increment, Now at logical operation (and / or)
+                
+                if (strcmp(table1, (yyvsp[-9].sval)) && strcmp(table1, (yyvsp[-2].sval))) // means none matches
+                {
+                    printf("Table names not matched in condition : %s\n", table1);
+                    exit(0);
+                }
+                if (strcmp(table2, (yyvsp[-9].sval)) && strcmp(table2, (yyvsp[-2].sval))) // means none matches
+                {
+                    printf("Table names not matched in condition : %s\n", table2);
+                    exit(0);
+                }
+
+                // Attribute1 should be in table 1
+                char filename[50];
+                strcpy(filename, table1);
+                strcat(filename, ".csv");
+                readcsv(filename);
+
+                if (getcolindex(getfileindex(table1), attribute1) == -1)    // Column doesn't exists in table1
+                {
+                    printf("Invalid column name : %s in %s\n", attribute1, table1);
+                    exit(0);
+                }
+
+                strcpy(filename, table2);
+                strcat(filename, ".csv");
+                readcsv(filename);
+                if (getcolindex(getfileindex(table2), attribute2) == -1)    // Column doesn't exists in table2
+                {
+                    printf("Invalid column name : %s in %s\n", attribute2, table2);
+                    exit(0);
+                }
+            
+                // Check data type of attribute 1 from table 1 and attribute 2 from table 2
+                if(gettype(table1, attribute1) != gettype(table2, attribute2)) {
+                    printf("Data type mismatch column names : %s and %s\n", attribute1, attribute2);
+                }
+            }
+
+            fprintf(file_in, "\tprintColumnName(tableName1);");
+            fprintf(file_in, "\tprintColumnName(tableName2);");
+            fprintf(file_in, "\tcout << endl;");
+
+            // Iterate over each row of table
+            fprintf(file_in, "\tfor(int j1 = 0; j1 < getNumRows(tableName1); j1++) {\n");
+            fprintf(file_in, "\t\tfor(int j2 = 0; j2 < getNumRows(tableName2); j2++) {\n");
+
+                // Put if condition_str
+                fprintf(file_in, "\t\t\tif (");
+
+                // Iterate over conditions.
+                for (condition_it = 0; condition_it < condition_ptr; condition_it++) {
+
+                    if (strcmp(condition[condition_it], "(") == 0) {
+                        fprintf(file_in, " ( ");
+                        continue;
+                    }
+                    
+                    // Get column name
+                    char *table1 = condition[condition_it++];
+                    char *attribute1 = condition[condition_it++];
+                    char *table2 = condition[condition_it++];
+                    char *attribute2 = condition[condition_it++];   // After increment, Now at logical operation (and / or)                
+
+                    if(!strcmp(table1, (yyvsp[-9].sval))){
+                        fprintf(file_in, "getVal(getindexfortable(\"%s\"), j1, \"%s\") ", table1, attribute1);
+                    }
+                    else {
+                        fprintf(file_in, "getVal(getindexfortable(\"%s\"), j2, \"%s\") ", table1, attribute1);
+                    }
+
+                    if(!strcmp(table2, (yyvsp[-2].sval))){
+                        fprintf(file_in, "== getVal(getindexfortable(\"%s\"), j2, \"%s\") ", table2, attribute2);
+                    }
+                    else {
+                        fprintf(file_in, "== getVal(getindexfortable(\"%s\"), j1, \"%s\") ", table2, attribute2);
+                    }
+
+                    if (condition_it < condition_ptr) {
+                        while (!strcmp(condition[condition_it], ")")) {
+                            fprintf(file_in, " ) ");
+                            condition_it++;
+
+                            if (condition_it == condition_ptr){
+                                break;
+                            }
+                        }
+                        
+                        if (condition_it < condition_ptr) {
+                            char *and_or_op = condition[condition_it];
+                            fprintf(file_in, " %s ", and_or_op);
+                        }
+                    }
+                }
+                // Put if condition_str
+                fprintf(file_in, ") {\n");
+
+                fprintf(file_in, "\t\t\tprintRow(getindexfortable(tableName1), j1);\n");
+                fprintf(file_in, "\t\t\tprintRow(getindexfortable(tableName2), j2);\n");
+                fprintf(file_in, "\t\t\tcout << endl;\n");
+
+            fprintf(file_in, "\t\t\t}\n");
+            fprintf(file_in, "\t\t}\n");
+            fprintf(file_in, "\t}\n");
+>>>>>>> shimona
 
             insert_footer(file_in);
             fclose(file_in);
 
         }
+<<<<<<< HEAD
 #line 1406 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1491,15 +1970,149 @@ yyreduce:
 
   case 38:
 #line 208 "bison_dbms.y" /* yacc.c:1646  */
+=======
+#line 1652 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 8:
+#line 416 "bison_dbms.y" /* yacc.c:1646  */
+    {
+           yyerrok;
+           eat_till_semi();
+        }
+#line 1661 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 10:
+#line 423 "bison_dbms.y" /* yacc.c:1646  */
+    { 
+                    strcat((yyval.sval), " "); 
+                    strcat((yyval.sval), (yyvsp[-1].sval)); 
+                    strcat((yyval.sval), " "); 
+                    strcat((yyval.sval), (yyvsp[0].sval)); 
+                }
+#line 1672 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 12:
+#line 431 "bison_dbms.y" /* yacc.c:1646  */
+    {
+                    strcpy(condition[condition_ptr++], (yyvsp[0].sval));
+                }
+#line 1680 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 13:
+#line 436 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
+#line 1686 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 14:
+#line 437 "bison_dbms.y" /* yacc.c:1646  */
+    { 
+                    strcpy(condition[condition_ptr++], (yyvsp[-2].sval));
+                    strcpy(condition[condition_ptr++], (yyvsp[-1].sval));
+                    strcpy(condition[condition_ptr++], (yyvsp[0].sval));
+                    }
+#line 1696 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 18:
+#line 447 "bison_dbms.y" /* yacc.c:1646  */
+    {
+                    strcpy(condition[condition_ptr++], (yyvsp[-6].sval));
+                    strcpy(condition[condition_ptr++], (yyvsp[-4].sval));
+                    strcpy(condition[condition_ptr++], (yyvsp[-2].sval));
+                    strcpy(condition[condition_ptr++], (yyvsp[0].sval));
+                    }
+#line 1707 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 19:
+#line 454 "bison_dbms.y" /* yacc.c:1646  */
+    {
+            strcpy(condition[condition_ptr++], (yyvsp[0].sval));
+        }
+#line 1715 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 20:
+#line 458 "bison_dbms.y" /* yacc.c:1646  */
+    {
+            strcpy(condition[condition_ptr++], (yyvsp[0].sval));
+        }
+#line 1723 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 22:
+#line 463 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); strcat((yyval.sval), " "); }
+#line 1729 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 23:
+#line 464 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); strcat((yyval.sval), " "); }
+#line 1735 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 24:
+#line 466 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
+#line 1741 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 25:
+#line 467 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-2].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
+#line 1747 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 26:
+#line 468 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
+#line 1753 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 27:
+#line 469 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-2].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
+#line 1759 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 28:
+#line 470 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
+#line 1765 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 30:
+#line 473 "bison_dbms.y" /* yacc.c:1646  */
+    { strcat((yyval.sval), (yyvsp[0].sval)); }
+#line 1771 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 37:
+#line 482 "bison_dbms.y" /* yacc.c:1646  */
+>>>>>>> shimona
     {
         strcpy(column[position], (yyvsp[0].sval));
         position++;
     }
+<<<<<<< HEAD
 #line 1499 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
 
 #line 1503 "bison_dbms.tab.c" /* yacc.c:1646  */
+=======
+#line 1780 "bison_dbms.tab.c" /* yacc.c:1646  */
+    break;
+
+
+#line 1784 "bison_dbms.tab.c" /* yacc.c:1646  */
+>>>>>>> shimona
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1727,12 +2340,20 @@ yyreturn:
 #endif
   return yyresult;
 }
+<<<<<<< HEAD
 #line 212 "bison_dbms.y" /* yacc.c:1906  */
+=======
+#line 486 "bison_dbms.y" /* yacc.c:1906  */
+>>>>>>> shimona
 
 
 int main(int argc, char **argv) {
 
+<<<<<<< HEAD
     char *filename = "tests/test1.txt";
+=======
+    char *filename = argv[1];
+>>>>>>> shimona
     // Open a file handle to a particular file:
     FILE *myfile = fopen(filename, "r");
     // Make sure it is valid:
@@ -1747,7 +2368,11 @@ int main(int argc, char **argv) {
     while(!feof(yyin))  {
         yyparse();
     }
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> shimona
 }
 
 void yyerror(const char *s) {
@@ -1765,9 +2390,12 @@ void eat_till_semi()
 }
 
 void insert_header (FILE *filename) {
+<<<<<<< HEAD
     char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nstring tableName;\n";
     fprintf(filename, "%s", header);
 
+=======
+>>>>>>> shimona
     FILE *fp = fopen("readcsv.cpp", "r");
     int c;
     while((c = (char)fgetc(fp)) != EOF)
@@ -1778,7 +2406,11 @@ void insert_header (FILE *filename) {
 }
 
 void insert_footer (FILE *filename) {
+<<<<<<< HEAD
     char *header = "return 0;\n}\n";
+=======
+    char *header = "cout << endl;\nreturn 0;\n}\n";
+>>>>>>> shimona
 
     fprintf(filename, "%s", header);
 }
@@ -1792,7 +2424,11 @@ void extract_column(char *table) {
     fgets(column_str, sizeof(column_str), f_in);
     printf("%s\n", schema);
     printf("%s\n", column_str);
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> shimona
     // Extract column name from column_str
     int i = 0;
     int begin = 0;
@@ -1812,3 +2448,133 @@ void extract_column(char *table) {
     }
     num_column = j;
 }
+<<<<<<< HEAD
+=======
+
+void readcsv(char* name)
+{
+    int index = num_files;
+	//name of the file pushed
+	int name_len = strlen(name);
+	for (int i = 0; i < name_len-4; ++i)
+	{
+		file_name[index][i] = name[i];
+	}
+
+	FILE* stream = fopen(name, "r");
+
+    if (stream == NULL) {
+        printf("No such table exists : %s\n", file_name[index]);
+        exit(0);
+    }
+    
+	char type_line[1024];
+	int itr;
+	
+	if(fgets(type_line, 1024, stream))
+	{
+        int len = strlen(type_line);
+   		// printf("%s\n", type_line);
+   		int i=0;
+	}
+
+	char name_line[1024];
+	if(fgets(name_line, 1024, stream))
+	{
+   		// printf("%s\n", name_line);
+   		int i=0;
+	}
+
+
+	int top=0;
+    int len = strlen(name_line);
+    int j=0;
+	for (int i = 0; i < len; ++i)
+	{
+		if(name_line[i] != ',' && name_line[i] != '\n')
+		{
+			col_name[index][top][j++] = name_line[i];
+		}
+		else
+		{
+			j = 0;
+			top++;
+		}	
+	}
+		
+	top = 0;
+    len = strlen(type_line);
+    for (int i = 0; i < len; ++i)
+	{
+		if(type_line[i] != ',' && type_line[i] != '\n')
+		{
+			data_type[index][top] = type_line[i];
+		}
+		else
+		{
+			top++;
+		}	
+	}
+	num_files++;
+}
+
+int getfileindex(char* name)
+{
+    // printf ("name = *%s*\n", name);
+	for (int i = 0; i < MAX_FILES; ++i)
+	{
+		if(strcmp(file_name[i], name)==0)
+		{
+            // printf ("filenames = *%s*\n", file_name[i]); 
+			return i;
+		}
+	}
+	return -1;
+}
+
+int getcolindex(int index, char* col)
+{
+	for (int i = 0; i < MAX_COLS; ++i)
+	{
+		if(strcmp(col_name[index][i], col) == 0)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+//returns 0 for string 1 for int
+int gettype(char* table_name, char* col)
+{
+	int index = getfileindex(table_name);
+	if(index == -1)
+	{
+		printf("No such table loaded.\n");
+		return -1;
+	}
+
+	int colindex = getcolindex(index, col);
+	if(colindex == -1)
+	{
+        // printf("Here is the problem\n");
+        // printf("column name = %s\n", col);
+		printf("No such column exists : %s\n", col);
+		exit(0);
+	}	
+
+	if(data_type[index][colindex] == 'i')
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int isnum (char *text) {
+    int i = 0;
+    if (text[0] == '"')
+        return 0;
+    else
+        return 1;
+}
+>>>>>>> shimona

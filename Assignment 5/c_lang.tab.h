@@ -47,20 +47,16 @@ extern int yydebug;
   {
     NUM = 258,
     IDENTIFIER = 259,
-    INT = 260,
-    FLOAT = 261,
-    OR = 262,
-    IF = 263,
-    ELSE = 264,
-    FOR = 265,
-    WHILE = 266,
-    SWITCH = 267,
-    CASE = 268,
-    DEFAULT = 269,
-    BREAK = 270,
-    CONTINUE = 271,
-    AND = 272,
-    REL_OP = 273
+    OR = 260,
+    IF = 261,
+    ELSE = 262,
+    FOR = 263,
+    WHILE = 264,
+    DO = 265,
+    SWITCH = 266,
+    CASE = 267,
+    DEFAULT = 268,
+    arith_op = 269
   };
 #endif
 
@@ -69,17 +65,15 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 126 "c_lang.y" /* yacc.c:1909  */
+#line 71 "c_lang.y" /* yacc.c:1909  */
 
     struct {
-        struct indexlist * indexlist;
         char* type;
-        int val;
-        int index;
+        double val;
         char* sval;
     } type_id;
 
-#line 83 "c_lang.tab.h" /* yacc.c:1909  */
+#line 77 "c_lang.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

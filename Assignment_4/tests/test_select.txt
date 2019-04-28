@@ -1,0 +1,1 @@
+SELECT < namem = "ameya" and (cpi >= -9 + 3 - 5 + 2 * 3 or name != "ameya")> (sample);
