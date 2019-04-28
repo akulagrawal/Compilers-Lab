@@ -21,6 +21,7 @@ struct quad {
 int isfull[MAX];
 int memory[MAX];
 map<string, int> mapmem;
+map<string, int> funcArgs;
 
 int getmem(string s) {
 	if(mapmem[s])
@@ -56,41 +57,41 @@ string to_hex(int y) {
 }
 
 int main()
-{   
+{
     freopen ("Assembly.asm","w",stdout);
-	// File pointer 
-	fstream fin; 
+	// File pointer
+	fstream fin;
 	vector<quad> quadlist;
 	quad temp;
 
-	// Open an existing file 
-	fin.open("IR.csv", ios::in); 
+	// Open an existing file
+	fin.open("IR.csv", ios::in);
 	vector<string> row;
-	string line, word; 
+	string line, word;
 	vector<string> v;
 	v.push_back(".data 0x10000000\n.text\n.globl main\nmain: ");
 
-	while (fin >> line) { 
+	while (fin >> line) {
 		row.clear();
 
-		// used for breaking words 
+		// used for breaking words
 		stringstream s(line);
 
-		// read every column data of a row and 
-		// store it in a string variable, 'word' 
-		while (getline(s, word, ',')) { 
-			// add all the column data 
+		// read every column data of a row and
+		// store it in a string variable, 'word'
+		while (getline(s, word, ',')) {
+			// add all the column data
 			// of a row to a vector
-			row.push_back(word); 
+			row.push_back(word);
 		}
 		temp.opcode = row[0];
 		temp.op1 = row[1];
 		temp.op2 = row[2];
 		temp.res = row[3];
 		quadlist.push_back(temp);
-		// cout << "Opcode: " << temp.opcode << "\n"; 
-		// cout << "Op1   : " << temp.op1 << "\n"; 
-		// cout << "Op1   : " << temp.op2 << "\n"; 
+		// cout << "Opcode: " << temp.opcode << "\n";
+		// cout << "Op1   : " << temp.op1 << "\n";
+		// cout << "Op1   : " << temp.op2 << "\n";
 		// cout << "Res   : " << temp.res << "\n";
 	}
 	map<string, int> isLabel;
@@ -211,17 +212,6 @@ int main()
 			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
 			v.push_back("bnez $t0, Label" + to_string(isLabel[quadlist[i].res]));
 		}
-		if(temp.opcode == "ifT") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("bnez $t0, Label" + to_string(isLabel[quadlist[i].res]));
-		}
 		if(temp.opcode == "<") {
 			//int x = getfree();
 			//int y = getfree();
@@ -316,6 +306,34 @@ int main()
 			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
 			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
+		}
+		if(temp.opcode == "assign") {
+			//int x = getfree();
+			//int y = getfree();
+			//if(x < 0 || y < 0) {
+			//	cout<<"ERROR: Register overflow\n";
+			//	exit(1);
+			//}
+			int x = getmem(temp.res);
+			if(isdigit(temp.op2[0]))
+				v.push_back("li $t0, " + temp.op2);
+			else
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op2]) + "($0)");
+			v.push_back("sw $t0, " + to_hex(x) + "($0)");
+		}
+		if(temp.opcode == "label") {
+			//int x = getfree();
+			//int y = getfree();
+			//if(x < 0 || y < 0) {
+			//	cout<<"ERROR: Register overflow\n";
+			//	exit(1);
+			//}
+			int x = getmem(temp.res);
+			if(isdigit(temp.op2[0]))
+				v.push_back("li $t0, " + temp.op2);
+			else
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op2]) + "($0)");
+			v.push_back("sw $t0, " + to_hex(x) + "($0)");
 		}
 
 		/*if(temp.opcode == "-") {
