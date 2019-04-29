@@ -371,6 +371,7 @@
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
     extern string Variable(string str);
+	extern string VarWithLevel(char *, int);
 %}
 
 %union {
@@ -399,7 +400,7 @@
 %type <type_id> variable_declaration_statement
 
 %type <type_id> logical_operation
-%type <type_id> FOREXP WHILEEXP if_exp else_mark
+%type <type_id> FOREXP WHILEEXP if_exp else_mark for_mark while_mark
 %type <type_id> SWITCHEXP CASE_EXP
 %type <type_id> bracket_dimlist name_list id_arr
 %type <type_id> bracket_dimlist_eval
@@ -933,30 +934,26 @@ loop_statement
 
         $$.val = $1.val + $2.val + 1;
         int gotoindex = $1.index;
-        //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
-        quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
+		int endwhile = $1.index + $1.val + $2.val + 1;
 
-        for(int i =gotoindex+1;i<gotoindex + $2.val + 2 && i< quadruples.size();i++ )
+        for(int i =gotoindex+1;i< endwhile && i< quadruples.size();i++ )
         {
-			//string s=jmp;
-			if(quadruples[i]._operator=="jmp")
+			if(quadruples[i]._result == "(loopend)")
 			{
-				quadruples[i]._result=quadruples[gotoindex]._result;
+				quadruples[i]._result = to_string(endwhile);
 			}
-			if(quadruples[i]._operator=="ctn")
+
+			if(quadruples[i]._result == "(loopstart)")
 			{
-				quadruples[i]._result=to_string(gotoindex-1);
-			}
-			if((quadruples[i]._operator=="ifz"))
-			{
-				i=stoi(quadruples[i]._result);
+				quadruples[i]._result = to_string(gotoindex);
 			}
         }
+
         quadruple temp;
         temp._operator = "ljmp";
         temp._arg1 = "";
         temp._arg2 = "";
-        temp._result = to_string(gotoindex-1);
+        temp._result = to_string(gotoindex);
         quadruples.push_back(temp);
 
         insideLoop --;
@@ -970,30 +967,26 @@ loop_statement
 
         $$.val = $1.val + $3.val + 1;
         int gotoindex = $1.index;
-        //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$3.val<<endl;
-        quadruples[gotoindex]._result = to_string(gotoindex + $3.val + 2);
+		int endfor = $1.len + $3.val + 2;
 
-        for(int i =gotoindex+1;i<gotoindex + $3.val + 2 && i< quadruples.size();i++ )
+        for(int i =gotoindex+1; i< endfor && i< quadruples.size();i++ )
         {
-            //string s=jmp;
-            if(quadruples[i]._operator=="jmp")
-            {
-            quadruples[i]._result=quadruples[gotoindex]._result;
-            }
-            if(quadruples[i]._operator=="ctn")
-            {
-            quadruples[i]._result=to_string(gotoindex-1);
-            }
-            if((quadruples[i]._operator=="ifz"))
-            {
-            i=stoi(quadruples[i]._result);
-            }
+            if(quadruples[i]._result == "(loopend)")
+			{
+				quadruples[i]._result = to_string(endfor);
+			}
+
+			if(quadruples[i]._result == "(loopstart)")
+			{
+				quadruples[i]._result = to_string(gotoindex);
+			}
         }
+
         quadruple temp;
         temp._operator = "ljmp";
         temp._arg1 = "";
         temp._arg2 = "";
-        temp._result = to_string(gotoindex-1);
+        temp._result = to_string(gotoindex);
         quadruples.push_back(temp);
 
         insideLoop --;
@@ -1005,32 +998,31 @@ loop_statement
 
         $$.type = strdup($4.type);
 
-        $$.val = $1.val + $2.val+$4.val + 1;
+		$$.val = $1.val + $2.val + $4.val + 1;
         int gotoindex = $1.index;
-        // cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
-        quadruples[gotoindex]._result = to_string(gotoindex + $2.val+ $4.val + 2);
+		int endfor = $1.len + $2.val + $4.val + 2;
 
-        for(int i =gotoindex+1;i<gotoindex + $2.val+ $4.val + 2 && i< quadruples.size();i++ )
+		cout << "expression derived " << $2.val << "\n";
+		cout << "statement derived " << $4.val << "\n";
+
+        for(int i =gotoindex+1; i < endfor && i< quadruples.size();i++ )
         {
-            //string s=jmp;
-            if(quadruples[i]._operator=="jmp")
-            {
-                quadruples[i]._result=quadruples[gotoindex]._result;
-            }
-            if(quadruples[i]._operator=="ctn")
-            {
-                quadruples[i]._result=to_string(gotoindex-1);
-            }
-            if((quadruples[i]._operator=="ifz"))
-            {
-                i=stoi(quadruples[i]._result);
-            }
+			if(quadruples[i]._result == "(loopend)")
+			{
+				quadruples[i]._result = to_string(endfor);
+			}
+
+			if(quadruples[i]._result == "(loopstart)")
+			{
+				quadruples[i]._result = to_string(gotoindex);
+			}
         }
+
         quadruple temp;
         temp._operator = "ljmp";
         temp._arg1 = "";
         temp._arg2 = "";
-        temp._result = to_string(gotoindex-1);
+        temp._result = to_string(gotoindex);
         quadruples.push_back(temp);
 
         insideLoop --;
@@ -1039,40 +1031,53 @@ loop_statement
 
 
   FOREXP
-    : FOR '(' expression_statement expression_statement
+    : for_mark expression_statement
     {
         insideLoop ++;
 
-        $$.index = quadruples.size();
-        $$.val = $3.val+ $4.val+1;
+		$$.len = $1.index + $2.val;
+        $$.index = $1.index;
+        $$.val = $1.val + $2.val + 1;
         quadruple temp;
         temp._operator = "ifF";
-        temp._arg1 = string($4.sval);
+        temp._arg1 = string($2.sval);
         temp._arg2 = "";
-        temp._result = "";
+        temp._result = "(loopend)";
         quadruples.push_back(temp);
 
 		level ++;
     }
     ;
 
+  for_mark
+	: FOR '(' expression_statement
+	{
+		$$.index = quadruples.size();
+		$$.val = $3.val;
+	}
+	;
+
   WHILEEXP
-    : WHILE '(' expression_cover ')' {
+    : while_mark expression_cover ')' {
 
         insideLoop ++;
 
-        $$.index = quadruples.size();
-        $$.val = $3.val+1;
+        $$.index = $1.index;
+        $$.val = $2.val+1;
         quadruple temp;
         temp._operator = "ifF";
-        temp._arg1 = string($3.sval);
+        temp._arg1 = string($2.sval);
         temp._arg2 = "";
-        temp._result = "";
+        temp._result = "(loopend)";
         quadruples.push_back(temp);
         level ++;
     }
 	;
 
+  while_mark
+	: WHILE '(' {
+		$$.index = quadruples.size();
+	}
 labeled_statement
 	: CASE_EXP statement
     {
@@ -1233,7 +1238,7 @@ assignment_expression
                 $$.val = $3.val + 1;
                 $$.type = $3.type;
                 $$.sval = $3.sval;
-                quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+                quadruples.push_back(quadruple("=", string($3.sval), "", VarWithLevel($1.sval, level)));
             }
         }
     }
@@ -1280,7 +1285,7 @@ assignment_expression
                     // Update quad.
                     while(currindex <= maxindex){
                         if(quadruples[currindex]._arg2 == "(multfactor)"){
-                            quadruples[currindex]._arg2 = multfactor;
+                            quadruples[currindex]._arg2 = to_string(multfactor);
                             currindex += 1;
                             break;
                         } else{
@@ -1293,7 +1298,7 @@ assignment_expression
                 $$.val = $2.val + $4.val + 1;
                 $$.type = $4.type;
                 $$.sval = $4.sval;
-                quadruples.push_back(quadruple("=", string($4.sval), "", string($1.sval) + "[" + string($2.sval) + "]"));
+                quadruples.push_back(quadruple("=", string($4.sval), "", VarWithLevel($1.sval, level) + "[" + string($2.sval) + "]"));
             }
         }
     }
@@ -1450,11 +1455,11 @@ arithmetic_factor
         $$.sval = $1.sval;
         $$.val = 2;
 
-        string temp = get_next_temp();
+		string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
 
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
-        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
+        quadruples.push_back(quadruple("=", VarWithLevel($1.sval, level), "",  temp));
     }
     | NUM
     {
@@ -1558,7 +1563,7 @@ id_arr
             $$.index = quadruples.size();
             $$.val = 1;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "1", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1576,8 +1581,8 @@ id_arr
             $$.index = quadruples.size();
             $$.val = 2 + $3.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
-            quadruples.push_back(quadruple("=", $3.sval, "", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "1", VarWithLevel($1.sval, level)));
+            quadruples.push_back(quadruple("=", $3.sval, "", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1594,7 +1599,7 @@ id_arr
             $$.index = quadruples.size();
             $$.val = 1 + $2.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "arraydim", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "arraydim", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1908,8 +1913,13 @@ bool isCompatible(string type1, string type2) {
         return true;
     return false;
 }
+
 string Variable(string str) {
     if (str == "")
         return "";
     return str.substr(1);
+}
+
+string VarWithLevel(char * str, int level){
+	return string(str) + "_" + to_string(level);
 }
