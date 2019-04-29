@@ -1,7 +1,7 @@
 CXX = g++
 CPP = g++
 CXXFLAG = -g -std=c++11
-# DEBUG_FLAG=gdb
+DEBUG_FLAG = gdb
 IC_FILE = intermediate.out
 
 

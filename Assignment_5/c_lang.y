@@ -338,8 +338,9 @@
     int insideSwitchCase = 0;
     // Keep track of whether inside loops
     int insideLoop = 0;
-    // Keep track whether one case conditions got matched with switch case expression
-    bool matchedCaseWithExp = false;
+
+    // Stores the type of variable (corresponding to variable name) by which it is initialized while declaration
+	unordered_map<string,string> varDatatype;
 
     extern bool isInt(const char *type);
     extern bool isFloat(const char *type);
@@ -364,7 +365,6 @@
     extern char* setNoErrorType();
     extern void reset_active_function();
     extern void errorLine(string errorMsg);
-    extern void warning(string warningMsg);
     extern bool isVariableInSymtab(string varname);
     extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag);
     extern void delete_var_list(string function_name, int level);
@@ -428,7 +428,7 @@ START
 
 function_declaration
 	: function_head '{' function_result_assignment statement_list '}'
-    {
+    {	
         // get a variable assigned to this function to be returned.
         string temp = "t" + string($1.sval);
 
@@ -752,7 +752,7 @@ statement
             symtab.search_function(active_func_name, func);
 
             if (!isMatch(func->function_return_type, $2.type))
-                warning("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
+                errorLine("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
 
             quadruples.push_back(quadruple("=", string($2.sval), "", "(funcvar)"));
         }
@@ -1060,6 +1060,9 @@ labeled_statement
 CASE_EXP
     :   CASE NUM ':'
     {
+		if (!isInt($2.type)) {
+			errorLine("case label does not reduce to an integer constant");
+		}
         $$.index = quadruples.size() + 1;
         $$.val = $2.val + 2;
 
@@ -1142,19 +1145,19 @@ expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = setIntType();
+        $$.type = strdup($1.type);
     }
     | relational_expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = setIntType();
+        $$.type = strdup($1.type);
     }
     | arithmetic_expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = $1.type;
+        $$.type = strdup($1.type);
     }
     ;
 
@@ -1175,7 +1178,7 @@ assignment_expression
                     errorLine("void value not ignored as it ought to be");
                 }
                 else if (!isMatch(datatype, string($3.type))) {
-                    warning("Implicit type conversion from " + string($3.type) + " to " + datatype);
+                    errorLine("Unmatched types between " + string($3.type) + " and " + datatype);
                 }
                 $$.val = $3.val + 2;
                 $$.type = strdup($3.type);
@@ -1202,7 +1205,7 @@ assignment_expression
                     errorLine("void value not ignored as it ought to be");
                 }
                 else if (!isMatch(datatype, string($6.type))) {
-                    warning("Implicit type conversion from " + string($6.type) + " to " + datatype);
+                    errorLine("Unmatched type between " + string($6.type) + " and " + datatype);
                 }
                 $$.val = $6.val + 2;
                 $$.type = strdup($6.type);
@@ -1218,12 +1221,20 @@ assignment_expression
 logical_expression
     : expression_cover logical_operation expression_cover
     {
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types.");
+			}
+		}
+		
         $$.val = $1.val + $2.val + $3.val + 1;
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
         quadruples[$2.index]._result = to_string($2.index + $3.val + 1);
         quadruples[$2.index]._arg1 = $1.sval;
+
+		$$.type = strdup($1.type);
     }
     ;
 
@@ -1247,16 +1258,28 @@ logical_operation
 relational_expression
     : expression_cover REL_OP expression_cover
     {
-        $$.type = setIntType();
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types.");
+			}
+		}
         $$.sval = $1.sval;
         $$.val = $1.val + $3.val + 1;
         quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), string($$.sval)));
+
+		$$.type = strdup($1.type);
     }
     ;
 
 arithmetic_expression
     : arithmetic_term '+' arithmetic_expression
     {
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types.");
+			}
+		}
+		
         $$.type = $1.type;
         $$.val = $1.val + $3.val + 1;
         $$.sval = $1.sval;
@@ -1264,6 +1287,11 @@ arithmetic_expression
     }
 	| arithmetic_term '-' arithmetic_expression
     {
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types.");
+			}
+		}
         $$.type = $1.type;
         $$.val = $1.val + $3.val + 1;
         $$.sval = $1.sval;
@@ -1280,6 +1308,11 @@ arithmetic_expression
 arithmetic_term
     : arithmetic_factor '*' arithmetic_term
     {
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types.");
+			}
+		}
         $$.type = $1.type;
         $$.sval = $3.sval;
         $$.val = $1.val + $3.val + 1;
@@ -1287,6 +1320,11 @@ arithmetic_term
 	}
 	| arithmetic_factor '/' arithmetic_term
     {
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types.");
+			}
+		}
         $$.type = $1.type;
         $$.sval = $3.sval;
         $$.val = $1.val + $3.val + 1;
@@ -1369,6 +1407,12 @@ arithmetic_factor
 variable_declaration_statement
     : TYPE name_list ';'
     {
+		for (auto it = varDatatype.begin(); it != varDatatype.end(); it++) {
+			if (!isMatch(it->second, $1.sval)) {
+				errorLine("Datatype mismatch for '" + Variable(it->first) + "'");
+			}
+		}
+		varDatatype.clear();
 		$$ = $1;
         ab_symtab.patch($1.sval, $2.sval);
         vector<string> dim = makedimlist($2.sval);
@@ -1413,6 +1457,8 @@ id_arr
         string datatype;
         bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false);
         if (!isExists) {
+			varDatatype[string($1.sval)] = string($3.type);
+			
             variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
             $$.index = quadruples.size();
             $$.val = 2 + $3.val;
@@ -1598,9 +1644,6 @@ void errorLine(string errorMsg) {
     errorFound = true;
     cerr << "Error at line " << lineNo << " : " << errorMsg << endl;
 }
-void warning(string warningMsg) {
-    cerr << "Warning at line " << lineNo << " : " << warningMsg << endl;
-}
 bool isVariableInSymtab(string varname) {
     if(ab_symtab.search(varname) == -1)
         return false;
@@ -1622,7 +1665,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
         if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
             if (cur_level_of_var == cur_level) {
                 varExists = true;
-                errorLine("Variable already declared in same scope : " + Variable(string(var_name)));
+                errorLine("Variable '" + Variable(string(var_name)) + "' is already declared in same scope.");
                 return varExists;
             }
         }
