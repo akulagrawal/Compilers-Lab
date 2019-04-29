@@ -1,9 +1,9 @@
-float func1(int a) {
-	a = 1;
-}
 
 int main()
 {
+	int i;
 	int x;
-	func1(1);
+	for(i=0;i<4;i=i+1){
+		x = x+1;
+	}
 }

@@ -59,14 +59,14 @@ string to_hex(int y) {
 
 int main(int argc, char **argv)
 {
-    freopen ("MIPS/Assembly.asm","w",stdout);
+    freopen ("./Assembly.asm","w",stdout);
 	// File pointer
 	fstream fin;
 	vector<quad> quadlist;
 	quad temp;
 
 	// Open an existing file
-	fin.open("MIPS/IR.csv", ios::in);
+	fin.open("./IR.csv", ios::in);
 	vector<string> row;
 	string line, word;
 	vector<string> v;
@@ -250,117 +250,112 @@ int main(int argc, char **argv)
 		}
 		if(temp.opcode == "<") {
 			if(type[temp.op1] == 'i'){
-				v.push_back("li $v0, 1");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 1");
 				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("blt $t0, $t1, Label" + to_string(labelidx));
-				v.push_back("li $v0, 0");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 0");
+				v.push_back("Label" + to_string(labelidx) + ":");
+				v.push_back("sw $t2, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.lt.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
+				v.push_back("Label" + to_string(labelidx) + ":");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
-			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == ">") {
 			if(type[temp.op1] == 'i'){
-				v.push_back("li $v0, 1");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 1");
 				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("bgt $t0, $t1, Label" + to_string(labelidx));
-				v.push_back("li $v0, 0");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 0");
+				v.push_back("Label" + to_string(labelidx) + ":");
+				v.push_back("sw $t2, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.lt.s $f2, $f1");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
+				v.push_back("Label" + to_string(labelidx) + ":");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
-			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == "<=") {
 			if(type[temp.op1] == 'i'){
-				v.push_back("li $v0, 1");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 1");
 				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("ble $t0, $t1, Label" + to_string(labelidx));
-				v.push_back("li $v0, 0");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 0");
+				v.push_back("Label" + to_string(labelidx) + ":");
+				v.push_back("sw $t2, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.le.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
+				v.push_back("Label" + to_string(labelidx) + ":");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
-			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == ">=") {
 			if(type[temp.op1] == 'i'){
-				v.push_back("li $v0, 1");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 1");
 				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("bge $t0, $t1, Label" + to_string(labelidx));
-				v.push_back("li $v0, 0");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 0");
+				v.push_back("Label" + to_string(labelidx) + ":");
+				v.push_back("sw $t2, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.le.s $f2, $f1");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
+				v.push_back("Label" + to_string(labelidx) + ":");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
-			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == "==") {
 			if(type[temp.op1] == 'i'){
-				v.push_back("li $v0, 1");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 1");
 				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("beq $t0, $t1, Label" + to_string(labelidx));
-				v.push_back("li $v0, 0");
-				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("li $t2, 0");
+				v.push_back("Label" + to_string(labelidx) + ":");
+				v.push_back("sw $t2, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.eq.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
+				v.push_back("Label" + to_string(labelidx) + ":");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
-			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == "label") {
@@ -407,6 +402,8 @@ int main(int argc, char **argv)
 	for(int i=0;i<v.size();i++){
 		cout<<v[i]<<endl;
 	}
+	cout<<to_hex(mapmem["t2"])<<endl;
+	cout<<to_hex(mapmem["t3"])<<endl;
 
     return 0;
 }
