@@ -337,6 +337,8 @@
     int insideSwitchCase = 0;
     // Keep track of whether inside loops
     int insideLoop = 0;
+    // Keep track whether one case conditions got matched with switch case expression
+    bool matchedCaseWithExp = false;
 
     extern bool isInt(const char *type);
     extern bool isFloat(const char *type);
@@ -396,6 +398,7 @@
 
 %type <type_id> logical_operation
 %type <type_id> FOREXP WHILEEXP if_exp else_mark
+%type <type_id> SWITCHEXP CASE_EXP
 %type <type_id> bracket_dimlist name_list id_arr
 %type <type_id> arithmetic_term arithmetic_factor
 
@@ -761,6 +764,7 @@ statement
         if (!insideSwitchCase)
             errorLine("Label conditions not inside switch statement");
 
+        $$.val = $1.val;
         $$.type = strdup($1.type);
     }
     | BREAK ';' 
@@ -806,18 +810,43 @@ conditional_statement
         else
             $$.type = strdup($4.type);
     }
-	| SWITCH '(' expression ')' { level ++; insideSwitchCase ++; } statement
+	| SWITCHEXP statement
     {
         delete_var_list(active_func_name, level);
-        level --;
+    	level --;
 
-        if ( !isInt($3.type) && !isFloat($3.type) )
-            errorLine("int expected in expression of if-else");
+		$$.val = $1.val + $2.val;
+		int startindex = $1.index;
 
-        $$.type = strdup($6.type);
-        insideSwitchCase --;
+		for (int i = startindex; i < quadruples.size(); i++) {
+			if (quadruples[i]._result == "(loopend)" || quadruples[i]._result == "next_switch_case_target" + to_string(insideSwitchCase)) {
+				quadruples[i]._result = to_string(startindex + $2.val + 1);
+			}
+		}
+		$$.type = strdup($2.type);
+
+		insideSwitchCase --;
     }
 	;
+
+SWITCHEXP
+    :   SWITCH '(' expression_cover ')'
+    {
+        if (!isErrorType($3.type)) {
+            if ( !isInt($3.type) ) {
+                errorLine("int expected in expression of switch-case");
+            }
+        }
+
+        $$.val = $3.val + 1;
+
+        insideSwitchCase ++;
+        level ++;
+
+		$$.index = quadruples.size();
+        string switch_result_str = "express" + to_string(insideSwitchCase);
+        quadruples.push_back(quadruple("=", string($3.sval), "", switch_result_str));
+    }
 
 if_exp
     :   IF '(' expression_cover ')'
@@ -837,8 +866,6 @@ if_exp
 
         quadruples.push_back(quadruple("=", string($3.sval), "", "expres"));
         quadruples.push_back(quadruple("ifF", "expres", "", ""));
-        // level ++;
-
     }
 
 else_mark
@@ -996,25 +1023,51 @@ loop_statement
         quadruples.push_back(temp);
         level ++;
     }
-
+	;
 
 labeled_statement
-	: CASE NUM ':' { level ++; } statement
+	: CASE_EXP statement
     {
-        delete_var_list(active_func_name, level);
-        level --;
+		for (int i = $1.index; i >= 0; i--) {
+			if (quadruples[i]._result == "next_switch_case_target" + to_string(insideSwitchCase)) {
+				quadruples[i]._result = to_string($1.index + 1);
+			}
+		}
+		
+        $$.val = $1.val + $2.val + 1;
+        int gotoindex = $1.index;
+		
+        quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
+        $$.type = strdup($2.type);
 
-        if (!isMatch($2.type, "int")) {
-            errorLine("int expected in switch case");
-        }
-
-        $$.type = strdup($5.type);
+        $$.index = quadruples.size();
+        quadruples.push_back(quadruple("jmp", "", "", "next_switch_case_target"+to_string(insideSwitchCase)));
     }
 	| DEFAULT ':' statement
     {
+		for (int i = quadruples.size(); i >= 0; i--) {
+			if (quadruples[i]._result == "next_switch_case_target" + to_string(insideSwitchCase)) {
+				quadruples[i]._result = to_string(quadruples.size() - $3.val );
+			}
+		}
+
+        $$.val = $3.val;
         $$.type = strdup($3.type);
     }
 	;
+
+CASE_EXP
+    :   CASE NUM ':'
+    {
+        $$.index = quadruples.size() + 1;
+        $$.val = $2.val + 2;
+
+        quadruples.push_back(quadruple("==", string($2.sval), "express"+to_string(insideSwitchCase), "expres"));
+        quadruples.push_back(quadruple("ifF", "expres", "", ""));
+
+        level ++;
+    }
+    ;
 
 compound_statement
 	: '{' '}'
@@ -1373,7 +1426,7 @@ bracket_dimlist
 int main(int argc, char **argv) {
 
     char *filename = (char*)malloc(sizeof(char)*20);
-    strcpy(filename, "input.txt");
+    strcpy(filename, "input2.txt");
 
     // Open a file handle to a particular file:
     FILE *myfile = fopen(filename, "r");

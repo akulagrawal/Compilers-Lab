@@ -19,6 +19,7 @@ int main(int argc)
     } else {
         argc = 2;
     }
+
 }
 
 int amain(int q, int a, int i, int x){
@@ -35,5 +36,19 @@ int amain(int q, int a, int i, int x){
 			break;
 		}
 		a=1;
+	}
+
+	switch(a) {
+		case 1:
+			int b = 3;
+			break;
+		case 2:
+			int x = 3;
+			int y = 4;
+			break;
+		default:
+			int z = 333;
+			int sd = 23;
+			break;
 	}
 }
