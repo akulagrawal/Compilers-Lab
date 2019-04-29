@@ -367,7 +367,7 @@
     extern void reset_active_function();
     extern void errorLine(string errorMsg);
     extern bool isVariableInSymtab(string varname);
-    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dimension);
+    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dimension, int &location);
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
     extern string Variable(string str);
@@ -1169,7 +1169,8 @@ assignment_expression
     {
         string datatype;
 		int dimension;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension);
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
@@ -1198,17 +1199,19 @@ assignment_expression
     {
         string datatype;
 		int dimension;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension);
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
-		else if (dimension != 1) {
+		else if (dimension != $2.len) {
 			if (dimension == 0)
 				errorLine("subscripted value is neither array nor pointer nor vector");
-			else
+			else {
 				errorLine("assignment to expression with array type");
+			}
 			$$.type = setErrorType();
 		}
         else {
@@ -1217,31 +1220,34 @@ assignment_expression
                     errorLine("void value not ignored as it ought to be");
                 }
                 else if (!isMatch(datatype, string($4.type))) {
-                    errorLine("Unmatched type between " + string($6.type) + " and " + datatype);
+                    errorLine("Unmatched type between " + string($4.type) + " and " + datatype);
                 }
 
-                // variable r = getArrayRecordbyName($1.sval);
-                // int multfactor = 1;
-                // int minindex = arraystartindex;
-                // int maxindex = $3.index;
-                // int currindex = minindex;
-                // for(int i = r.dimension.size() - 1; i >= 0; --i){
-                //     // Compute multiplicative factor.
-                //     multfactor *= stoi(r.dimension[i]);
-                //
-                //     // Update quad.
-                //     while(currindex <= maxindex){
-                //         if(quadruples[currindex]._arg2 == "(multfactor)"){
-                //             quadruples[currindex]._arg2 = multfactor;
-                //             currindex += 1;
-                //             break;
-                //         } else{
-                //             currindex += 1;
-                //         }
-                //     }
-                // }
+				// Variable is at location: location
+				// Can be accessed as: ab_symtab.tab[location]
 
-                cout << "arraystartindex = " << arraystartindex << "\n";
+                int multfactor = 1;
+                int minindex = arraystartindex;
+                int maxindex = $2.index;
+                int currindex = minindex;
+
+                for(int i = ab_symtab.tab[location].dimension.size() - 1; i >= 0; --i){
+                    // Compute multiplicative factor.
+                    multfactor *= stoi(ab_symtab.tab[location].dimension[i]);
+                
+                    // Update quad.
+                    while(currindex <= maxindex){
+                        if(quadruples[currindex]._arg2 == "(multfactor)"){
+                            quadruples[currindex]._arg2 = multfactor;
+                            currindex += 1;
+                            break;
+                        } else{
+                            currindex += 1;
+                        }
+                    }
+                }
+
+                // cout << "arraystartindex = " << arraystartindex << "\n";
                 $$.val = $4.val + 2;
                 $$.type = $4.type;
                 $$.sval = $4.sval;
@@ -1385,7 +1391,8 @@ arithmetic_factor
     {
         string datatype;
 		int dimension;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension);
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
@@ -1432,17 +1439,19 @@ arithmetic_factor
     {
 		string datatype;
 		int dimension;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension);
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
-		else if(dimension != 1) {
+		else if(dimension != $2.len) {
 			if (dimension == 0)
 				errorLine("subscripted value is neither array nor pointer nor vector");
-			else
+			else {
 				errorLine("assignment to expression with array type");
+			}
 			$$.type = setErrorType();
 		}
         else {
@@ -1498,7 +1507,8 @@ id_arr
     {
         string datatype;
 		int dimension;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension);
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
             $$.index = quadruples.size();
@@ -1513,7 +1523,8 @@ id_arr
     {
         string datatype;
 		int dimension;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension);
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
         if (!isExists) {
 			varDatatype[string($1.sval)] = string($3.type);
 			
@@ -1531,8 +1542,9 @@ id_arr
     {
     	string datatype;
 		int dimension;
+		int location;
         vector<string> dim = makedimlist($2.sval);
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension);
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", true, dim, active_func_name, level);
             $$.index = quadruples.size();
@@ -1548,9 +1560,10 @@ id_arr
 bracket_dimlist_eval
     : '[' arithmetic_expression ']'
     {
+		$$.len = 1;
+
         if(string($2.type) == "float"){
             errorLine("Float cannot be passed as a dimension to an array.");
-            return 1;
         }
 
         $$.sval = $2.sval;
@@ -1560,12 +1573,12 @@ bracket_dimlist_eval
     }
     | '[' arithmetic_expression ']' bracket_dimlist_eval
     {
+		$$.len = $4.len + 1;
+
         if(string($2.type) == "float"){
             errorLine("Float cannot be passed as a dimension to an array.");
-            return 1;
         }
 
-        $$=$2;
         $$.val = $4.val + 2;
         $$.sval = $4.sval;
         $$.index = quadruples.size();
@@ -1577,6 +1590,7 @@ bracket_dimlist_eval
         quadruples.push_back(quadruple("+", string($2.sval), string($4.sval), string($$.sval)));
 
     }
+	;
 
 bracket_dimlist
     : '[' NUM ']'
@@ -1609,7 +1623,6 @@ bracket_dimlist
 
         $$=$2;
         $$.val = $4.val + 1;
-        $$.sval = $4.sval;
 
         quadruples.push_back(quadruple("*", string($2.sval), "arraydim", "arraydim"));
 
@@ -1746,17 +1759,17 @@ bool isVariableInSymtab(string varname) {
 // If flag = true : check for case like  ----- a = 3;
 // Return false if error
 // else return true
-bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dim) {
+bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dim, int &location) {
 
 	dim = 0;
-
+	location = -1;
     if (!flag) {
         function_record *r;
         bool varExists = false;
 
         // Check if variable is already declared
         int cur_level_of_var;
-		int location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
+		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
         if (location != -1) {
             if (cur_level_of_var == cur_level) {
                 varExists = true;
@@ -1791,7 +1804,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
 
         // Check if variable is already declared as a variable (either global or local within a function)
         int cur_level_of_var;
-		int location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
+		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
 		
         if (location != -1) {
             found = true;
