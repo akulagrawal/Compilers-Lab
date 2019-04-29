@@ -236,11 +236,11 @@
 			return ans;
 		}
 
-		void patch(char* v_type, char* s){
+		void patch(char* v_type, char* s, int cur_level){
 			vector<string> var_names = this->getvarvector(s);
 			for (int i = 0; i < var_names.size(); ++i){
 				for (int j = 0; j < tab.size(); ++j){
-					if(tab[j].name == var_names[i]){
+					if(tab[j].name == var_names[i] && tab[j].level == cur_level) {
 						tab[j].type = strdup(v_type);
                         quadruples[tab[j].quadindex]._arg1 = string(tab[j].type);
 						break;
@@ -1483,7 +1483,7 @@ variable_declaration_statement
 		}
 		varDatatype.clear();
 		$$ = $1;
-        ab_symtab.patch($1.sval, $2.sval);
+        ab_symtab.patch($1.sval, $2.sval, level);
         vector<string> dim = makedimlist($2.sval);
 
         $$.val = $2.val;

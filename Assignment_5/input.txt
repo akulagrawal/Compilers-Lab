@@ -13,13 +13,11 @@ int sum(int a) {
 	}
 	return 0;
 }
-int sum(int a) {
-	return 2;
-}
+
 int main()
 {
 	int i,j,a = 5;
-	int f = sum(23.5);
+	int f = sum(23);
 	for(i=0; i<10;i=i+1)
 	{
 		int x = 10;
