@@ -1,10 +1,18 @@
-int sum(int a) {
-	int i = 0;
-	int j = 0;
-
-	return 0;
+int sum(int a, int b) {
+	return a + b;
 }
+
 int main()
 {
+	int x;
+	int i;
+
+	for (i = 0; i < 10; i= i +1)
+	{
+		while(x < 4) 
+			break;
+		int j = 3;
+	}
+
 	return 1;
 }

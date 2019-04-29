@@ -934,24 +934,20 @@ loop_statement
         $$.val = $1.val + $2.val + 1;
         int gotoindex = $1.index;
 		int endwhile = $1.index + $1.val + $2.val + 1;
-        // quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
 
         for(int i =gotoindex+1;i< endwhile && i< quadruples.size();i++ )
         {
-			//string s=jmp;
-			if(quadruples[i]._operator=="jmp")
+			if(quadruples[i]._result == "(loopend)")
 			{
 				quadruples[i]._result = to_string(endwhile);
 			}
-			if(quadruples[i]._operator=="ctn")
+
+			if(quadruples[i]._result == "(loopstart)")
 			{
 				quadruples[i]._result = to_string(gotoindex);
 			}
-			if((quadruples[i]._operator=="ifF"))
-			{
-				quadruples[i]._result = to_string(endwhile);
-			}
         }
+
         quadruple temp;
         temp._operator = "ljmp";
         temp._arg1 = "";
@@ -974,18 +970,15 @@ loop_statement
 
         for(int i =gotoindex+1; i< endfor && i< quadruples.size();i++ )
         {
-            if(quadruples[i]._operator=="jmp")
-            {
-            	quadruples[i]._result = to_string(endfor);
-            }
-            if(quadruples[i]._operator=="ctn")
-            {
-            	quadruples[i]._result = to_string(gotoindex);
-            }
-            if((quadruples[i]._operator=="ifF"))
-            {
-            	quadruples[i]._result = to_string(endfor);
-            }
+            if(quadruples[i]._result == "(loopend)")
+			{
+				quadruples[i]._result = to_string(endfor);
+			}
+
+			if(quadruples[i]._result == "(loopstart)")
+			{
+				quadruples[i]._result = to_string(gotoindex);
+			}
         }
 
         quadruple temp;
@@ -1013,18 +1006,15 @@ loop_statement
 
         for(int i =gotoindex+1; i < endfor && i< quadruples.size();i++ )
         {
-            if(quadruples[i]._operator=="jmp")
-            {
-            	quadruples[i]._result = to_string(endfor);
-            }
-            if(quadruples[i]._operator=="ctn")
-            {
-            	quadruples[i]._result = to_string(gotoindex);
-            }
-            if((quadruples[i]._operator=="ifF"))
-            {
-            	quadruples[i]._result = to_string(endfor);
-            }
+			if(quadruples[i]._result == "(loopend)")
+			{
+				quadruples[i]._result = to_string(endfor);
+			}
+
+			if(quadruples[i]._result == "(loopstart)")
+			{
+				quadruples[i]._result = to_string(gotoindex);
+			}
         }
 
         quadruple temp;
@@ -1051,7 +1041,7 @@ loop_statement
         temp._operator = "ifF";
         temp._arg1 = string($2.sval);
         temp._arg2 = "";
-        temp._result = "";
+        temp._result = "(loopend)";
         quadruples.push_back(temp);
 
 		level ++;
@@ -1077,7 +1067,7 @@ loop_statement
         temp._operator = "ifF";
         temp._arg1 = string($2.sval);
         temp._arg2 = "";
-        temp._result = "";
+        temp._result = "(loopend)";
         quadruples.push_back(temp);
         level ++;
     }
