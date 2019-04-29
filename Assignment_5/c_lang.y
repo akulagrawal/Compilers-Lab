@@ -1639,7 +1639,13 @@ bracket_dimlist
 int main(int argc, char **argv) {
 
     char *filename = (char*)malloc(sizeof(char)*20);
-    strcpy(filename, "input.txt");
+	
+	if (argc < 2) {
+		cout << argc << " -- Give input file please\n";
+		exit(EXIT_FAILURE);
+	}
+
+    strcpy(filename, argv[1]);
 
     // Open a file handle to a particular file:
     FILE *myfile = fopen(filename, "r");

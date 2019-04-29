@@ -1,0 +1,43 @@
+int main() 
+{
+    int a = 2.5;
+    int arr[10];
+    arr = 12;
+    arr[1] = 1;
+    a[10] = 1;
+	switch(a) {
+		case 1: 
+        {
+			int b = 3;
+            switch(b) {
+                case 1: 
+                {
+                    int b = 3;
+                }
+                case 2:
+                {
+                    int x = 3;
+                    int y = 4;
+                }
+                default:
+                {
+                    int z = 333;
+                    int sd = 23;
+                    break;
+                }
+	        }
+        }
+		case 2:
+        {
+			int x = 3;
+			int y = 4;
+        }
+		default:
+        {
+			int z = 333;
+			int sd = 23;
+			break;
+        }
+	}
+    return 0;
+}

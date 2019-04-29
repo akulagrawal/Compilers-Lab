@@ -57,7 +57,7 @@ string to_hex(int y) {
 	return s;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     freopen ("Assembly.asm","w",stdout);
 	// File pointer
