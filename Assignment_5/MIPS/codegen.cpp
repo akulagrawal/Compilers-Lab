@@ -59,14 +59,14 @@ string to_hex(int y) {
 
 int main(int argc, char **argv)
 {
-    freopen ("Assembly.asm","w",stdout);
+    freopen ("MIPS/Assembly.asm","w",stdout);
 	// File pointer
 	fstream fin;
 	vector<quad> quadlist;
 	quad temp;
 
 	// Open an existing file
-	fin.open("IR.csv", ios::in);
+	fin.open("MIPS/IR.csv", ios::in);
 	vector<string> row;
 	string line, word;
 	vector<string> v;
@@ -146,19 +146,19 @@ int main(int argc, char **argv)
 		if(temp.opcode == "=") {
 			
 			
-			int x = getmem(temp.op1);
-			if(type[temp.op1] == 'i'){
-				if(isdigit(temp.op2[0]))
-					v.push_back("li $t0, " + temp.op2);
+			int x = getmem(temp.res);
+			if(type[temp.res] == 'i'){
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
 				else
-					v.push_back("lw $t0, " + to_hex(mapmem[temp.op2]) + "($0)");
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("sw $t0, " + to_hex(x) + "($0)");
 			}
 			else{
-				if(isdigit(temp.op2[0]))
-					v.push_back("li.s $f0, " + temp.op2);
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
 				else
-					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op2]) + "($0)");
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("s.s $f0, " + to_hex(x) + "($0)");
 			}
 		}
@@ -396,7 +396,7 @@ int main(int argc, char **argv)
 			v.push_back("jr $ra");
 		}
 		if(temp.opcode == "call") {
-			v.push_back("jal " + isLabel[temp.op1]);
+			v.push_back("jal Label" + to_string(isLabel[temp.op1]));
 		}
 		if((temp.opcode == "jmp") || (temp.opcode == "ljmp")) {
 			v.push_back("j Label" + to_string(isLabel[quadlist[i].res]));
