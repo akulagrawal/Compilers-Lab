@@ -865,14 +865,9 @@ if_exp
         $$.index = quadruples.size();
         $$.val = $3.val + 1;
 
-<<<<<<< HEAD
         quadruples.push_back(quadruple("ifF", string($3.sval), "", ""));
         // level ++;
 
-=======
-        quadruples.push_back(quadruple("=", string($3.sval), "", "expres"));
-        quadruples.push_back(quadruple("ifF", "expres", "", ""));
->>>>>>> 3ce08c5540f5ea47c5d3d5ebac0b46f81482a5a7
     }
 
 else_mark
@@ -1039,10 +1034,10 @@ labeled_statement
 				quadruples[i]._result = to_string($1.index + 1);
 			}
 		}
-		
+
         $$.val = $1.val + $2.val + 1;
         int gotoindex = $1.index;
-		
+
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
         $$.type = strdup($2.type);
 
