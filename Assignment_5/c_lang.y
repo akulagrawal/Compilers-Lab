@@ -399,7 +399,7 @@
 %type <type_id> variable_declaration_statement
 
 %type <type_id> logical_operation
-%type <type_id> FOREXP WHILEEXP if_exp else_mark for_mark
+%type <type_id> FOREXP WHILEEXP if_exp else_mark for_mark while_mark
 %type <type_id> SWITCHEXP CASE_EXP
 %type <type_id> bracket_dimlist name_list id_arr
 %type <type_id> bracket_dimlist_eval
@@ -933,30 +933,30 @@ loop_statement
 
         $$.val = $1.val + $2.val + 1;
         int gotoindex = $1.index;
-        //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
-        quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
+		int endwhile = $1.index + $1.val + $2.val + 1;
+        // quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
 
-        for(int i =gotoindex+1;i<gotoindex + $2.val + 2 && i< quadruples.size();i++ )
+        for(int i =gotoindex+1;i< endwhile && i< quadruples.size();i++ )
         {
 			//string s=jmp;
 			if(quadruples[i]._operator=="jmp")
 			{
-				quadruples[i]._result=quadruples[gotoindex]._result;
+				quadruples[i]._result = to_string(endwhile);
 			}
 			if(quadruples[i]._operator=="ctn")
 			{
-				quadruples[i]._result=to_string(gotoindex-1);
+				quadruples[i]._result = to_string(gotoindex);
 			}
-			if((quadruples[i]._operator=="ifz"))
+			if((quadruples[i]._operator=="ifF"))
 			{
-				i=stoi(quadruples[i]._result);
+				quadruples[i]._result = to_string(endwhile);
 			}
         }
         quadruple temp;
         temp._operator = "ljmp";
         temp._arg1 = "";
         temp._arg2 = "";
-        temp._result = to_string(gotoindex-1);
+        temp._result = to_string(gotoindex);
         quadruples.push_back(temp);
 
         insideLoop --;
@@ -1064,18 +1064,18 @@ loop_statement
 		$$.index = quadruples.size();
 		$$.val = $3.val;
 	}
-
 	;
+
   WHILEEXP
-    : WHILE '(' expression_cover ')' {
+    : while_mark expression_cover ')' {
 
         insideLoop ++;
 
-        $$.index = quadruples.size();
-        $$.val = $3.val+1;
+        $$.index = $1.index;
+        $$.val = $2.val+1;
         quadruple temp;
         temp._operator = "ifF";
-        temp._arg1 = string($3.sval);
+        temp._arg1 = string($2.sval);
         temp._arg2 = "";
         temp._result = "";
         quadruples.push_back(temp);
@@ -1083,6 +1083,10 @@ loop_statement
     }
 	;
 
+  while_mark
+	: WHILE '(' {
+		$$.index = quadruples.size();
+	}
 labeled_statement
 	: CASE_EXP statement
     {
