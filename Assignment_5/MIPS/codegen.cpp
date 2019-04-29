@@ -19,17 +19,18 @@ struct quad {
 };
 
 int isfull[MAX];
-int memory[MAX];
+map<string, char> type;
 map<string, int> mapmem;
 map<string, int> funcArgs;
 
-int getmem(string s) {
+int getmem(string s, char ch = 'i') {
 	if(mapmem[s])
 		return mapmem[s];
 	for(int i=1;i<MAX;i+=4) {
 		if(!isfull[i]) {
 			mapmem[s] = i;
-			isfull[i] =1;
+			isfull[i] = 1;
+			type[s] = ch;
 			return i;
 		}
 	}
@@ -109,232 +110,238 @@ int main()
 		if(isLabel[idx])
 			v.push_back("Label" + to_string(isLabel[idx]) + ":");
 		temp = quadlist[i];
-		if(temp.opcode == "DECL") {
-			int x = getmem(temp.op1);
-			v.push_back("li $t0, 0");
-			v.push_back("sw $t0, " + to_hex(x) + "($0)");
+		if(temp.opcode == "assign") {
+			int x = getmem(temp.res, temp.op1[0]);
+			if(temp.op1 == "int"){
+				v.push_back("li $t0, 0");
+				v.push_back("sw $t0, " + to_hex(x) + "($0)");
+			}
+			else{
+				v.push_back("li.s $f0, 0");
+				v.push_back("s.s $f0, " + to_hex(x) + "($0)");
+			}
 		}
 		if(temp.opcode == "=") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
+			
+			
 			int x = getmem(temp.op1);
-			if(isdigit(temp.op2[0]))
-				v.push_back("li $t0, " + temp.op2);
-			else
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("sw $t0, " + to_hex(x) + "($0)");
+			if(type[temp.op1] == 'i'){
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t0, " + temp.op2);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("sw $t0, " + to_hex(x) + "($0)");
+			}
+			else{
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f0, " + temp.op2);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("s.s $f0, " + to_hex(x) + "($0)");
+			}
 		}
 		if(temp.opcode == "+") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("add $v0, $t0, $t1");
-			int z = getmem(temp.res);
-			v.push_back("sw $v0, " + to_hex(z) + "($0)");
+			int x = getmem(temp.res);
+			if(type[temp.res] == 'i'){
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("add $v0, $t0, $t1");
+				v.push_back("sw $v0, " + to_hex(x) + "($0)");
+			}
+			else{
+				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("add.s $f3, $f0, $f1");
+				v.push_back("s.s $f3, " + to_hex(x) + "($0)");
+			}
 		}
 		if(temp.opcode == "-") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("sub $v0, $t0, $t1");
-			int z = getmem(temp.res);
-			v.push_back("sw $v0, " + to_hex(z) + "($0)");
+			int x = getmem(temp.res);
+			if(type[temp.res] == 'i'){
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("sub $v0, $t0, $t1");
+				v.push_back("sw $v0, " + to_hex(x) + "($0)");
+			}
+			else{
+				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("sub.s $f3, $f0, $f1");
+				v.push_back("s.s $f3, " + to_hex(x) + "($0)");
+			}
 		}
 		if(temp.opcode == "*") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("mult $t0, $t1");
-			v.push_back("mflo $v0");
-			int z = getmem(temp.res);
-			v.push_back("sw $v0, " + to_hex(z) + "($0)");
+			int x = getmem(temp.res);
+			if(type[temp.res] == 'i'){
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("mult $t0, $t1");
+				v.push_back("mflo $v0");
+				v.push_back("sw $v0, " + to_hex(x) + "($0)");
+			}
+			else{
+				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("mul.s $f3, $f0, $f1");
+				v.push_back("s.s $f3, " + to_hex(x) + "($0)");
+			}
 		}
 		if(temp.opcode == "/") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("div $t0, $t1");
-			v.push_back("mflo $v0");
-			int z = getmem(temp.res);
-			v.push_back("sw $v0, " + to_hex(z) + "($0)");
+			int x = getmem(temp.res);
+			if(type[temp.res] == 'i'){
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("div $t0, $t1");
+				v.push_back("mflo $v0");
+				v.push_back("sw $v0, " + to_hex(x) + "($0)");
+			}
+			else{
+				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("div.s $f3, $f0, $f1");
+				v.push_back("s.s $f3, " + to_hex(x) + "($0)");
+			}
 		}
 		if(temp.opcode == "ifF") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("beqz $t0, Label" + to_string(isLabel[quadlist[i].res]));
+			if(type[temp.op1] == 'i'){
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("beqz $t0, Label" + to_string(isLabel[quadlist[i].res]));
+			}
+			else{
+				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("li.s $f1, 0");
+				v.push_back("c.eq.s $f0, $f1");
+				v.push_back("bc1t Label" + to_string(isLabel[quadlist[i].res]));
+			}
 		}
 		if(temp.opcode == "ifT") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("bnez $t0, Label" + to_string(isLabel[quadlist[i].res]));
+			if(type[temp.op1] == 'i'){
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("bnez $t0, Label" + to_string(isLabel[quadlist[i].res]));
+			}
+			else{
+				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("li.s $f1, 0");
+				v.push_back("c.eq.s $f0, $f1");
+				v.push_back("bc1f Label" + to_string(isLabel[quadlist[i].res]));
+			}
 		}
 		if(temp.opcode == "<") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("li $v0, 1");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("blt $t0, $t1, Label" + to_string(labelidx));
-			v.push_back("li $v0, 0");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			if(type[temp.op1] == 'i'){
+				v.push_back("li $v0, 1");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("blt $t0, $t1, Label" + to_string(labelidx));
+				v.push_back("li $v0, 0");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
+			else{
+				v.push_back("li.s $f0, 1");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("c.lt.s $f1, $f2");
+				v.push_back("bc1t Label" + to_string(labelidx));
+				v.push_back("li.s $f0, 0");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
 			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == ">") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("li $v0, 1");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("bgt $t0, $t1, Label" + to_string(labelidx));
-			v.push_back("li $v0, 0");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			if(type[temp.op1] == 'i'){
+				v.push_back("li $v0, 1");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("bgt $t0, $t1, Label" + to_string(labelidx));
+				v.push_back("li $v0, 0");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
+			else{
+				v.push_back("li.s $f0, 1");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("c.gt.s $f1, $f2");
+				v.push_back("bc1t Label" + to_string(labelidx));
+				v.push_back("li.s $f0, 0");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
 			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == "<=") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("li $v0, 1");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("ble $t0, $t1, Label" + to_string(labelidx));
-			v.push_back("li $v0, 0");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			if(type[temp.op1] == 'i'){
+				v.push_back("li $v0, 1");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("ble $t0, $t1, Label" + to_string(labelidx));
+				v.push_back("li $v0, 0");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
+			else{
+				v.push_back("li.s $f0, 1");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("c.le.s $f1, $f2");
+				v.push_back("bc1t Label" + to_string(labelidx));
+				v.push_back("li.s $f0, 0");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
 			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == ">=") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("li $v0, 1");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("bge $t0, $t1, Label" + to_string(labelidx));
-			v.push_back("li $v0, 0");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			if(type[temp.op1] == 'i'){
+				v.push_back("li $v0, 1");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("bge $t0, $t1, Label" + to_string(labelidx));
+				v.push_back("li $v0, 0");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
+			else{
+				v.push_back("li.s $f0, 1");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("c.ge.s $f1, $f2");
+				v.push_back("bc1t Label" + to_string(labelidx));
+				v.push_back("li.s $f0, 0");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
 			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == "==") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = memory[mapmem[temp.op1]];
-			int y = memory[mapmem[temp.op2]];
-			v.push_back("li $v0, 1");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
-			v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-			v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("beq $t0, $t1, Label" + to_string(labelidx));
-			v.push_back("li $v0, 0");
-			v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			if(type[temp.op1] == 'i'){
+				v.push_back("li $v0, 1");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("beq $t0, $t1, Label" + to_string(labelidx));
+				v.push_back("li $v0, 0");
+				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
+			else{
+				v.push_back("li.s $f0, 1");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("c.eq.s $f1, $f2");
+				v.push_back("bc1t Label" + to_string(labelidx));
+				v.push_back("li.s $f0, 0");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
+			}
 			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
-		if(temp.opcode == "assign") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = getmem(temp.res);
-			if(isdigit(temp.op2[0]))
-				v.push_back("li $t0, " + temp.op2);
-			else
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("sw $t0, " + to_hex(x) + "($0)");
-		}
-		if(temp.opcode == "label") {
-			//int x = getfree();
-			//int y = getfree();
-			//if(x < 0 || y < 0) {
-			//	cout<<"ERROR: Register overflow\n";
-			//	exit(1);
-			//}
-			int x = getmem(temp.res);
-			if(isdigit(temp.op2[0]))
-				v.push_back("li $t0, " + temp.op2);
-			else
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op2]) + "($0)");
-			v.push_back("sw $t0, " + to_hex(x) + "($0)");
-		}
+
 
 		/*if(temp.opcode == "-") {
 			int x = getfree();
