@@ -56,7 +56,7 @@ string to_hex(int y) {
 	return s;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     freopen ("Assembly.asm","w",stdout);
 	// File pointer
@@ -65,7 +65,7 @@ int main()
 	quad temp;
 
 	// Open an existing file
-	fin.open("IR.csv", ios::in);
+	fin.open("../IR.csv", ios::in);
 	vector<string> row;
 	string line, word;
 	vector<string> v;
