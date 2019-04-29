@@ -38,7 +38,7 @@ c_lang.l
 \/                        { yylval.type_id.sval = strdup(yytext); return '/'  ; }
 ((\|\|)|or)               { yylval.type_id.sval = strdup(yytext); return OR; }
 ((&&)|and)                { yylval.type_id.sval = strdup(yytext); return AND; }
-((<=)|(>=)|<|>|(==))      { yylval.type_id.sval = strdup(yytext); return REL_OP; }
+((<=)|(>=)|<|>|(==)|(!=)) { yylval.type_id.sval = strdup(yytext); return REL_OP; }
 '                         { yylval.type_id.sval = strdup(yytext); return '\''; }
 \"                        { yylval.type_id.sval = strdup(yytext); return '"'; }
 ,                         { yylval.type_id.sval = strdup(yytext); return ','; }

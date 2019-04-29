@@ -754,8 +754,10 @@ statement
             function_record *func;
             symtab.search_function(active_func_name, func);
 
-            if (!isMatch(func->function_return_type, $2.type))
-                errorLine("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
+			if (!isErrorType(func->function_return_type)) {
+				if (!isMatch(func->function_return_type, $2.type))
+					errorLine("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
+			}
 
             quadruples.push_back(quadruple("=", string($2.sval), "", "(funcvar)"));
         }
@@ -1009,6 +1011,8 @@ loop_statement
         temp._arg2 = "";
         temp._result = "";
         quadruples.push_back(temp);
+
+		level ++;
     }
     ;
 
@@ -1071,8 +1075,6 @@ CASE_EXP
 
         quadruples.push_back(quadruple("==", string($2.sval), "express"+to_string(insideSwitchCase), "expres"));
         quadruples.push_back(quadruple("ifF", "expres", "", ""));
-
-        level ++;
     }
     ;
 
@@ -1262,7 +1264,7 @@ logical_expression
     {
 		if (!isErrorType($1.type) && !isErrorType($3.type)) {
 			if(!isMatch($1.type, $3.type)) {
-				errorLine("Unmatched types.");
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
 			}
 		}
 		
@@ -1299,7 +1301,7 @@ relational_expression
     {
 		if (!isErrorType($1.type) && !isErrorType($3.type)) {
 			if(!isMatch($1.type, $3.type)) {
-				errorLine("Unmatched types.");
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
 			}
 		}
         $$.sval = $1.sval;
@@ -1315,7 +1317,7 @@ arithmetic_expression
     {
 		if (!isErrorType($1.type) && !isErrorType($3.type)) {
 			if(!isMatch($1.type, $3.type)) {
-				errorLine("Unmatched types.");
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
 			}
 		}
 		
@@ -1328,7 +1330,7 @@ arithmetic_expression
     {
 		if (!isErrorType($1.type) && !isErrorType($3.type)) {
 			if(!isMatch($1.type, $3.type)) {
-				errorLine("Unmatched types.");
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
 			}
 		}
         $$.type = $1.type;
@@ -1349,7 +1351,7 @@ arithmetic_term
     {
 		if (!isErrorType($1.type) && !isErrorType($3.type)) {
 			if(!isMatch($1.type, $3.type)) {
-				errorLine("Unmatched types.");
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
 			}
 		}
         $$.type = $1.type;
@@ -1361,7 +1363,7 @@ arithmetic_term
     {
 		if (!isErrorType($1.type) && !isErrorType($3.type)) {
 			if(!isMatch($1.type, $3.type)) {
-				errorLine("Unmatched types.");
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
 			}
 		}
         $$.type = $1.type;
@@ -1473,8 +1475,10 @@ variable_declaration_statement
     : TYPE name_list ';'
     {
 		for (auto it = varDatatype.begin(); it != varDatatype.end(); it++) {
-			if (!isMatch(it->second, $1.sval)) {
-				errorLine("Datatype mismatch for '" + Variable(it->first) + "'");
+			if (!isErrorType(it->second) && !isErrorType($1.sval)) {
+				if (!isMatch(it->second, $1.sval)) {
+					errorLine("Datatype mismatch for '" + Variable(it->first) + "'");
+				}
 			}
 		}
 		varDatatype.clear();
