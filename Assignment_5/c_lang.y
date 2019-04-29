@@ -432,6 +432,11 @@ START
 function_declaration
 	: function_head '{' function_result_assignment statement_list '}'
     {	
+		if (active_func_name != "_main") {
+			quadruples[$1.index]._result = to_string($1.index + $1.val + $3.val + $4.val + 1);
+			// cout << "-------" << $1.index << " " << $1.val << " " << $3.val << " " << $4.val << endl;
+		}
+		
         // get a variable assigned to this function to be returned.
         string temp = "t" + string($1.sval);
 
@@ -454,6 +459,9 @@ function_declaration
     }
 	| function_head '{' '}'
     {
+		if (active_func_name != "_main")
+			quadruples[$1.index]._result = to_string($1.index + $1.val);
+
         delete_var_list(active_func_name, level);
         level--;
         reset_active_function();
@@ -464,12 +472,21 @@ function_result_assignment
     : // Assign a variable for the return value of this function.
     {
         $$.index = quadruples.size();
+		$$.val = 1;
         quadruples.push_back(quadruple("assign", "(type)", "1", "(funcvar)"));
     }
 
 function_head
     : TYPE IDENTIFIER '(' { level ++; } param_list_declaration ')'
     {
+		set_active_function($2.sval);
+		$$.index = quadruples.size();
+		if (active_func_name != "_main") {
+			$$.val = 2;
+			quadruples.push_back(quadruple("jmp", "", "", ""));
+		}
+		else
+			$$.val = 1;
         quadruples.push_back(quadruple("label", string($2.sval), to_string($5.len), ""));
 
         level ++;
@@ -487,10 +504,17 @@ function_head
         }
 
         $$.sval = $2.sval;
-        set_active_function($2.sval);
     }
     | VOID IDENTIFIER '(' { level ++; } param_list_declaration ')'
     {
+		set_active_function($2.sval);
+		$$.index = quadruples.size();
+		if (active_func_name != "_main") {
+			$$.val = 2;
+			quadruples.push_back(quadruple("jmp", "", "", ""));
+		}
+		else
+			$$.val = 1;
         quadruples.push_back(quadruple("label", string($2.sval), to_string($5.len), ""));
 
         level ++;
@@ -508,10 +532,17 @@ function_head
         }
 
         $$.sval = $2.sval;
-        set_active_function($2.sval);
     }
     | TYPE IDENTIFIER '(' ')'
     {
+		set_active_function($2.sval);
+		$$.index = quadruples.size();
+		if (active_func_name != "_main") {
+			$$.val = 2;
+			quadruples.push_back(quadruple("jmp", "", "", ""));
+		}
+		else
+			$$.val = 1;
         quadruples.push_back(quadruple("label", string($2.sval), to_string(0), ""));
 
         level += 2;
@@ -530,10 +561,17 @@ function_head
         }
 
         $$.sval = $2.sval;
-        set_active_function($2.sval);
     }
     | VOID IDENTIFIER '(' ')'
     {
+		set_active_function($2.sval);
+		$$.index = quadruples.size();
+		if (active_func_name != "_main") {
+			$$.val = 2;
+			quadruples.push_back(quadruple("jmp", "", "", ""));
+		}
+		else
+			$$.val = 1;
         quadruples.push_back(quadruple("label", string($2.sval), to_string(0), ""));
 
         level += 2;
@@ -553,7 +591,6 @@ function_head
         }
 
         $$.sval = $2.sval;
-        set_active_function($2.sval);
     }
     ;
 
@@ -725,10 +762,12 @@ statement
     : conditional_statement
     {
         $$.type = strdup($1.type);
+		$$.val = $1.val;
     }
     | loop_statement
     {
         $$.type = strdup($1.type);
+		$$.val = $1.val;
     }
     | compound_statement        // Nested statement_list
     {
@@ -743,13 +782,14 @@ statement
     | variable_declaration_statement
     {
         $$.type = setVoidType();
+		$$.val = $1.val;
     }
     | RETURN expression_statement
     {
         if (isInsideFunc()){
             $$.type = strdup($2.type);
             $$.index = quadruples.size();
-            $$.val = 1;
+            $$.val = $2.val + 1;
 
             function_record *func;
             symtab.search_function(active_func_name, func);
@@ -891,26 +931,26 @@ loop_statement
 
         $$.type = strdup($2.type);
 
-        $$.val = $1.val + $2.val;
+        $$.val = $1.val + $2.val + 1;
         int gotoindex = $1.index;
         //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
 
         for(int i =gotoindex+1;i<gotoindex + $2.val + 2 && i< quadruples.size();i++ )
         {
-        //string s=jmp;
-        if(quadruples[i]._operator=="jmp")
-        {
-            quadruples[i]._result=quadruples[gotoindex]._result;
-        }
-        if(quadruples[i]._operator=="ctn")
-        {
-            quadruples[i]._result=to_string(gotoindex-1);
-        }
-        if((quadruples[i]._operator=="ifz"))
-        {
-            i=stoi(quadruples[i]._result);
-        }
+			//string s=jmp;
+			if(quadruples[i]._operator=="jmp")
+			{
+				quadruples[i]._result=quadruples[gotoindex]._result;
+			}
+			if(quadruples[i]._operator=="ctn")
+			{
+				quadruples[i]._result=to_string(gotoindex-1);
+			}
+			if((quadruples[i]._operator=="ifz"))
+			{
+				i=stoi(quadruples[i]._result);
+			}
         }
         quadruple temp;
         temp._operator = "ljmp";
@@ -928,7 +968,7 @@ loop_statement
 
         $$.type = strdup($3.type);
 
-        $$.val = $1.val + $3.val;
+        $$.val = $1.val + $3.val + 1;
         int gotoindex = $1.index;
         //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$3.val<<endl;
         quadruples[gotoindex]._result = to_string(gotoindex + $3.val + 2);
@@ -965,7 +1005,7 @@ loop_statement
 
         $$.type = strdup($4.type);
 
-        $$.val = $1.val + $2.val+$4.val;
+        $$.val = $1.val + $2.val+$4.val + 1;
         int gotoindex = $1.index;
         // cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val+ $4.val + 2);
@@ -1071,7 +1111,7 @@ CASE_EXP
 			errorLine("case label does not reduce to an integer constant");
 		}
         $$.index = quadruples.size() + 1;
-        $$.val = $2.val + 2;
+        $$.val = 2;
 
         quadruples.push_back(quadruple("==", string($2.sval), "express"+to_string(insideSwitchCase), "expres"));
         quadruples.push_back(quadruple("ifF", "expres", "", ""));
@@ -1190,7 +1230,7 @@ assignment_expression
                 else if (!isMatch(datatype, string($3.type))) {
                     errorLine("Unmatched types between " + string($3.type) + " and " + datatype);
                 }
-                $$.val = $3.val + 2;
+                $$.val = $3.val + 1;
                 $$.type = $3.type;
                 $$.sval = $3.sval;
                 quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
@@ -1250,7 +1290,7 @@ assignment_expression
                 }
 
                 // cout << "arraystartindex = " << arraystartindex << "\n";
-                $$.val = $4.val + 2;
+                $$.val = $2.val + $4.val + 1;
                 $$.type = $4.type;
                 $$.sval = $4.sval;
                 quadruples.push_back(quadruple("=", string($4.sval), "", string($1.sval) + "[" + string($2.sval) + "]"));
@@ -1459,7 +1499,7 @@ arithmetic_factor
         else {
             $$.type = strdup(datatype.c_str());
 			$$.sval = $1.sval;
-			$$.val = 2;
+			$$.val = $2.val + 2;
 
 			string temp = get_next_temp();
 			$$.sval = strdup(temp.c_str());
@@ -1499,7 +1539,7 @@ name_list
     }
 	| id_arr ',' name_list
     {
-        $$.val = $1.val;
+        $$.val = $1.val + $3.val;
         $$.sval=$1.sval;
         strcat($$.sval,",");
         strcat($$.sval, $3.sval);
@@ -1583,7 +1623,7 @@ bracket_dimlist_eval
             errorLine("Float cannot be passed as a dimension to an array.");
         }
 
-        $$.val = $4.val + 2;
+        $$.val = $2.val + $4.val + 2;
         $$.sval = $4.sval;
         $$.index = quadruples.size();
 
@@ -1601,7 +1641,6 @@ bracket_dimlist
     {
         if(string($2.type) == "float"){
             errorLine("Float cannot be passed as a dimension to an array.");
-            return 1;
         }
 
         $$=$2;
@@ -1622,7 +1661,6 @@ bracket_dimlist
     {
         if(string($2.type) == "float"){
             errorLine("Float cannot be passed as a dimension to an array.");
-            return 1;
         }
 
         $$=$2;
@@ -1663,16 +1701,16 @@ int main(int argc, char **argv) {
     }
 
     if(!errorFound){
-        //cerr << "Intermediate Code in Quadruple Format:" << "\n";
-        //cerr << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(8) << "ARG1" << " | " << setw(8) << "ARG2" << " | " << setw(8) << "RESULT" << "\n";
+        cerr << "Intermediate Code in Quadruple Format:" << "\n";
+        cerr << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(8) << "ARG1" << " | " << setw(8) << "ARG2" << " | " << setw(8) << "RESULT" << "\n";
         for(int i = 0; i < quadruples.size(); ++i){
             quadruple quad = quadruples[i];
-            //cerr << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(8) << quad._arg1 << " | " << setw(8) << quad._arg2 << " | " << setw(8) << quad._result << "\n";
+            cerr << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(8) << quad._arg1 << " | " << setw(8) << quad._arg2 << " | " << setw(8) << quad._result << "\n";
         }
 
         for(int i = 0; i < quadruples.size(); ++i){
             quadruple quad = quadruples[i];
-            cout << quad._operator << "," << quad._arg1 << "," << quad._arg2 << "," << quad._result << "\n";
+            // cout << quad._operator << "," << quad._arg1 << "," << quad._arg2 << "," << quad._result << "\n";
         }
     }
 

@@ -6,37 +6,5 @@ int sum(int a) {
 }
 int main()
 {
-	int i,j,a = 5;
-	int f = sum(23);
-	for(i=0; i<10;i=i+1)
-	{
-		int x = 10;
-		if (a+2*5 != x)
-		{
-			switch(x)
-			{
-				case 1:
-				{
-					for(j=i;j>=10;j = j-1)
-					{
-						int x;
-						while (x < i) {
-							int x;
-							int i;
-						}
-					}
-					a = 8;
-					break;
-				}
-				default:
-					break;
-			}
-		}
-	}
-	
-	if(i > 0)
-	{
-		return 0;
-	}
 	return 1;
 }
