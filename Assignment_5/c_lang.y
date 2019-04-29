@@ -434,7 +434,7 @@ function_declaration
     {	
 		if (active_func_name != "_main") {
 			quadruples[$1.index]._result = to_string($1.index + $1.val + $3.val + $4.val + 1);
-			cout << "-------" << $1.index << " " << $1.val << " " << $3.val << " " << $4.val << endl;
+			// cout << "-------" << $1.index << " " << $1.val << " " << $3.val << " " << $4.val << endl;
 		}
 		
         // get a variable assigned to this function to be returned.
@@ -789,7 +789,7 @@ statement
         if (isInsideFunc()){
             $$.type = strdup($2.type);
             $$.index = quadruples.size();
-            $$.val = 1;
+            $$.val = $2.val + 1;
 
             function_record *func;
             symtab.search_function(active_func_name, func);
