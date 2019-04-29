@@ -454,7 +454,7 @@ function_declaration
 	;
 
 function_result_assignment
-    : %empty// Assign a variable for the return value of this function.
+    : // Assign a variable for the return value of this function.
     {
         $$.index = quadruples.size();
         quadruples.push_back(quadruple("assign", "(type)", "1", "(funcvar)"));
@@ -763,7 +763,7 @@ statement
 
         $$.type = strdup($1.type);
     }
-    | BREAK ';' 
+    | BREAK ';'
     {
         /* Check if inside loop or switch. (to be done). */
         if (!insideLoop && !insideSwitchCase) {
@@ -773,7 +773,7 @@ statement
         $$.val=1;
         quadruples.push_back(quadruple("jmp", "", "", "(loopend)"));
     }
-    | CONTINUE ';' 
+    | CONTINUE ';'
     {
         /* Check if inside loop or switch. (to be done). */
         if (!insideLoop) {
@@ -966,7 +966,7 @@ loop_statement
 
 
   FOREXP
-    : FOR '(' expression_statement expression_statement 
+    : FOR '(' expression_statement expression_statement
     {
         insideLoop ++;
 
@@ -1391,13 +1391,18 @@ int main(int argc, char **argv) {
     }
 
     if(!errorFound){
-        cout << "Intermediate Code in Quadruple Format:" << "\n";
-        cout << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(7) << "ARG1" << " | " << setw(7) << "ARG2" << " | " << setw(7) << "RESULT" << "\n";
+        // cout << "Intermediate Code in Quadruple Format:" << "\n";
+        // cout << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(7) << "ARG1" << " | " << setw(7) << "ARG2" << " | " << setw(7) << "RESULT" << "\n";
+        // for(int i = 0; i < quadruples.size(); ++i){
+        //     quadruple quad = quadruples[i];
+        //     cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(7) << quad._arg1 << " | " << setw(7) << quad._arg2 << " | " << setw(7) << quad._result << "\n";
+        // }
+
         for(int i = 0; i < quadruples.size(); ++i){
-            quadruple quad = quadruples[i];
-            cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(7) << quad._arg1 << " | " << setw(7) << quad._arg2 << " | " << setw(7) << quad._result << "\n";
+           quadruple quad = quadruples[i];
+           cout << quad._operator << "," << quad._arg1 << "," << quad._arg2 << "," << quad._result << "\n";
         }
-    }
+     }
 
 }
 
