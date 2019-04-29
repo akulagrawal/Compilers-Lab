@@ -1657,18 +1657,18 @@ int main(int argc, char **argv) {
     }
 
     if(!errorFound){
-        cerr << "Intermediate Code in Quadruple Format:" << "\n";
-        cerr << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(8) << "ARG1" << " | " << setw(8) << "ARG2" << " | " << setw(8) << "RESULT" << "\n";
+        //cerr << "Intermediate Code in Quadruple Format:" << "\n";
+        //cerr << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(8) << "ARG1" << " | " << setw(8) << "ARG2" << " | " << setw(8) << "RESULT" << "\n";
         for(int i = 0; i < quadruples.size(); ++i){
             quadruple quad = quadruples[i];
-            cerr << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(8) << quad._arg1 << " | " << setw(8) << quad._arg2 << " | " << setw(8) << quad._result << "\n";
+            //cerr << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(8) << quad._arg1 << " | " << setw(8) << quad._arg2 << " | " << setw(8) << quad._result << "\n";
         }
 
-        // for(int i = 0; i < quadruples.size(); ++i){
-        //    quadruple quad = quadruples[i];
-        //    cout << quad._operator << "," << quad._arg1 << "," << quad._arg2 << "," << quad._result << "\n";
-        // }
-     }
+        for(int i = 0; i < quadruples.size(); ++i){
+            quadruple quad = quadruples[i];
+            cout << quad._operator << "," << quad._arg1 << "," << quad._arg2 << "," << quad._result << "\n";
+        }
+    }
 
 }
 
