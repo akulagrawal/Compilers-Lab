@@ -371,6 +371,7 @@
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
     extern string Variable(string str);
+	extern string VarWithLevel(char *, int);
 %}
 
 %union {
@@ -1237,7 +1238,7 @@ assignment_expression
                 $$.val = $3.val + 1;
                 $$.type = $3.type;
                 $$.sval = $3.sval;
-                quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+                quadruples.push_back(quadruple("=", string($3.sval), "", VarWithLevel($1.sval, level)));
             }
         }
     }
@@ -1297,7 +1298,7 @@ assignment_expression
                 $$.val = $2.val + $4.val + 1;
                 $$.type = $4.type;
                 $$.sval = $4.sval;
-                quadruples.push_back(quadruple("=", string($4.sval), "", string($1.sval) + "[" + string($2.sval) + "]"));
+                quadruples.push_back(quadruple("=", string($4.sval), "", VarWithLevel($1.sval, level) + "[" + string($2.sval) + "]"));
             }
         }
     }
@@ -1458,7 +1459,7 @@ arithmetic_factor
         $$.sval = strdup(temp.c_str());
 
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
-        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
+        quadruples.push_back(quadruple("=", VarWithLevel($1.sval, level), "",  temp));
     }
     | NUM
     {
@@ -1562,7 +1563,7 @@ id_arr
             $$.index = quadruples.size();
             $$.val = 1;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "1", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1580,8 +1581,8 @@ id_arr
             $$.index = quadruples.size();
             $$.val = 2 + $3.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
-            quadruples.push_back(quadruple("=", $3.sval, "", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "1", VarWithLevel($1.sval, level)));
+            quadruples.push_back(quadruple("=", $3.sval, "", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1598,7 +1599,7 @@ id_arr
             $$.index = quadruples.size();
             $$.val = 1 + $2.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "arraydim", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "arraydim", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1912,8 +1913,13 @@ bool isCompatible(string type1, string type2) {
         return true;
     return false;
 }
+
 string Variable(string str) {
     if (str == "")
         return "";
     return str.substr(1);
+}
+
+string VarWithLevel(char * str, int level){
+	return string(str) + "_" + to_string(level);
 }
