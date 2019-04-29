@@ -933,9 +933,8 @@ loop_statement
 
         $$.val = $1.val + $2.val+$4.val;
         int gotoindex = $1.index;
-        cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
+        // cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val+ $4.val + 2);
-
 
         for(int i =gotoindex+1;i<gotoindex + $2.val+ $4.val + 2 && i< quadruples.size();i++ )
         {
@@ -1485,10 +1484,10 @@ void reset_active_function() {
 }
 void errorLine(string errorMsg) {
     errorFound = true;
-    cout << "Error at line " << lineNo << " : " << errorMsg << endl;
+    cerr << "Error at line " << lineNo << " : " << errorMsg << endl;
 }
 void warning(string warningMsg) {
-    cout << "Warning at line " << lineNo << " : " << warningMsg << endl;
+    cerr << "Warning at line " << lineNo << " : " << warningMsg << endl;
 }
 bool isVariableInSymtab(string varname) {
     if(ab_symtab.search(varname) == -1)
