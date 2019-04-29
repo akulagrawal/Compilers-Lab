@@ -111,6 +111,7 @@
 
     vector<quadruple> quadruples;
 
+    int arraystartindex = 0;
     bool arraydimDefined = false;
 
     /* Indices of associated quadruples. */
@@ -383,7 +384,7 @@
     } type_id;
 }
 
-%expect 8       // 1. if-else
+%expect 8       // if-else and expressions.
 
 // Non Terminals
 %type <type_id> statement statement_list
@@ -401,7 +402,9 @@
 %type <type_id> FOREXP WHILEEXP if_exp else_mark
 %type <type_id> SWITCHEXP CASE_EXP
 %type <type_id> bracket_dimlist name_list id_arr
+%type <type_id> bracket_dimlist_eval
 %type <type_id> arithmetic_term arithmetic_factor
+
 
 // Terminals
 %token <type_id> NUM IDENTIFIER
@@ -1170,7 +1173,6 @@ assignment_expression
         }
         else {
             if (!isErrorType($3.type)) {
-
                 if (isVoidType($3.type)) {
                     errorLine("void value not ignored as it ought to be");
                 }
@@ -1178,16 +1180,13 @@ assignment_expression
                     warning("Implicit type conversion from " + string($3.type) + " to " + datatype);
                 }
                 $$.val = $3.val + 2;
-                $$.type = strdup($3.type);
-                string temp = get_next_temp();
-                $$.sval = strdup(temp.c_str());
+                $$.type = $3.type;
+                $$.sval = $3.sval;
                 quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
-                quadruples.push_back(quadruple("=", string($3.sval), "", temp));
-
             }
         }
     }
-    | IDENTIFIER '[' NUM ']' '=' arithmetic_expression
+    | IDENTIFIER bracket_dimlist_eval '=' arithmetic_expression
     {
         string datatype;
         bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
@@ -1197,19 +1196,40 @@ assignment_expression
             $$.type = setErrorType();
         }
         else {
-            if (!isErrorType($6.type)) {
-                if (isVoidType($6.type)) {
+            if (!isErrorType($4.type)) {
+                if (isVoidType($4.type)) {
                     errorLine("void value not ignored as it ought to be");
                 }
-                else if (!isMatch(datatype, string($6.type))) {
-                    warning("Implicit type conversion from " + string($6.type) + " to " + datatype);
+                else if (!isMatch(datatype, string($4.type))) {
+                    warning("Implicit type conversion from " + string($4.type) + " to " + datatype);
                 }
-                $$.val = $6.val + 2;
-                $$.type = strdup($6.type);
-                string temp = get_next_temp();
-                $$.sval = strdup(temp.c_str());
-                quadruples.push_back(quadruple("=", string($6.sval), "", string($1.sval) + "[" + string($3.sval) + "]"));
-                quadruples.push_back(quadruple("=", string($6.sval), "", temp));
+
+                // variable r = getArrayRecordbyName($1.sval);
+                // int multfactor = 1;
+                // int minindex = arraystartindex;
+                // int maxindex = $3.index;
+                // int currindex = minindex;
+                // for(int i = r.dimension.size() - 1; i >= 0; --i){
+                //     // Compute multiplicative factor.
+                //     multfactor *= stoi(r.dimension[i]);
+                //
+                //     // Update quad.
+                //     while(currindex <= maxindex){
+                //         if(quadruples[currindex]._arg2 == "(multfactor)"){
+                //             quadruples[currindex]._arg2 = multfactor;
+                //             currindex += 1;
+                //             break;
+                //         } else{
+                //             currindex += 1;
+                //         }
+                //     }
+                // }
+
+                cout << "arraystartindex = " << arraystartindex << "\n";
+                $$.val = $4.val + 2;
+                $$.type = $4.type;
+                $$.sval = $4.sval;
+                quadruples.push_back(quadruple("=", string($4.sval), "", string($1.sval) + "[" + string($2.sval) + "]"));
             }
         }
     }
@@ -1352,7 +1372,7 @@ arithmetic_factor
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
         quadruples.push_back(quadruple("=", "t" + string($1.sval), "",  temp));
     }
-    | IDENTIFIER '[' NUM ']'
+    | IDENTIFIER bracket_dimlist_eval
     {
         $$.sval = $1.sval;
         $$.val = 2;
@@ -1361,7 +1381,7 @@ arithmetic_factor
         $$.sval = strdup(temp.c_str());
 
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
-        quadruples.push_back(quadruple("=", string($1.sval) + "[" + string($3.sval) + "]", "",  temp));
+        quadruples.push_back(quadruple("=", string($1.sval) + "[" + string($2.sval) + "]", "",  temp));
     }
 	;
 
@@ -1440,6 +1460,39 @@ id_arr
     }
 	;
 
+bracket_dimlist_eval
+    : '[' arithmetic_expression ']'
+    {
+        if(string($2.type) == "float"){
+            errorLine("Float cannot be passed as a dimension to an array.");
+            return 1;
+        }
+
+        $$.sval = $2.sval;
+        $$.val = $2.val;
+        $$.index = quadruples.size();
+        arraystartindex = quadruples.size();
+    }
+    | '[' arithmetic_expression ']' bracket_dimlist_eval
+    {
+        if(string($2.type) == "float"){
+            errorLine("Float cannot be passed as a dimension to an array.");
+            return 1;
+        }
+
+        $$=$2;
+        $$.val = $4.val + 2;
+        $$.sval = $4.sval;
+        $$.index = quadruples.size();
+
+        /* Multiply arithmetic_factor by the actual dimensions to the right. */
+        quadruples.push_back(quadruple("*", string($2.sval), "(multfactor)", string($2.sval)));
+
+        /* Add the offset for the lower dimensions. */
+        quadruples.push_back(quadruple("+", string($2.sval), string($4.sval), string($$.sval)));
+
+    }
+
 bracket_dimlist
     : '[' NUM ']'
     {
@@ -1473,7 +1526,7 @@ bracket_dimlist
         $$.val = $4.val + 1;
         $$.sval = $4.sval;
 
-        quadruples.push_back(quadruple("*", string($2.sval), "expres", "expres"));
+        quadruples.push_back(quadruple("*", string($2.sval), "arraydim", "arraydim"));
 
 		strcat($$.sval,",");
 		strcat($$.sval,$4.sval);
@@ -1484,7 +1537,7 @@ bracket_dimlist
 int main(int argc, char **argv) {
 
     char *filename = (char*)malloc(sizeof(char)*20);
-    strcpy(filename, "input2.txt");
+    strcpy(filename, "input.txt");
 
     // Open a file handle to a particular file:
     FILE *myfile = fopen(filename, "r");
@@ -1509,10 +1562,10 @@ int main(int argc, char **argv) {
             cerr << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(8) << quad._arg1 << " | " << setw(8) << quad._arg2 << " | " << setw(8) << quad._result << "\n";
         }
 
-        for(int i = 0; i < quadruples.size(); ++i){
-           quadruple quad = quadruples[i];
-           cout << quad._operator << "," << quad._arg1 << "," << quad._arg2 << "," << quad._result << "\n";
-        }
+        // for(int i = 0; i < quadruples.size(); ++i){
+        //    quadruple quad = quadruples[i];
+        //    cout << quad._operator << "," << quad._arg1 << "," << quad._arg2 << "," << quad._result << "\n";
+        // }
      }
 
 }
