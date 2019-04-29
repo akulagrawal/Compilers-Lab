@@ -117,14 +117,30 @@ int main()
 			v.push_back("Label" + to_string(isLabel[idx]) + ":");
 		temp = quadlist[i];
 		if(temp.opcode == "assign") {
-			int x = getmem(temp.res, temp.op1[0]);
-			if(temp.op1 == "int"){
-				v.push_back("li $t0, 0");
-				v.push_back("sw $t0, " + to_hex(x) + "($0)");
+			int n = mapmem[temp.op2];
+			if(n==0) {
+				int x = getmem(temp.res, temp.op1[0]);
+				if(temp.op1 == "int"){
+					v.push_back("li $t0, 0");
+					v.push_back("sw $t0, " + to_hex(x) + "($0)");
+				}
+				else{
+					v.push_back("li.s $f0, 0");
+					v.push_back("s.s $f0, " + to_hex(x) + "($0)");
+				}
 			}
-			else{
-				v.push_back("li.s $f0, 0");
-				v.push_back("s.s $f0, " + to_hex(x) + "($0)");
+			else {
+				for(int i=0;i<n;i++){
+					int x = getmem(temp.res + "[" + to_string(i) + "]", temp.op1[0]);
+					if(temp.op1 == "int"){
+						v.push_back("li $t0, 0");
+						v.push_back("sw $t0, " + to_hex(x) + "($0)");
+					}
+					else{
+						v.push_back("li.s $f0, 0");
+						v.push_back("s.s $f0, " + to_hex(x) + "($0)");
+					}
+				}
 			}
 		}
 		if(temp.opcode == "=") {
@@ -398,6 +414,6 @@ int main()
 }
 /* To display $t0
 move $a0, $t0
-li $v0, 1
+li $v0, 1 (2 for float)
 syscall
 */
