@@ -1,39 +1,11 @@
-int sum(int a, int b, int c, int d){
-    return a + b + c + d;
-}
-
-int prod(int a, int b, int c){
-    return a * b * c;
-}
-
-float one(){
-    return 1;
-}
-
-int main(int argc)
+int main()
 {
-    if(argc == 1){
-        int d = 3 * 5 + 3;
-        int r = one();
-        d = sum(sum(2, 3, 1, 2), 1, sum(1, 2, 4, 5), prod(sum(1, 2, 3, 4), 1, 2));
-    } else {
-        argc = 2;
-    }
-}
-
-int amain(int q, int a, int i, int x){
-	while(q<1)
+	int x = 5;
+	int i;
+	for(i=0; i<10;i=i+1)
 	{
-		a=1;
-		break;
+		x = x+1;
 	}
-
-	for(i=1;i<5;i<5)
-	{
-		continue;
-		if(x<4){
-			break;
-		}
-		a=1;
-	}
+	
+	return 1;
 }

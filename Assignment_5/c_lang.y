@@ -111,6 +111,9 @@
 
     vector<quadruple> quadruples;
 
+    int arraystartindex = 0;
+    bool arraydimDefined = false;
+
     /* Indices of associated quadruples. */
     struct indexlist {
         vector<int> indexes;
@@ -233,12 +236,11 @@
 			return ans;
 		}
 
-		void patch(char* v_type, char* s){
+		void patch(char* v_type, char* s, int cur_level){
 			vector<string> var_names = this->getvarvector(s);
 			for (int i = 0; i < var_names.size(); ++i){
-
 				for (int j = 0; j < tab.size(); ++j){
-					if(tab[j].name == var_names[i]){
+					if(tab[j].name == var_names[i] && tab[j].level == cur_level) {
 						tab[j].type = strdup(v_type);
                         quadruples[tab[j].quadindex]._arg1 = string(tab[j].type);
 						break;
@@ -255,7 +257,7 @@
 			return -1;
 		}
 
-        bool search_var(string varname, int &cur_level, string functionName, string &datatype) {
+        int search_var(string varname, int &cur_level, string functionName, string &datatype) {
             vector<int> position;
             for (int i = 0; i < tab.size(); ++i) {
                 if (tab[i].name == varname && tab[i].function_name == functionName)
@@ -264,7 +266,7 @@
                     position.push_back(i);
             }
             if (position.empty()) {
-                return false;
+                return -1;
             }
             else {
                 int pos_with_max_level = 0;
@@ -277,8 +279,8 @@
                 }
                 cur_level = max_level;
                 datatype = tab[pos_with_max_level].type;
+            	return pos_with_max_level;
             }
-            return true;
         }
 
         void delete_var_from_level(string function_name, int level) {
@@ -338,6 +340,9 @@
     // Keep track of whether inside loops
     int insideLoop = 0;
 
+    // Stores the type of variable (corresponding to variable name) by which it is initialized while declaration
+	unordered_map<string,string> varDatatype;
+
     extern bool isInt(const char *type);
     extern bool isFloat(const char *type);
     extern bool isBoolean(const char *type);
@@ -361,9 +366,8 @@
     extern char* setNoErrorType();
     extern void reset_active_function();
     extern void errorLine(string errorMsg);
-    extern void warning(string warningMsg);
     extern bool isVariableInSymtab(string varname);
-    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag);
+    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dimension, int &location);
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
     extern string Variable(string str);
@@ -380,7 +384,7 @@
     } type_id;
 }
 
-%expect 8       // 1. if-else
+%expect 8       // if-else and expressions.
 
 // Non Terminals
 %type <type_id> statement statement_list
@@ -396,8 +400,11 @@
 
 %type <type_id> logical_operation
 %type <type_id> FOREXP WHILEEXP if_exp else_mark
+%type <type_id> SWITCHEXP CASE_EXP
 %type <type_id> bracket_dimlist name_list id_arr
+%type <type_id> bracket_dimlist_eval
 %type <type_id> arithmetic_term arithmetic_factor
+
 
 // Terminals
 %token <type_id> NUM IDENTIFIER
@@ -424,7 +431,7 @@ START
 
 function_declaration
 	: function_head '{' function_result_assignment statement_list '}'
-    {
+    {	
         // get a variable assigned to this function to be returned.
         string temp = "t" + string($1.sval);
 
@@ -454,7 +461,7 @@ function_declaration
 	;
 
 function_result_assignment
-    : %empty// Assign a variable for the return value of this function.
+    : // Assign a variable for the return value of this function.
     {
         $$.index = quadruples.size();
         quadruples.push_back(quadruple("assign", "(type)", "1", "(funcvar)"));
@@ -747,8 +754,10 @@ statement
             function_record *func;
             symtab.search_function(active_func_name, func);
 
-            if (!isMatch(func->function_return_type, $2.type))
-                warning("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
+			if (!isErrorType(func->function_return_type)) {
+				if (!isMatch(func->function_return_type, $2.type))
+					errorLine("'return' with a value '" + string($2.type) + "', in function returning '" + string(func->function_return_type) + "'");
+			}
 
             quadruples.push_back(quadruple("=", string($2.sval), "", "(funcvar)"));
         }
@@ -761,9 +770,10 @@ statement
         if (!insideSwitchCase)
             errorLine("Label conditions not inside switch statement");
 
+        $$.val = $1.val;
         $$.type = strdup($1.type);
     }
-    | BREAK ';' 
+    | BREAK ';'
     {
         /* Check if inside loop or switch. (to be done). */
         if (!insideLoop && !insideSwitchCase) {
@@ -773,7 +783,7 @@ statement
         $$.val=1;
         quadruples.push_back(quadruple("jmp", "", "", "(loopend)"));
     }
-    | CONTINUE ';' 
+    | CONTINUE ';'
     {
         /* Check if inside loop or switch. (to be done). */
         if (!insideLoop) {
@@ -806,18 +816,43 @@ conditional_statement
         else
             $$.type = strdup($4.type);
     }
-	| SWITCH '(' expression ')' { level ++; insideSwitchCase ++; } statement
+	| SWITCHEXP statement
     {
         delete_var_list(active_func_name, level);
-        level --;
+    	level --;
 
-        if ( !isInt($3.type) && !isFloat($3.type) )
-            errorLine("int expected in expression of if-else");
+		$$.val = $1.val + $2.val;
+		int startindex = $1.index;
 
-        $$.type = strdup($6.type);
-        insideSwitchCase --;
+		for (int i = startindex; i < quadruples.size(); i++) {
+			if (quadruples[i]._result == "(loopend)" || quadruples[i]._result == "next_switch_case_target" + to_string(insideSwitchCase)) {
+				quadruples[i]._result = to_string(startindex + $2.val + 1);
+			}
+		}
+		$$.type = strdup($2.type);
+
+		insideSwitchCase --;
     }
 	;
+
+SWITCHEXP
+    :   SWITCH '(' expression_cover ')'
+    {
+        if (!isErrorType($3.type)) {
+            if ( !isInt($3.type) ) {
+                errorLine("int expected in expression of switch-case");
+            }
+        }
+
+        $$.val = $3.val + 1;
+
+        insideSwitchCase ++;
+        level ++;
+
+		$$.index = quadruples.size();
+        string switch_result_str = "express" + to_string(insideSwitchCase);
+        quadruples.push_back(quadruple("=", string($3.sval), "", switch_result_str));
+    }
 
 if_exp
     :   IF '(' expression_cover ')'
@@ -832,11 +867,10 @@ if_exp
             }
         }
 
-        $$.index = quadruples.size() + 1;
-        $$.val = $3.val + 2;
+        $$.index = quadruples.size();
+        $$.val = $3.val + 1;
 
-        quadruples.push_back(quadruple("=", string($3.sval), "", "expres"));
-        quadruples.push_back(quadruple("ifF", "expres", "", ""));
+        quadruples.push_back(quadruple("ifF", string($3.sval), "", ""));
         // level ++;
 
     }
@@ -933,9 +967,8 @@ loop_statement
 
         $$.val = $1.val + $2.val+$4.val;
         int gotoindex = $1.index;
-        cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
+        // cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
         quadruples[gotoindex]._result = to_string(gotoindex + $2.val+ $4.val + 2);
-
 
         for(int i =gotoindex+1;i<gotoindex + $2.val+ $4.val + 2 && i< quadruples.size();i++ )
         {
@@ -966,7 +999,7 @@ loop_statement
 
 
   FOREXP
-    : FOR '(' expression_statement expression_statement 
+    : FOR '(' expression_statement expression_statement
     {
         insideLoop ++;
 
@@ -978,6 +1011,8 @@ loop_statement
         temp._arg2 = "";
         temp._result = "";
         quadruples.push_back(temp);
+
+		level ++;
     }
     ;
 
@@ -996,25 +1031,52 @@ loop_statement
         quadruples.push_back(temp);
         level ++;
     }
-
+	;
 
 labeled_statement
-	: CASE NUM ':' { level ++; } statement
+	: CASE_EXP statement
     {
-        delete_var_list(active_func_name, level);
-        level --;
+		for (int i = $1.index; i >= 0; i--) {
+			if (quadruples[i]._result == "next_switch_case_target" + to_string(insideSwitchCase)) {
+				quadruples[i]._result = to_string($1.index + 1);
+			}
+		}
 
-        if (!isMatch($2.type, "int")) {
-            errorLine("int expected in switch case");
-        }
+        $$.val = $1.val + $2.val + 1;
+        int gotoindex = $1.index;
 
-        $$.type = strdup($5.type);
+        quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
+        $$.type = strdup($2.type);
+
+        $$.index = quadruples.size();
+        quadruples.push_back(quadruple("jmp", "", "", "next_switch_case_target"+to_string(insideSwitchCase)));
     }
 	| DEFAULT ':' statement
     {
+		for (int i = quadruples.size(); i >= 0; i--) {
+			if (quadruples[i]._result == "next_switch_case_target" + to_string(insideSwitchCase)) {
+				quadruples[i]._result = to_string(quadruples.size() - $3.val );
+			}
+		}
+
+        $$.val = $3.val;
         $$.type = strdup($3.type);
     }
 	;
+
+CASE_EXP
+    :   CASE NUM ':'
+    {
+		if (!isInt($2.type)) {
+			errorLine("case label does not reduce to an integer constant");
+		}
+        $$.index = quadruples.size() + 1;
+        $$.val = $2.val + 2;
+
+        quadruples.push_back(quadruple("==", string($2.sval), "express"+to_string(insideSwitchCase), "expres"));
+        quadruples.push_back(quadruple("ifF", "expres", "", ""));
+    }
+    ;
 
 compound_statement
 	: '{' '}'
@@ -1088,19 +1150,19 @@ expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = setIntType();
+        $$.type = strdup($1.type);
     }
     | relational_expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = setIntType();
+        $$.type = strdup($1.type);
     }
     | arithmetic_expression
     {
         $$.val = $1.val;
         $$.sval = $1.sval;
-        $$.type = $1.type;
+        $$.type = strdup($1.type);
     }
     ;
 
@@ -1108,28 +1170,90 @@ assignment_expression
     : IDENTIFIER '=' arithmetic_expression
     {
         string datatype;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+		int dimension;
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
+		else if (dimension != 0) {
+			errorLine("assignment to expression with array type");
+			$$.type = setErrorType();
+		}
         else {
             if (!isErrorType($3.type)) {
-
                 if (isVoidType($3.type)) {
                     errorLine("void value not ignored as it ought to be");
                 }
                 else if (!isMatch(datatype, string($3.type))) {
-                    warning("Implicit type conversion from " + string($3.type) + " to " + datatype);
+                    errorLine("Unmatched types between " + string($3.type) + " and " + datatype);
                 }
                 $$.val = $3.val + 2;
-                $$.type = strdup($3.type);
-                string temp = get_next_temp();
-                $$.sval = strdup(temp.c_str());
+                $$.type = $3.type;
+                $$.sval = $3.sval;
                 quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
-                quadruples.push_back(quadruple("=", string($3.sval), "", temp));
+            }
+        }
+    }
+    | IDENTIFIER bracket_dimlist_eval '=' arithmetic_expression
+    {
+        string datatype;
+		int dimension;
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
 
+        if (!isExists) {
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
+            $$.type = setErrorType();
+        }
+		else if (dimension != $2.len) {
+			if (dimension == 0)
+				errorLine("subscripted value is neither array nor pointer nor vector");
+			else {
+				errorLine("assignment to expression with array type");
+			}
+			$$.type = setErrorType();
+		}
+        else {
+            if (!isErrorType($4.type)) {
+                if (isVoidType($4.type)) {
+                    errorLine("void value not ignored as it ought to be");
+                }
+                else if (!isMatch(datatype, string($4.type))) {
+                    errorLine("Unmatched type between " + string($4.type) + " and " + datatype);
+                }
+
+				// Variable is at location: location
+				// Can be accessed as: ab_symtab.tab[location]
+
+                int multfactor = 1;
+                int minindex = arraystartindex;
+                int maxindex = $2.index;
+                int currindex = minindex;
+
+                for(int i = ab_symtab.tab[location].dimension.size() - 1; i >= 0; --i){
+                    // Compute multiplicative factor.
+                    multfactor *= stoi(ab_symtab.tab[location].dimension[i]);
+                
+                    // Update quad.
+                    while(currindex <= maxindex){
+                        if(quadruples[currindex]._arg2 == "(multfactor)"){
+                            quadruples[currindex]._arg2 = multfactor;
+                            currindex += 1;
+                            break;
+                        } else{
+                            currindex += 1;
+                        }
+                    }
+                }
+
+                // cout << "arraystartindex = " << arraystartindex << "\n";
+                $$.val = $4.val + 2;
+                $$.type = $4.type;
+                $$.sval = $4.sval;
+                quadruples.push_back(quadruple("=", string($4.sval), "", string($1.sval) + "[" + string($2.sval) + "]"));
             }
         }
     }
@@ -1138,12 +1262,20 @@ assignment_expression
 logical_expression
     : expression_cover logical_operation expression_cover
     {
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
+			}
+		}
+		
         $$.val = $1.val + $2.val + $3.val + 1;
         string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
         quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
         quadruples[$2.index]._result = to_string($2.index + $3.val + 1);
         quadruples[$2.index]._arg1 = $1.sval;
+
+		$$.type = strdup($1.type);
     }
     ;
 
@@ -1167,30 +1299,44 @@ logical_operation
 relational_expression
     : expression_cover REL_OP expression_cover
     {
-        $$.type = setIntType();
-        string temp = get_next_temp();
-        $$.sval = strdup(temp.c_str());
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
+			}
+		}
+        $$.sval = $1.sval;
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), string($$.sval)));
+
+		$$.type = strdup($1.type);
     }
     ;
 
 arithmetic_expression
     : arithmetic_term '+' arithmetic_expression
     {
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
+			}
+		}
+		
         $$.type = $1.type;
-        string temp = get_next_temp();
-        $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("+", string($1.sval), string($3.sval), temp));
+        $$.sval = $1.sval;
+        quadruples.push_back(quadruple("+", string($1.sval), string($3.sval), string($$.sval)));
     }
 	| arithmetic_term '-' arithmetic_expression
     {
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
+			}
+		}
         $$.type = $1.type;
-        string temp = get_next_temp();
-        $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("-", string($1.sval), string($3.sval), temp));
+        $$.sval = $1.sval;
+        quadruples.push_back(quadruple("-", string($1.sval), string($3.sval), string($$.sval)));
     }
 	| arithmetic_term
     {
@@ -1203,19 +1349,27 @@ arithmetic_expression
 arithmetic_term
     : arithmetic_factor '*' arithmetic_term
     {
-        string temp = get_next_temp();
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
+			}
+		}
         $$.type = $1.type;
-        $$.sval = strdup(temp.c_str());
+        $$.sval = $3.sval;
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("*", string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("*", string($1.sval), string($3.sval), string($$.sval)));
 	}
 	| arithmetic_factor '/' arithmetic_term
     {
-        string temp = get_next_temp();
+		if (!isErrorType($1.type) && !isErrorType($3.type)) {
+			if(!isMatch($1.type, $3.type)) {
+				errorLine("Unmatched types between " + string($1.type) + " and " + string($3.type));
+			}
+		}
         $$.type = $1.type;
-        $$.sval = strdup(temp.c_str());
+        $$.sval = $3.sval;
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("/", string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("/", string($1.sval), string($3.sval), string($$.sval)));
     }
 	| arithmetic_factor
     {
@@ -1231,27 +1385,47 @@ arithmetic_factor
         string temp = get_next_temp();
         $$.type = $2.type;
         $$.sval = strdup(temp.c_str());
-        $$.val = $2.val + 1;
+        $$.val = $2.val + 2;
+        quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
         quadruples.push_back(quadruple("=", $2.sval, "",  temp));
 	}
 	| IDENTIFIER
     {
         string datatype;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+		int dimension;
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
         }
+		else if(dimension != 0) {
+			errorLine("assignment to expression with array type");
+			$$.type = setErrorType();
+		}
         else {
             $$.type = strdup(datatype.c_str());
         }
 
         $$.sval = $1.sval;
+        $$.val = 2;
+
+        string temp = get_next_temp();
+        $$.sval = strdup(temp.c_str());
+
+        quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
+        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
     }
     | NUM
     {
         $$.type = $1.type;
-        $$.sval = $1.sval;
+        $$.val = 2;
+
+        string temp = get_next_temp();
+        $$.sval = strdup(temp.c_str());
+
+        quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
+        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
     }
     | function_call
     {
@@ -1260,9 +1434,39 @@ arithmetic_factor
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + 2;
 
-        // cout << $$.val << "\n";
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
         quadruples.push_back(quadruple("=", "t" + string($1.sval), "",  temp));
+    }
+    | IDENTIFIER bracket_dimlist_eval
+    {
+		string datatype;
+		int dimension;
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+
+        if (!isExists) {
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
+            $$.type = setErrorType();
+        }
+		else if(dimension != $2.len) {
+			if (dimension == 0)
+				errorLine("subscripted value is neither array nor pointer nor vector");
+			else {
+				errorLine("assignment to expression with array type");
+			}
+			$$.type = setErrorType();
+		}
+        else {
+            $$.type = strdup(datatype.c_str());
+			$$.sval = $1.sval;
+			$$.val = 2;
+
+			string temp = get_next_temp();
+			$$.sval = strdup(temp.c_str());
+
+			quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
+			quadruples.push_back(quadruple("=", string($1.sval) + "[" + string($2.sval) + "]", "",  temp));
+        }
     }
 	;
 
@@ -1270,8 +1474,16 @@ arithmetic_factor
 variable_declaration_statement
     : TYPE name_list ';'
     {
+		for (auto it = varDatatype.begin(); it != varDatatype.end(); it++) {
+			if (!isErrorType(it->second) && !isErrorType($1.sval)) {
+				if (!isMatch(it->second, $1.sval)) {
+					errorLine("Datatype mismatch for '" + Variable(it->first) + "'");
+				}
+			}
+		}
+		varDatatype.clear();
 		$$ = $1;
-        ab_symtab.patch($1.sval, $2.sval);
+        ab_symtab.patch($1.sval, $2.sval, level);
         vector<string> dim = makedimlist($2.sval);
 
         $$.val = $2.val;
@@ -1298,7 +1510,9 @@ id_arr
     : IDENTIFIER
     {
         string datatype;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false);
+		int dimension;
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
             $$.index = quadruples.size();
@@ -1308,18 +1522,22 @@ id_arr
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
-
 	}
 	| IDENTIFIER '=' arithmetic_expression
     {
         string datatype;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false);
+		int dimension;
+		int location;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
         if (!isExists) {
+			varDatatype[string($1.sval)] = string($3.type);
+			
             variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
             $$.index = quadruples.size();
-            $$.val = 1 + $3.val;
+            $$.val = 2 + $3.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", $3.sval, $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
+            quadruples.push_back(quadruple("=", $3.sval, "", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1327,17 +1545,54 @@ id_arr
 	| IDENTIFIER bracket_dimlist
     {
     	string datatype;
+		int dimension;
+		int location;
         vector<string> dim = makedimlist($2.sval);
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false);
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", true, dim, active_func_name, level);
             $$.index = quadruples.size();
             $$.val = 1 + $2.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "expres", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "arraydim", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
+    }
+	;
+
+bracket_dimlist_eval
+    : '[' arithmetic_expression ']'
+    {
+		$$.len = 1;
+
+        if(string($2.type) == "float"){
+            errorLine("Float cannot be passed as a dimension to an array.");
+        }
+
+        $$.sval = $2.sval;
+        $$.val = $2.val;
+        $$.index = quadruples.size();
+        arraystartindex = quadruples.size();
+    }
+    | '[' arithmetic_expression ']' bracket_dimlist_eval
+    {
+		$$.len = $4.len + 1;
+
+        if(string($2.type) == "float"){
+            errorLine("Float cannot be passed as a dimension to an array.");
+        }
+
+        $$.val = $4.val + 2;
+        $$.sval = $4.sval;
+        $$.index = quadruples.size();
+
+        /* Multiply arithmetic_factor by the actual dimensions to the right. */
+        quadruples.push_back(quadruple("*", string($2.sval), "(multfactor)", string($2.sval)));
+
+        /* Add the offset for the lower dimensions. */
+        quadruples.push_back(quadruple("+", string($2.sval), string($4.sval), string($$.sval)));
+
     }
 	;
 
@@ -1350,8 +1605,18 @@ bracket_dimlist
         }
 
         $$=$2;
-        $$.val = 1;
-        quadruples.push_back(quadruple("=", string($2.sval), "",  "expres"));
+
+        if(arraydimDefined){
+            $$.val = 1;
+            quadruples.push_back(quadruple("=", string($2.sval), "",  "arraydim"));
+        } else {
+            $$.val = 2;
+            quadruples.push_back(quadruple("assign", "int", "1",  "arraydim"));
+            quadruples.push_back(quadruple("=", string($2.sval), "",  "arraydim"));
+
+            arraydimDefined = true;
+        }
+
 	}
 	| '[' NUM ']' bracket_dimlist
     {
@@ -1362,7 +1627,8 @@ bracket_dimlist
 
         $$=$2;
         $$.val = $4.val + 1;
-        quadruples.push_back(quadruple("*", string($2.sval), "expres",  "expres"));
+
+        quadruples.push_back(quadruple("*", string($2.sval), "arraydim", "arraydim"));
 
 		strcat($$.sval,",");
 		strcat($$.sval,$4.sval);
@@ -1391,11 +1657,16 @@ int main(int argc, char **argv) {
     }
 
     if(!errorFound){
-        cout << "Intermediate Code in Quadruple Format:" << "\n";
-        cout << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(7) << "ARG1" << " | " << setw(7) << "ARG2" << " | " << setw(7) << "RESULT" << "\n";
+        //cerr << "Intermediate Code in Quadruple Format:" << "\n";
+        //cerr << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(8) << "ARG1" << " | " << setw(8) << "ARG2" << " | " << setw(8) << "RESULT" << "\n";
         for(int i = 0; i < quadruples.size(); ++i){
             quadruple quad = quadruples[i];
-            cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(7) << quad._arg1 << " | " << setw(7) << quad._arg2 << " | " << setw(7) << quad._result << "\n";
+            //cerr << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(8) << quad._arg1 << " | " << setw(8) << quad._arg2 << " | " << setw(8) << quad._result << "\n";
+        }
+
+        for(int i = 0; i < quadruples.size(); ++i){
+            quadruple quad = quadruples[i];
+            cout << quad._operator << "," << quad._arg1 << "," << quad._arg2 << "," << quad._result << "\n";
         }
     }
 
@@ -1480,10 +1751,7 @@ void reset_active_function() {
 }
 void errorLine(string errorMsg) {
     errorFound = true;
-    cout << "Error at line " << lineNo << " : " << errorMsg << endl;
-}
-void warning(string warningMsg) {
-    cout << "Warning at line " << lineNo << " : " << warningMsg << endl;
+    cerr << "Error at line " << lineNo << " : " << errorMsg << endl;
 }
 bool isVariableInSymtab(string varname) {
     if(ab_symtab.search(varname) == -1)
@@ -1495,18 +1763,22 @@ bool isVariableInSymtab(string varname) {
 // If flag = true : check for case like  ----- a = 3;
 // Return false if error
 // else return true
-bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag) {
+bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dim, int &location) {
 
+	dim = 0;
+	location = -1;
     if (!flag) {
         function_record *r;
         bool varExists = false;
 
         // Check if variable is already declared
         int cur_level_of_var;
-        if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
+		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
+        if (location != -1) {
             if (cur_level_of_var == cur_level) {
                 varExists = true;
-                errorLine("Variable already declared in same scope : " + Variable(string(var_name)));
+				dim = ab_symtab.tab[location].dimension.size();
+                errorLine("Variable '" + Variable(string(var_name)) + "' is already declared in same scope.");
                 return varExists;
             }
         }
@@ -1517,6 +1789,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
                 if(func->search_param(var_name, r)) {
                     varExists = true;
                     errorLine("Redeclaration of parameter '" + Variable(string(var_name)) + "' as variable" );
+					dim = 0;
                     return varExists;
                 }
             }
@@ -1528,14 +1801,18 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
     // If flag = true : check for case like  ----- a = 3;
     // Variable should be declared somewhere
 
+		dim = 0;
         function_record *r;
         bool varExists = false;
         bool found = false;
 
         // Check if variable is already declared as a variable (either global or local within a function)
         int cur_level_of_var;
-        if (ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype)) {
+		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
+		
+        if (location != -1) {
             found = true;
+			dim = ab_symtab.tab[location].dimension.size();
             if (cur_level_of_var == cur_level) {
                 varExists = true;
                 // Variable already declared in same scope
@@ -1557,6 +1834,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
                     varExists = true;
                     // "Declared as parameter"
                     datatype = r->type;
+					dim = 0;
                     return varExists;
                 }
             }
@@ -1567,6 +1845,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
 
         if (!varExists) {
             // errorLine("Variable : " + var_name + " is not declared");
+			dim = 0;
             return false;
         }
     }

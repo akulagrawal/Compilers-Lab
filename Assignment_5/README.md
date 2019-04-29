@@ -1,7 +1,8 @@
 ### To Run
 
-<<<<<<< HEAD
-```$make semantics```
+```bash
+$make semantics
+```
 
 ### Debug
 

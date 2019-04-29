@@ -12,6 +12,7 @@
 *.yy.c*
 *.tab*
 *vscode*
+*.out
 
 # Object files
 *.o

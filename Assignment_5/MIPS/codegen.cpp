@@ -117,19 +117,19 @@ int main()
 			v.push_back("Label" + to_string(isLabel[idx]) + ":");
 		temp = quadlist[i];
 		if(temp.opcode == "assign") {
-			int n = mapmem[temp.op2];
-			if(n==0) {
+			if(isdigit(temp.op2[0])) {
 				int x = getmem(temp.res, temp.op1[0]);
 				if(temp.op1 == "int"){
 					v.push_back("li $t0, 0");
 					v.push_back("sw $t0, " + to_hex(x) + "($0)");
 				}
 				else{
-					v.push_back("li.s $f0, 0");
+					v.push_back("li.s $f0, 0.0");
 					v.push_back("s.s $f0, " + to_hex(x) + "($0)");
 				}
 			}
 			else {
+				int n = mapmem[temp.op2];
 				for(int i=0;i<n;i++){
 					int x = getmem(temp.res + "[" + to_string(i) + "]", temp.op1[0]);
 					if(temp.op1 == "int"){
@@ -137,7 +137,7 @@ int main()
 						v.push_back("sw $t0, " + to_hex(x) + "($0)");
 					}
 					else{
-						v.push_back("li.s $f0, 0");
+						v.push_back("li.s $f0, 0.0");
 						v.push_back("s.s $f0, " + to_hex(x) + "($0)");
 					}
 				}
@@ -231,7 +231,7 @@ int main()
 			}
 			else{
 				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("li.s $f1, 0");
+				v.push_back("li.s $f1, 0.0");
 				v.push_back("c.eq.s $f0, $f1");
 				v.push_back("bc1t Label" + to_string(isLabel[quadlist[i].res]));
 			}
@@ -243,7 +243,7 @@ int main()
 			}
 			else{
 				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("li.s $f1, 0");
+				v.push_back("li.s $f1, 0.0");
 				v.push_back("c.eq.s $f0, $f1");
 				v.push_back("bc1f Label" + to_string(isLabel[quadlist[i].res]));
 			}
@@ -259,13 +259,13 @@ int main()
 				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
-				v.push_back("li.s $f0, 1");
+				v.push_back("li.s $f0, 1.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.lt.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
-				v.push_back("li.s $f0, 0");
+				v.push_back("li.s $f0, 0.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			v.push_back("Label" + to_string(labelidx) + ":");
@@ -282,13 +282,13 @@ int main()
 				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
-				v.push_back("li.s $f0, 1");
+				v.push_back("li.s $f0, 1.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
-				v.push_back("c.gt.s $f1, $f2");
+				v.push_back("c.lt.s $f2, $f1");
 				v.push_back("bc1t Label" + to_string(labelidx));
-				v.push_back("li.s $f0, 0");
+				v.push_back("li.s $f0, 0.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			v.push_back("Label" + to_string(labelidx) + ":");
@@ -305,13 +305,13 @@ int main()
 				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
-				v.push_back("li.s $f0, 1");
+				v.push_back("li.s $f0, 1.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.le.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
-				v.push_back("li.s $f0, 0");
+				v.push_back("li.s $f0, 0.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			v.push_back("Label" + to_string(labelidx) + ":");
@@ -328,13 +328,13 @@ int main()
 				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
-				v.push_back("li.s $f0, 1");
+				v.push_back("li.s $f0, 1.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
-				v.push_back("c.ge.s $f1, $f2");
+				v.push_back("c.le.s $f2, $f1");
 				v.push_back("bc1t Label" + to_string(labelidx));
-				v.push_back("li.s $f0, 0");
+				v.push_back("li.s $f0, 0.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			v.push_back("Label" + to_string(labelidx) + ":");
@@ -351,21 +351,19 @@ int main()
 				v.push_back("sw $v0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			else{
-				v.push_back("li.s $f0, 1");
+				v.push_back("li.s $f0, 1.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
 				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.eq.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
-				v.push_back("li.s $f0, 0");
+				v.push_back("li.s $f0, 0.0");
 				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
 			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
 		if(temp.opcode == "label") {
-			v.push_back("Label" + to_string(labelidx) + ":");
-			labelidx++;
 			v.push_back("Label" + to_string(labelidx) + ":");
 			isLabel[temp.op1] = labelidx;
 			labelidx++;
@@ -398,14 +396,14 @@ int main()
 			v.push_back("jr $ra");
 		}
 		if(temp.opcode == "call") {
-			v.push_back("jal " + temp.op1);
+			v.push_back("jal " + isLabel[temp.op1]);
 		}
 		if((temp.opcode == "jmp") || (temp.opcode == "ljmp")) {
 			v.push_back("j Label" + to_string(isLabel[quadlist[i].res]));
 		}
 		
 	}
-	v.push_back("jr $ra");
+	//v.push_back("jr $ra");
 	for(int i=0;i<v.size();i++){
 		cout<<v[i]<<endl;
 	}

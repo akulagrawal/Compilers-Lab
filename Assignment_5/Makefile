@@ -1,21 +1,21 @@
 CXX = g++
 CPP = g++
 CXXFLAG = -g -std=c++11
-# DEBUG_FLAG=gdb
+DEBUG_FLAG = gdb
+IC_FILE = IR.csv
 
-file=input.txt
 
-run:	build
-		./a.out
+intermediate: build_bison
+	./a.out > $(IC_FILE)
 
-build:
-		$(CPP) $(CXXFLAG) intermediate.cpp
+debug: build_bison
+	$(DEBUG_FLAG) ./a.out
 
 semantics:	build_bison
-		$(DEBUG_FLAG) ./a.out
+	./a.out
 
 build_bison:	BISON FLEX
-	$(CXX) $(CXXFLAG) c_lang.tab.c lex.yy.c -lfl
+	$(CXX) $(CXXFLAG) c_lang.tab.c lex.yy.c -o a.out
 
 FLEX:
 	flex c_lang.l
