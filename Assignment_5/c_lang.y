@@ -111,6 +111,8 @@
 
     vector<quadruple> quadruples;
 
+    bool arraydimDefined = false;
+
     /* Indices of associated quadruples. */
     struct indexlist {
         vector<int> indexes;
@@ -236,7 +238,6 @@
 		void patch(char* v_type, char* s){
 			vector<string> var_names = this->getvarvector(s);
 			for (int i = 0; i < var_names.size(); ++i){
-
 				for (int j = 0; j < tab.size(); ++j){
 					if(tab[j].name == var_names[i]){
 						tab[j].type = strdup(v_type);
@@ -832,11 +833,10 @@ if_exp
             }
         }
 
-        $$.index = quadruples.size() + 1;
-        $$.val = $3.val + 2;
+        $$.index = quadruples.size();
+        $$.val = $3.val + 1;
 
-        quadruples.push_back(quadruple("=", string($3.sval), "", "expres"));
-        quadruples.push_back(quadruple("ifF", "expres", "", ""));
+        quadruples.push_back(quadruple("ifF", string($3.sval), "", ""));
         // level ++;
 
     }
@@ -1132,6 +1132,32 @@ assignment_expression
             }
         }
     }
+    | IDENTIFIER '[' NUM ']' '=' arithmetic_expression
+    {
+        string datatype;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true);
+
+        if (!isExists) {
+            errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
+            $$.type = setErrorType();
+        }
+        else {
+            if (!isErrorType($6.type)) {
+                if (isVoidType($6.type)) {
+                    errorLine("void value not ignored as it ought to be");
+                }
+                else if (!isMatch(datatype, string($6.type))) {
+                    warning("Implicit type conversion from " + string($6.type) + " to " + datatype);
+                }
+                $$.val = $6.val + 2;
+                $$.type = strdup($6.type);
+                string temp = get_next_temp();
+                $$.sval = strdup(temp.c_str());
+                quadruples.push_back(quadruple("=", string($6.sval), "", string($1.sval) + "[" + string($3.sval) + "]"));
+                quadruples.push_back(quadruple("=", string($6.sval), "", temp));
+            }
+        }
+    }
     ;
 
 logical_expression
@@ -1167,10 +1193,9 @@ relational_expression
     : expression_cover REL_OP expression_cover
     {
         $$.type = setIntType();
-        string temp = get_next_temp();
-        $$.sval = strdup(temp.c_str());
+        $$.sval = $1.sval;
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple(string($2.sval), string($1.sval), string($3.sval), string($$.sval)));
     }
     ;
 
@@ -1178,18 +1203,16 @@ arithmetic_expression
     : arithmetic_term '+' arithmetic_expression
     {
         $$.type = $1.type;
-        string temp = get_next_temp();
-        $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("+", string($1.sval), string($3.sval), temp));
+        $$.sval = $1.sval;
+        quadruples.push_back(quadruple("+", string($1.sval), string($3.sval), string($$.sval)));
     }
 	| arithmetic_term '-' arithmetic_expression
     {
         $$.type = $1.type;
-        string temp = get_next_temp();
-        $$.sval = strdup(temp.c_str());
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("-", string($1.sval), string($3.sval), temp));
+        $$.sval = $1.sval;
+        quadruples.push_back(quadruple("-", string($1.sval), string($3.sval), string($$.sval)));
     }
 	| arithmetic_term
     {
@@ -1202,19 +1225,17 @@ arithmetic_expression
 arithmetic_term
     : arithmetic_factor '*' arithmetic_term
     {
-        string temp = get_next_temp();
         $$.type = $1.type;
-        $$.sval = strdup(temp.c_str());
+        $$.sval = $3.sval;
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("*", string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("*", string($1.sval), string($3.sval), string($$.sval)));
 	}
 	| arithmetic_factor '/' arithmetic_term
     {
-        string temp = get_next_temp();
         $$.type = $1.type;
-        $$.sval = strdup(temp.c_str());
+        $$.sval = $3.sval;
         $$.val = $1.val + $3.val + 1;
-        quadruples.push_back(quadruple("/", string($1.sval), string($3.sval), temp));
+        quadruples.push_back(quadruple("/", string($1.sval), string($3.sval), string($$.sval)));
     }
 	| arithmetic_factor
     {
@@ -1230,7 +1251,8 @@ arithmetic_factor
         string temp = get_next_temp();
         $$.type = $2.type;
         $$.sval = strdup(temp.c_str());
-        $$.val = $2.val + 1;
+        $$.val = $2.val + 2;
+        quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
         quadruples.push_back(quadruple("=", $2.sval, "",  temp));
 	}
 	| IDENTIFIER
@@ -1246,11 +1268,24 @@ arithmetic_factor
         }
 
         $$.sval = $1.sval;
+        $$.val = 2;
+
+        string temp = get_next_temp();
+        $$.sval = strdup(temp.c_str());
+
+        quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
+        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
     }
     | NUM
     {
         $$.type = $1.type;
-        $$.sval = $1.sval;
+        $$.val = 2;
+
+        string temp = get_next_temp();
+        $$.sval = strdup(temp.c_str());
+
+        quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
+        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
     }
     | function_call
     {
@@ -1259,9 +1294,19 @@ arithmetic_factor
         $$.sval = strdup(temp.c_str());
         $$.val = $1.val + 2;
 
-        // cout << $$.val << "\n";
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
         quadruples.push_back(quadruple("=", "t" + string($1.sval), "",  temp));
+    }
+    | IDENTIFIER '[' NUM ']'
+    {
+        $$.sval = $1.sval;
+        $$.val = 2;
+
+        string temp = get_next_temp();
+        $$.sval = strdup(temp.c_str());
+
+        quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
+        quadruples.push_back(quadruple("=", string($1.sval) + "[" + string($3.sval) + "]", "",  temp));
     }
 	;
 
@@ -1307,7 +1352,6 @@ id_arr
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
-
 	}
 	| IDENTIFIER '=' arithmetic_expression
     {
@@ -1316,9 +1360,10 @@ id_arr
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
             $$.index = quadruples.size();
-            $$.val = 1 + $3.val;
+            $$.val = 2 + $3.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", $3.sval, $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
+            quadruples.push_back(quadruple("=", $3.sval, "", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1333,7 +1378,7 @@ id_arr
             $$.index = quadruples.size();
             $$.val = 1 + $2.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "expres", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "arraydim", $1.sval));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1349,8 +1394,18 @@ bracket_dimlist
         }
 
         $$=$2;
-        $$.val = 1;
-        quadruples.push_back(quadruple("=", string($2.sval), "",  "expres"));
+
+        if(arraydimDefined){
+            $$.val = 1;
+            quadruples.push_back(quadruple("=", string($2.sval), "",  "arraydim"));
+        } else {
+            $$.val = 2;
+            quadruples.push_back(quadruple("assign", "int", "1",  "arraydim"));
+            quadruples.push_back(quadruple("=", string($2.sval), "",  "arraydim"));
+
+            arraydimDefined = true;
+        }
+
 	}
 	| '[' NUM ']' bracket_dimlist
     {
@@ -1361,7 +1416,9 @@ bracket_dimlist
 
         $$=$2;
         $$.val = $4.val + 1;
-        quadruples.push_back(quadruple("*", string($2.sval), "expres",  "expres"));
+        $$.sval = $4.sval;
+
+        quadruples.push_back(quadruple("*", string($2.sval), "expres", "expres"));
 
 		strcat($$.sval,",");
 		strcat($$.sval,$4.sval);
@@ -1390,12 +1447,12 @@ int main(int argc, char **argv) {
     }
 
     if(!errorFound){
-        // cout << "Intermediate Code in Quadruple Format:" << "\n";
-        // cout << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(7) << "ARG1" << " | " << setw(7) << "ARG2" << " | " << setw(7) << "RESULT" << "\n";
-        // for(int i = 0; i < quadruples.size(); ++i){
-        //     quadruple quad = quadruples[i];
-        //     cout << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(7) << quad._arg1 << " | " << setw(7) << quad._arg2 << " | " << setw(7) << quad._result << "\n";
-        // }
+        cerr << "Intermediate Code in Quadruple Format:" << "\n";
+        cerr << setw(3) << "" << "      " << setw(6) << "OPER" << " | " << setw(8) << "ARG1" << " | " << setw(8) << "ARG2" << " | " << setw(8) << "RESULT" << "\n";
+        for(int i = 0; i < quadruples.size(); ++i){
+            quadruple quad = quadruples[i];
+            cerr << setw(3) << i << "      " << setw(6) << quad._operator << " | " << setw(8) << quad._arg1 << " | " << setw(8) << quad._arg2 << " | " << setw(8) << quad._result << "\n";
+        }
 
         for(int i = 0; i < quadruples.size(); ++i){
            quadruple quad = quadruples[i];
