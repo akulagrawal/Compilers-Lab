@@ -1280,7 +1280,7 @@ assignment_expression
                     // Update quad.
                     while(currindex <= maxindex){
                         if(quadruples[currindex]._arg2 == "(multfactor)"){
-                            quadruples[currindex]._arg2 = multfactor;
+                            quadruples[currindex]._arg2 = to_string(multfactor);
                             currindex += 1;
                             break;
                         } else{
