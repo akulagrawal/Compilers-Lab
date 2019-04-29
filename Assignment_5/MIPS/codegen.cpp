@@ -104,6 +104,12 @@ int main()
 				labelidx++;
 			}
 		}
+		if((quadlist[i].opcode == "jmp") || (quadlist[i].opcode =="ljmp")) {
+			if(!isLabel[quadlist[i].res]) {
+				isLabel[quadlist[i].res] = labelidx;
+				labelidx++;
+			}
+		}
 	}
 	for(int i=0;i<quadlist.size();i++) {
 		string idx = to_string(i);
@@ -341,48 +347,47 @@ int main()
 			v.push_back("Label" + to_string(labelidx) + ":");
 			labelidx++;
 		}
-
-
-		/*if(temp.opcode == "-") {
-			int x = getfree();
-			int y = getfree();
-			if(x < 0 || y < 0) {
-				cout<<"Register overflow error\n";
-				exit(1);
-			}
-			register[x] = stoi(temp.opcode);
-			register[y] = stoi(temp.op1);
-			v.push_back("sub $v0, $t" + itos(x) + ", $t" + itos(y));
+		if(temp.opcode == "label") {
+			v.push_back("Label" + to_string(labelidx) + ":");
+			labelidx++;
+			v.push_back("Label" + to_string(labelidx) + ":");
+			isLabel[temp.op1] = labelidx;
+			labelidx++;
 		}
-		if(temp.opcode == "*") {
-			int x = getfree();
-			int y = getfree();
-			if(x < 0 || y < 0) {
-				cout<<"Register overflow error\n";
-				exit(1);
+		if(temp.opcode == "pop") {
+			if(type[temp.res] == 'i'){
+				v.push_back("lw $t0,($sp)");
+				v.push_back("addi $sp, $sp, 4");
+				v.push_back("sw $t0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
-			register[x] = stoi(temp.opcode);
-			register[y] = stoi(temp.op1);
-			v.push_back("mult $t" + itos(x) + ", $t" + itos(y));
-			v.push_back("")
-		}
-		if(temp.opcode == "/") {
-			int x = getfree();
-			int y = getfree();
-			if(x < 0 || y < 0) {
-				cout<<"Register overflow error\n";
-				exit(1);
+			else{
+				v.push_back("l.s $f0,($sp)");
+				v.push_back("addi $sp, $sp, 4");
+				v.push_back("s.s $f0, " + to_hex(mapmem[temp.res]) + "($0)");
 			}
-			register[x] = stoi(temp.opcode);
-			register[y] = stoi(temp.op1);
-			v.push_back("sub $v0, $t" + itos(x) + ", $t" + itos(y));
-			v.push_back("")
+		} //we can still access elements not on top
+		if(temp.opcode == "push") {
+			if(type[temp.op1] == 'i'){
+				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("sub $sp, $sp, 4");
+				v.push_back("sw $t0, ($sp)");
+			}
+			else{
+				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				v.push_back("sub $sp, $sp, 4");
+				v.push_back("s.s $f0, ($sp)");
+			}
 		}
-		if(temp.opcode == "ifz") {
-			cout<<"beq "<<temp.op1<<", "<<temp.op2<<", "<<temp.res<<endl;
-		}*/
-
-
+		if(temp.opcode == "end") {
+			v.push_back("jr $ra");
+		}
+		if(temp.opcode == "call") {
+			v.push_back("jal " + temp.op1);
+		}
+		if((temp.opcode == "jmp") || (temp.opcode == "ljmp")) {
+			v.push_back("j Label" + to_string(isLabel[quadlist[i].res]));
+		}
+		
 	}
 	v.push_back("jr $ra");
 	for(int i=0;i<v.size();i++){
