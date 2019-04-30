@@ -70,14 +70,11 @@
     #include <string.h>
     #define print(str, val) \
     printf("%s %s\n", str, val);
-<<<<<<< HEAD
-=======
     #define TRUE 1
     #define FALSE 0
 
     #define NUMBER 1
     #define STRING 0
->>>>>>> shimona
 
     // Declare stuff from Flex that Bison needs to know about:
     extern int yylex();
@@ -96,10 +93,6 @@
     char column[30][30];
     int num_column = 0;
     int position = 0;
-<<<<<<< HEAD
-
-#line 93 "bison_dbms.tab.c" /* yacc.c:339  */
-=======
     char condition[100][50];
     int condition_ptr = 0;
     // --------------------------------------------------------------------
@@ -121,7 +114,6 @@
     
 
 #line 117 "bison_dbms.tab.c" /* yacc.c:339  */
->>>>>>> shimona
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -185,21 +177,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-<<<<<<< HEAD
-#line 36 "bison_dbms.y" /* yacc.c:355  */
-=======
 #line 60 "bison_dbms.y" /* yacc.c:355  */
->>>>>>> shimona
 
     int ival;
     float fval;
     char *sval;
 
-<<<<<<< HEAD
-#line 163 "bison_dbms.tab.c" /* yacc.c:355  */
-=======
 #line 187 "bison_dbms.tab.c" /* yacc.c:355  */
->>>>>>> shimona
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -216,11 +200,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-<<<<<<< HEAD
-#line 180 "bison_dbms.tab.c" /* yacc.c:358  */
-=======
 #line 204 "bison_dbms.tab.c" /* yacc.c:358  */
->>>>>>> shimona
 
 #ifdef short
 # undef short
@@ -462,28 +442,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  12
 /* YYLAST -- Last index in YYTABLE.  */
-<<<<<<< HEAD
-#define YYLAST   99
-=======
 #define YYLAST   89
->>>>>>> shimona
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  24
 /* YYNNTS -- Number of nonterminals.  */
-<<<<<<< HEAD
-#define YYNNTS  15
-/* YYNRULES -- Number of rules.  */
-#define YYNRULES  38
-/* YYNSTATES -- Number of states.  */
-#define YYNSTATES  92
-=======
 #define YYNNTS  16
 /* YYNRULES -- Number of rules.  */
 #define YYNRULES  37
 /* YYNSTATES -- Number of states.  */
 #define YYNSTATES  91
->>>>>>> shimona
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
@@ -529,21 +497,12 @@ static const yytype_uint8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-<<<<<<< HEAD
-static const yytype_uint8 yyrline[] =
-{
-       0,    80,    80,    81,    83,   115,   140,   143,   148,   162,
-     164,   166,   168,   169,   171,   172,   174,   175,   177,   178,
-     180,   181,   182,   184,   185,   186,   187,   194,   195,   196,
-     197,   199,   200,   201,   202,   203,   205,   206,   208
-=======
 static const yytype_uint16 yyrline[] =
 {
        0,   106,   106,   107,   109,   197,   233,   266,   416,   421,
      423,   429,   431,   436,   437,   443,   444,   446,   447,   454,
      458,   462,   463,   464,   466,   467,   468,   469,   470,   471,
      473,   474,   475,   476,   477,   479,   480,   482
->>>>>>> shimona
 };
 #endif
 
@@ -555,15 +514,9 @@ static const char *const yytname[] =
   "$end", "error", "$undefined", "SELECT", "PROJECT", "CARTESIAN_PRODUCT",
   "EQUI_JOIN", "AND", "LT_EQ", "EQ", "NEQ", "LP", "RP", "LAB", "RAB",
   "SIC", "DIC", "COMMA", "SEMI", "NUM", "ID", "DOT", "MINUS", "ARITH_OP",
-<<<<<<< HEAD
-  "$accept", "STMT_LIST", "STMT", "JOIN", "TABLE", "CONDITION_LIST_FINAL",
-  "CONDITION_LIST", "CONDITION", "CONDITION_LIST_EQ", "CONDITION_EQ",
-  "EXPR", "TERM", "OP", "ATTR_LIST", "ATTR", YY_NULLPTR
-=======
   "$accept", "STMT_LIST", "STMT", "TABLE", "CONDITION_LIST", "LOGICAL_OP",
   "CONDITION", "CONDITION_LIST_EQ", "CONDITION_EQ", "LP_NT", "RP_NT",
   "EXPR", "ARITHMETIC", "OP", "ATTR_LIST", "ATTR", YY_NULLPTR
->>>>>>> shimona
 };
 #endif
 
@@ -578,17 +531,10 @@ static const yytype_uint16 yytoknum[] =
 };
 # endif
 
-<<<<<<< HEAD
-#define YYPACT_NINF -58
-
-#define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-58)))
-=======
 #define YYPACT_NINF -55
 
 #define yypact_value_is_default(Yystate) \
   (!!((Yystate) == (-55)))
->>>>>>> shimona
 
 #define YYTABLE_NINF -3
 
@@ -599,18 +545,6 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-<<<<<<< HEAD
-      38,    -9,    19,    23,   -15,    40,    34,   -58,    -1,    28,
-     -58,    51,   -58,   -58,    -1,    27,    42,   -58,   -58,    31,
-      50,   -58,    58,    46,   -58,    52,    53,     6,    55,    56,
-      -6,    54,    57,    59,    60,   -58,    62,    -1,   -58,   -58,
-     -58,   -58,   -58,    11,    63,    28,   -58,    64,    67,   -58,
-     -58,    11,    11,   -58,   -58,   -58,   -58,   -15,   -58,    11,
-     -58,    35,   -15,   -58,    33,   -15,   -58,   -58,    68,    69,
-      33,    61,    65,    76,    72,    70,    71,    73,    66,   -58,
-      33,    74,   -58,   -58,   -58,    78,   -58,   -58,    75,    77,
-      79,   -58
-=======
       20,    -8,    27,    32,    16,    46,    11,   -55,     9,    33,
      -55,    40,   -55,   -55,   -55,    24,    14,    47,     9,   -55,
       41,    39,     3,   -55,   -55,   -55,   -55,   -55,    25,    48,
@@ -621,7 +555,6 @@ static const yytype_int8 yypact[] =
       61,    62,    59,    15,    45,   -55,   -55,   -55,   -55,   -55,
       63,    16,   -55,   -55,    64,    68,    65,    67,    69,   -55,
      -55
->>>>>>> shimona
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -629,18 +562,6 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-<<<<<<< HEAD
-       0,     0,     0,     0,     0,     0,     0,     7,     0,     0,
-      10,     0,     1,     3,     0,     0,     0,    24,    26,     0,
-       0,    11,    13,     0,    38,     0,    37,     0,     0,     0,
-      22,     0,     0,     0,     0,    25,     0,     0,    35,    31,
-      32,    33,    34,     0,     0,     0,     8,     0,     0,    14,
-      23,     0,     0,    27,    28,    29,    30,     0,    12,     0,
-      15,    22,     0,    36,     0,     0,    21,    20,     0,     0,
-       0,     0,     0,    17,     0,     0,     0,     0,     0,     9,
-       0,     0,     4,     5,    18,     0,    16,     6,     0,     0,
-       0,    19
-=======
        0,     0,     0,     0,     0,     0,     0,     8,     0,     0,
        9,     0,     1,     3,    19,     0,     0,    11,     0,    37,
        0,    36,     0,    34,    30,    31,    32,    33,     0,     0,
@@ -651,31 +572,20 @@ static const yytype_uint8 yydefact[] =
        0,     0,     0,     0,     0,    27,    25,     4,     5,     6,
        0,     0,    15,    17,     0,     0,     0,     0,     0,     7,
       18
->>>>>>> shimona
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-<<<<<<< HEAD
-     -58,    84,   -58,   -58,   -37,   -58,   -13,   -58,   -57,   -58,
-       0,    -8,   -58,    26,   -58
-=======
      -55,    75,   -55,   -42,   -13,    13,   -55,   -54,   -55,   -48,
      -11,   -55,   -50,   -55,    35,   -55
->>>>>>> shimona
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-<<<<<<< HEAD
-      -1,     5,     6,    48,    11,    20,    21,    22,    72,    73,
-      29,    61,    43,    25,    26
-=======
       -1,     5,     6,    11,    16,    31,    17,    59,    60,    18,
       45,    40,    41,    28,    20,    21
->>>>>>> shimona
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -683,18 +593,6 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-<<<<<<< HEAD
-      23,    28,    38,    39,    40,    10,    30,    41,    42,     7,
-      14,    46,    47,    77,    15,    16,    51,    52,    17,    18,
-      68,    19,    59,    86,    58,    69,    15,    16,    74,    23,
-      17,    18,     8,    19,    -2,     1,     9,     2,     3,     1,
-      12,     2,     3,    60,    70,     4,    31,    32,    24,     4,
-      35,    66,    67,    71,    38,    39,    40,    51,    52,    41,
-      42,    33,    34,    27,    36,    37,    44,    49,    50,    53,
-      45,    63,    54,    57,    62,    55,    56,    64,    65,    79,
-      75,    76,    78,    80,    81,    84,    85,    88,    82,    83,
-      13,     0,    87,     0,     0,    89,     0,     0,    90,    91
-=======
       55,    61,    64,    65,    56,    32,    57,    74,    35,    36,
        7,    -2,     1,    61,     2,     3,    75,    76,    43,    82,
       14,     1,     4,     2,     3,    61,    14,    38,    29,    15,
@@ -704,23 +602,10 @@ static const yytype_int8 yytable[] =
       46,    48,    54,    83,    49,    68,    69,    70,    63,    47,
       81,    72,    84,    73,     0,     0,    77,    71,    78,    79,
       87,    13,    80,     0,    86,    89,    88,     0,     0,    90
->>>>>>> shimona
 };
 
 static const yytype_int8 yycheck[] =
 {
-<<<<<<< HEAD
-       8,    14,     8,     9,    10,    20,    14,    13,    14,    18,
-      11,     5,     6,    70,    15,    16,    22,    23,    19,    20,
-      57,    22,    11,    80,    37,    62,    15,    16,    65,    37,
-      19,    20,    13,    22,     0,     1,    13,     3,     4,     1,
-       0,     3,     4,    43,    11,    11,    19,    20,    20,    11,
-      19,    51,    52,    20,     8,     9,    10,    22,    23,    13,
-      14,    19,    20,    12,    14,     7,    14,    12,    12,    15,
-      17,    45,    15,    11,    11,    16,    16,    13,    11,    14,
-      12,    12,    21,     7,    12,    12,    20,     9,    18,    18,
-       6,    -1,    18,    -1,    -1,    20,    -1,    -1,    21,    20
-=======
       42,    49,    52,    53,    46,    18,    48,    61,     5,     6,
       18,     0,     1,    61,     3,     4,    66,    67,    31,    73,
       11,     1,    11,     3,     4,    73,    11,    19,    14,    20,
@@ -730,7 +615,6 @@ static const yytype_int8 yycheck[] =
       11,    11,    19,    74,    13,    12,    12,    12,    16,    34,
       11,    14,     9,    60,    -1,    -1,    18,    21,    18,    18,
       12,     6,    20,    -1,    20,    18,    21,    -1,    -1,    20
->>>>>>> shimona
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -738,17 +622,6 @@ static const yytype_int8 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,     1,     3,     4,    11,    25,    26,    18,    13,    13,
-<<<<<<< HEAD
-      20,    28,     0,    25,    11,    15,    16,    19,    20,    22,
-      29,    30,    31,    35,    20,    37,    38,    12,    30,    34,
-      35,    19,    20,    19,    20,    19,    14,     7,     8,     9,
-      10,    13,    14,    36,    14,    17,     5,     6,    27,    12,
-      12,    22,    23,    15,    15,    16,    16,    11,    30,    11,
-      34,    35,    11,    37,    13,    11,    34,    34,    28,    28,
-      11,    20,    32,    33,    28,    12,    12,    32,    21,    14,
-       7,    12,    18,    18,    12,    20,    32,    18,     9,    20,
-      21,    20
-=======
       20,    27,     0,    25,    11,    20,    28,    30,    33,    20,
       38,    39,    12,     8,     9,    10,    13,    14,    37,    14,
        7,    29,    28,    14,    17,     5,     6,    16,    19,    22,
@@ -758,39 +631,24 @@ static const yytype_uint8 yystos[] =
       12,    21,    14,    29,    31,    36,    36,    18,    18,    18,
       20,    11,    31,    34,     9,    27,    20,    12,    21,    18,
       20
->>>>>>> shimona
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-<<<<<<< HEAD
-       0,    24,    25,    25,    26,    26,    26,    26,    27,    27,
-      28,    29,    30,    30,    31,    31,    32,    32,    33,    33,
-      34,    34,    34,    35,    35,    35,    35,    35,    35,    35,
-      35,    36,    36,    36,    36,    36,    37,    37,    38
-=======
        0,    24,    25,    25,    26,    26,    26,    26,    26,    27,
       28,    28,    29,    30,    30,    31,    31,    32,    32,    33,
       34,    35,    35,    35,    36,    36,    36,    36,    36,    36,
       37,    37,    37,    37,    37,    38,    38,    39
->>>>>>> shimona
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-<<<<<<< HEAD
-       0,     2,     1,     2,     8,     8,     8,     2,     1,     4,
-       1,     1,     3,     1,     3,     3,     3,     1,     3,     7,
-       3,     3,     1,     3,     1,     2,     1,     3,     3,     3,
-       3,     1,     1,     1,     1,     1,     3,     1,     1
-=======
        0,     2,     1,     2,     8,     8,     8,    11,     2,     1,
        3,     1,     1,     3,     3,     3,     1,     3,     7,     1,
        1,     1,     3,     3,     3,     4,     3,     4,     2,     1,
        1,     1,     1,     1,     1,     3,     1,     1
->>>>>>> shimona
 };
 
 
@@ -1467,34 +1325,6 @@ yyreduce:
   switch (yyn)
     {
         case 4:
-<<<<<<< HEAD
-#line 83 "bison_dbms.y" /* yacc.c:1646  */
-    {
-
-            printf("Valid Syntax \n");
-
-            FILE *file_in = fopen("intermediate.cpp", "w+");
-            insert_header(file_in);
-
-            // Set if conditions to filter the rows
-            // Get the condition
-            char condition[1024];
-            strcpy(condition, (yyvsp[-5].sval));
-
-            // printf("Condition = %s\n", condition);
-
-            // Open the file in which table exists
-            fprintf(file_in, "\ttableName = \"%s\";\n", (yyvsp[-2].sval));
-            fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
-            // fprintf(file_in, "\tprintColumnNames();\n");
-            // Iterate over each row of table
-            fprintf(file_in, "\tfor(int j = 0; j < getNumRows(tableName); j++) {\n");
-
-                // Put if condition
-                fprintf(file_in, "\t\tif (%s) {\n", condition);
-
-                    fprintf(file_in, "\t\t\tprintRow(0, j);\n");
-=======
 #line 109 "bison_dbms.y" /* yacc.c:1646  */
     {
 
@@ -1577,7 +1407,6 @@ yyreduce:
                 fprintf(file_in, ") {\n");
 
                     fprintf(file_in, "\t\t\tprintRow(0, j); cout << endl; \n");
->>>>>>> shimona
 
             fprintf(file_in, "\t\t}\n");
             fprintf(file_in, "\t}\n");
@@ -1585,19 +1414,6 @@ yyreduce:
             insert_footer(file_in);
             fclose(file_in);
         }
-<<<<<<< HEAD
-#line 1340 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 5:
-#line 115 "bison_dbms.y" /* yacc.c:1646  */
-    {
-            printf("Valid Syntax \n");
-            int i = 0;
-            for (i = 0; i < position; i++) {
-                printf("%s ,", column[i]);
-            }
-=======
 #line 1418 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1606,23 +1422,10 @@ yyreduce:
     {
             printf("Valid Syntax \n");
             int i = 0;
->>>>>>> shimona
 
             FILE *file_in = fopen("intermediate.cpp", "w+");
             insert_header(file_in);
 
-<<<<<<< HEAD
-            // Construct vector of columnNames
-            fprintf(file_in, "\tvector<string> columnNames;\n");
-
-            for (i = 0; i < position; i++) {
-                fprintf(file_in, "\tcolumnNames.push_back(\"%s\");\n", column[i]);
-            }
-
-            fprintf(file_in, "\tfor(int i = 0; i < getNumRows(a);i++){\n");
-            fprintf(file_in, "\t\tfor(int k = 0; k < columnNames.size();k++)\n");
-            fprintf(file_in, "\t\t\tcout<<getVal(0,i, columnNames[k])<<\" \";\n");
-=======
             // Open the file in which table exists
             fprintf(file_in, "\tstring tableName = \"%s\";\n", (yyvsp[-2].sval));
             fprintf(file_in, "\treadcsv(tableName+\".csv\", 0);\n");
@@ -1647,45 +1450,11 @@ yyreduce:
             fprintf(file_in, "\tfor(int i = 0; i < getNumRows(tableName);i++){\n");
             fprintf(file_in, "\t\tfor(int k = 0; k < columnNames.size();k++)\n");
             fprintf(file_in, "\t\t\tcout<<setw(14)<<getVal(0,i, columnNames[k]);\n");
->>>>>>> shimona
             fprintf(file_in, "\t\tcout<<\"\\n\";\n\t}\n");
 
             insert_footer(file_in);
             fclose(file_in);
         }
-<<<<<<< HEAD
-#line 1370 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 6:
-#line 140 "bison_dbms.y" /* yacc.c:1646  */
-    {
-           printf("Valid Syntax \n");
-        }
-#line 1378 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 7:
-#line 143 "bison_dbms.y" /* yacc.c:1646  */
-    {
-           yyerrok;
-           eat_till_semi();
-        }
-#line 1387 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 8:
-#line 148 "bison_dbms.y" /* yacc.c:1646  */
-    {
-            FILE *file_in = fopen("intermediate.cpp", "w+");
-            insert_header(file_in);
-            fprintf(file_in, "\tint r0 = getNumRows(0);\n");
-            fprintf(file_in, "\tint r1 = getNumRows(1);\n");
-            fprintf(file_in, "\tfor(int i = 0; i < r0;i++){\n");
-            fprintf(file_in, "\t\tfor(int j = 0; j < r1;j++){\n");
-            fprintf(file_in, "\t\t\tprintRow(0, i);\n");
-            fprintf(file_in, "\t\t\tprintRow(1, j); cout<<endl;\n\t\t}\n\t}\n");
-=======
 #line 1459 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1874,103 +1643,11 @@ yyreduce:
             fprintf(file_in, "\t\t\t}\n");
             fprintf(file_in, "\t\t}\n");
             fprintf(file_in, "\t}\n");
->>>>>>> shimona
 
             insert_footer(file_in);
             fclose(file_in);
 
         }
-<<<<<<< HEAD
-#line 1406 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 12:
-#line 168 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1412 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 14:
-#line 171 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1418 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 15:
-#line 172 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1424 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 20:
-#line 180 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1430 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 21:
-#line 181 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1436 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 23:
-#line 184 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), " "); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1442 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 25:
-#line 186 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1448 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 26:
-#line 187 "bison_dbms.y" /* yacc.c:1646  */
-    {
-            char columnName[30];
-            strcpy(columnName, "getVal( 0, j, \"");
-            strcat(columnName, (yyvsp[0].sval));
-            strcat(columnName, "\")");
-            strcpy((yyval.sval), columnName);
-            }
-#line 1460 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 27:
-#line 194 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1466 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 28:
-#line 195 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1472 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 29:
-#line 196 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1478 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 30:
-#line 197 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), (yyvsp[-1].sval)); strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1484 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 31:
-#line 199 "bison_dbms.y" /* yacc.c:1646  */
-    { strcat((yyval.sval), (yyvsp[0].sval)); }
-#line 1490 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 38:
-#line 208 "bison_dbms.y" /* yacc.c:1646  */
-=======
 #line 1652 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
@@ -2095,24 +1772,15 @@ yyreduce:
 
   case 37:
 #line 482 "bison_dbms.y" /* yacc.c:1646  */
->>>>>>> shimona
     {
         strcpy(column[position], (yyvsp[0].sval));
         position++;
     }
-<<<<<<< HEAD
-#line 1499 "bison_dbms.tab.c" /* yacc.c:1646  */
-    break;
-
-
-#line 1503 "bison_dbms.tab.c" /* yacc.c:1646  */
-=======
 #line 1780 "bison_dbms.tab.c" /* yacc.c:1646  */
     break;
 
 
 #line 1784 "bison_dbms.tab.c" /* yacc.c:1646  */
->>>>>>> shimona
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2340,20 +2008,12 @@ yyreturn:
 #endif
   return yyresult;
 }
-<<<<<<< HEAD
-#line 212 "bison_dbms.y" /* yacc.c:1906  */
-=======
 #line 486 "bison_dbms.y" /* yacc.c:1906  */
->>>>>>> shimona
 
 
 int main(int argc, char **argv) {
 
-<<<<<<< HEAD
-    char *filename = "tests/test1.txt";
-=======
     char *filename = argv[1];
->>>>>>> shimona
     // Open a file handle to a particular file:
     FILE *myfile = fopen(filename, "r");
     // Make sure it is valid:
@@ -2368,11 +2028,7 @@ int main(int argc, char **argv) {
     while(!feof(yyin))  {
         yyparse();
     }
-<<<<<<< HEAD
-
-=======
   
->>>>>>> shimona
 }
 
 void yyerror(const char *s) {
@@ -2390,12 +2046,6 @@ void eat_till_semi()
 }
 
 void insert_header (FILE *filename) {
-<<<<<<< HEAD
-    char *header = "#include <bits/stdc++.h>\nusing namespace std;\n\nstring tableName;\n";
-    fprintf(filename, "%s", header);
-
-=======
->>>>>>> shimona
     FILE *fp = fopen("readcsv.cpp", "r");
     int c;
     while((c = (char)fgetc(fp)) != EOF)
@@ -2406,11 +2056,7 @@ void insert_header (FILE *filename) {
 }
 
 void insert_footer (FILE *filename) {
-<<<<<<< HEAD
-    char *header = "return 0;\n}\n";
-=======
     char *header = "cout << endl;\nreturn 0;\n}\n";
->>>>>>> shimona
 
     fprintf(filename, "%s", header);
 }
@@ -2424,11 +2070,7 @@ void extract_column(char *table) {
     fgets(column_str, sizeof(column_str), f_in);
     printf("%s\n", schema);
     printf("%s\n", column_str);
-<<<<<<< HEAD
-
-=======
     
->>>>>>> shimona
     // Extract column name from column_str
     int i = 0;
     int begin = 0;
@@ -2448,8 +2090,6 @@ void extract_column(char *table) {
     }
     num_column = j;
 }
-<<<<<<< HEAD
-=======
 
 void readcsv(char* name)
 {
@@ -2577,4 +2217,3 @@ int isnum (char *text) {
     else
         return 1;
 }
->>>>>>> shimona
