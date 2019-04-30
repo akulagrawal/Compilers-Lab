@@ -1,5 +1,14 @@
 
-### To Run
+### Generate Assembly Code
 
-``` g++ -std=c++11 codegen.cpp```
-```./a.out```
+```bash
+$g++ -std=c++11 codegen.cpp
+$./a.out
+```
+
+### Run Assembly Code
+```bash
+$spim
+>load "Assembly.asm"
+>run
+```
