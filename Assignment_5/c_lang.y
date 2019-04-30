@@ -367,7 +367,7 @@
     extern void reset_active_function();
     extern void errorLine(string errorMsg);
     extern bool isVariableInSymtab(string varname);
-    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dimension, int &location, int &cur_level);
+    extern bool checkForVariable(string var_name, string &datatype, string active_func, int level, bool flag, int &dimension, int &location, int &cur_level);
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
     extern string Variable(string str);
@@ -1819,7 +1819,7 @@ bool isVariableInSymtab(string varname) {
 // If flag = true : check for case like  ----- a = 3;
 // Return false if error
 // else return true
-bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dim, int &location, int &cur_level) {
+bool checkForVariable(string var_name, string &datatype, string active_func, int level, bool flag, int &dim, int &location, int &cur_level) {
 
 	dim = 0;
 	cur_level = 0;
@@ -1833,7 +1833,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
 		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
         if (location != -1) {
 			cur_level = cur_level_of_var;
-            if (cur_level_of_var == cur_level) {
+            if (cur_level_of_var == level) {
                 varExists = true;
 				dim = ab_symtab.tab[location].dimension.size();
                 errorLine("Variable '" + Variable(string(var_name)) + "' is already declared in same scope.");
@@ -1841,7 +1841,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
                 return varExists;
             }
         }
-        if (cur_level == 2) {
+        if (level == 2) {
             function_record *func;
             var_record *r;
             if ( symtab.search_function(active_func, func) ) {
@@ -1875,7 +1875,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
 			cur_level = cur_level_of_var;
             found = true;
 			dim = ab_symtab.tab[location].dimension.size();
-            if (cur_level_of_var == cur_level) {
+            if (cur_level_of_var == level) {
                 varExists = true;
                 // Variable already declared in same scope
                 return varExists;
