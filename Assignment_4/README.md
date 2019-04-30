@@ -1,4 +1,4 @@
-# ASSIGNMENT 4
+# Problem Statement
 
 In this assignment, you’re required to extend the work done by you for the Relational
 Algebra (RA) subset **{SELECT, PROJECT, CARTESIAN PRODUCT, EQUI-JOIN}**
