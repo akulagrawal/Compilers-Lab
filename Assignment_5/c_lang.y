@@ -483,11 +483,11 @@ function_head
 		set_active_function($2.sval);
 		$$.index = quadruples.size();
 		if (active_func_name != "_main") {
-			$$.val = 2 + $5.val;
+			$$.val = 2;
 			quadruples.push_back(quadruple("jmp", "", "", ""));
 		}
 		else
-			$$.val = 1 + $5.val;
+			$$.val = 1;
         quadruples.push_back(quadruple("label", string($2.sval), to_string($5.len), ""));
 
         level ++;
@@ -511,11 +511,11 @@ function_head
 		set_active_function($2.sval);
 		$$.index = quadruples.size();
 		if (active_func_name != "_main") {
-			$$.val = 2 + $5.val;
+			$$.val = 2;
 			quadruples.push_back(quadruple("jmp", "", "", ""));
 		}
 		else
-			$$.val = 1 + $5.val;
+			$$.val = 1;
         quadruples.push_back(quadruple("label", string($2.sval), to_string($5.len), ""));
 
         level ++;
@@ -598,7 +598,6 @@ function_head
 param_list_declaration
     : param_list_declaration ',' param_declaration
     {
-        $$.val = $1.val + $3.val;
         bool found = false;
         // Check if variable is repeated in parameter list
         for (auto it = active_func_param_list.begin(); it != active_func_param_list.end(); it++) {
@@ -621,7 +620,6 @@ param_list_declaration
     }
     | param_declaration
     {
-        $$.val = $1.val;
         active_func_param_list.clear();
         $$.len = 1;
         var_record param($1.sval, $1.type, /* is_parameter = */ true, level) ;
@@ -631,12 +629,7 @@ param_list_declaration
     ;
 
 param_declaration
-    : TYPE IDENTIFIER           { 
-        $$.type = $1.sval; $$.sval = $2.sval; 
-        $$.val = 0;
-        // string temp = get_next_temp();
-        quadruples.push_back(quadruple("assign", $1.sval, "1", VarWithLevel($2.sval, level)));
-    }
+    : TYPE IDENTIFIER           { $$.type = $1.sval; $$.sval = $2.sval; }
     ;
 
 function_call
@@ -1009,8 +1002,6 @@ loop_statement
         int gotoindex = $1.index;
 		int endfor = $1.len + $2.val + $4.val + 2;
 
-		cout << "expression derived " << $2.val << "\n";
-		cout << "statement derived " << $4.val << "\n";
 
         for(int i =gotoindex+1; i < endfor && i< quadruples.size();i++ )
         {

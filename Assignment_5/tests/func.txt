@@ -1,0 +1,10 @@
+int sum(int a, int b)
+{
+	return 1;
+}
+
+int main()
+{
+	int a = sum(1,2);
+	return 0;
+}

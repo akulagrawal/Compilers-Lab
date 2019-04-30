@@ -181,14 +181,14 @@ int main(int argc, char **argv)
 					if(isdigit(temp.op1[0]))
 						v.push_back("li $t0, " + temp.op1);
 					else
-						v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+						v.push_back("lw $t0, " + to_hex(getmem(temp.op1)) + "($0)");
 					v.push_back("sw $t0, " + to_hex(x) + "($0)");
 				}
 				else{
 					if(isdigit(temp.op1[0]))
 						v.push_back("li.s $f0, " + temp.op1);
 					else
-						v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+						v.push_back("l.s $f0, " + to_hex(getmem(temp.op1,'f')) + "($0)");
 					v.push_back("s.s $f0, " + to_hex(x) + "($0)");
 				}
 			}
@@ -501,6 +501,7 @@ int main(int argc, char **argv)
 		if(temp.opcode == "label") {
 			v.push_back("Label" + to_string(labelidx) + ":");
 			isLabel[temp.op1] = labelidx;
+			funcArgs[temp.op1] = 
 			labelidx++;
 		}
 		if(temp.opcode == "pop") {

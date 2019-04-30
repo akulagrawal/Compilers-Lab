@@ -1,3 +1,4 @@
 make intermediate
-g++ -std=c++11 MIPS/codegen.cpp
+cd MIPS
+g++ -std=c++11 codegen.cpp
 ./a.out
