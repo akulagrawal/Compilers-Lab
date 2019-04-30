@@ -367,10 +367,11 @@
     extern void reset_active_function();
     extern void errorLine(string errorMsg);
     extern bool isVariableInSymtab(string varname);
-    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dimension, int &location);
+    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dimension, int &location, int &cur_level);
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
     extern string Variable(string str);
+	extern string VarWithLevel(char *, int);
 %}
 
 %union {
@@ -399,7 +400,7 @@
 %type <type_id> variable_declaration_statement
 
 %type <type_id> logical_operation
-%type <type_id> FOREXP WHILEEXP if_exp else_mark
+%type <type_id> FOREXP WHILEEXP if_exp else_mark for_mark while_mark
 %type <type_id> SWITCHEXP CASE_EXP
 %type <type_id> bracket_dimlist name_list id_arr
 %type <type_id> bracket_dimlist_eval
@@ -933,30 +934,26 @@ loop_statement
 
         $$.val = $1.val + $2.val + 1;
         int gotoindex = $1.index;
-        //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
-        quadruples[gotoindex]._result = to_string(gotoindex + $2.val + 2);
+		int endwhile = $1.index + $1.val + $2.val + 1;
 
-        for(int i =gotoindex+1;i<gotoindex + $2.val + 2 && i< quadruples.size();i++ )
+        for(int i =gotoindex+1;i< endwhile && i< quadruples.size();i++ )
         {
-			//string s=jmp;
-			if(quadruples[i]._operator=="jmp")
+			if(quadruples[i]._result == "(loopend)")
 			{
-				quadruples[i]._result=quadruples[gotoindex]._result;
+				quadruples[i]._result = to_string(endwhile);
 			}
-			if(quadruples[i]._operator=="ctn")
+
+			if(quadruples[i]._result == "(loopstart)")
 			{
-				quadruples[i]._result=to_string(gotoindex-1);
-			}
-			if((quadruples[i]._operator=="ifz"))
-			{
-				i=stoi(quadruples[i]._result);
+				quadruples[i]._result = to_string(gotoindex);
 			}
         }
+
         quadruple temp;
         temp._operator = "ljmp";
         temp._arg1 = "";
         temp._arg2 = "";
-        temp._result = to_string(gotoindex-1);
+        temp._result = to_string(gotoindex);
         quadruples.push_back(temp);
 
         insideLoop --;
@@ -970,30 +967,26 @@ loop_statement
 
         $$.val = $1.val + $3.val + 1;
         int gotoindex = $1.index;
-        //  cout<<"$1.index :"<<$1.index<<" $2.val= "<<$3.val<<endl;
-        quadruples[gotoindex]._result = to_string(gotoindex + $3.val + 2);
+		int endfor = $1.len + $3.val + 2;
 
-        for(int i =gotoindex+1;i<gotoindex + $3.val + 2 && i< quadruples.size();i++ )
+        for(int i =gotoindex+1; i< endfor && i< quadruples.size();i++ )
         {
-            //string s=jmp;
-            if(quadruples[i]._operator=="jmp")
-            {
-            quadruples[i]._result=quadruples[gotoindex]._result;
-            }
-            if(quadruples[i]._operator=="ctn")
-            {
-            quadruples[i]._result=to_string(gotoindex-1);
-            }
-            if((quadruples[i]._operator=="ifz"))
-            {
-            i=stoi(quadruples[i]._result);
-            }
+            if(quadruples[i]._result == "(loopend)")
+			{
+				quadruples[i]._result = to_string(endfor);
+			}
+
+			if(quadruples[i]._result == "(loopstart)")
+			{
+				quadruples[i]._result = to_string(gotoindex);
+			}
         }
+
         quadruple temp;
         temp._operator = "ljmp";
         temp._arg1 = "";
         temp._arg2 = "";
-        temp._result = to_string(gotoindex-1);
+        temp._result = to_string(gotoindex);
         quadruples.push_back(temp);
 
         insideLoop --;
@@ -1005,32 +998,31 @@ loop_statement
 
         $$.type = strdup($4.type);
 
-        $$.val = $1.val + $2.val+$4.val + 1;
+		$$.val = $1.val + $2.val + $4.val + 1;
         int gotoindex = $1.index;
-        // cout<<"$1.index :"<<$1.index<<" $2.val= "<<$2.val<<endl;
-        quadruples[gotoindex]._result = to_string(gotoindex + $2.val+ $4.val + 2);
+		int endfor = $1.len + $2.val + $4.val + 2;
 
-        for(int i =gotoindex+1;i<gotoindex + $2.val+ $4.val + 2 && i< quadruples.size();i++ )
+		cout << "expression derived " << $2.val << "\n";
+		cout << "statement derived " << $4.val << "\n";
+
+        for(int i =gotoindex+1; i < endfor && i< quadruples.size();i++ )
         {
-            //string s=jmp;
-            if(quadruples[i]._operator=="jmp")
-            {
-                quadruples[i]._result=quadruples[gotoindex]._result;
-            }
-            if(quadruples[i]._operator=="ctn")
-            {
-                quadruples[i]._result=to_string(gotoindex-1);
-            }
-            if((quadruples[i]._operator=="ifz"))
-            {
-                i=stoi(quadruples[i]._result);
-            }
+			if(quadruples[i]._result == "(loopend)")
+			{
+				quadruples[i]._result = to_string(endfor);
+			}
+
+			if(quadruples[i]._result == "(loopstart)")
+			{
+				quadruples[i]._result = to_string(gotoindex);
+			}
         }
+
         quadruple temp;
         temp._operator = "ljmp";
         temp._arg1 = "";
         temp._arg2 = "";
-        temp._result = to_string(gotoindex-1);
+        temp._result = to_string(gotoindex);
         quadruples.push_back(temp);
 
         insideLoop --;
@@ -1039,40 +1031,53 @@ loop_statement
 
 
   FOREXP
-    : FOR '(' expression_statement expression_statement
+    : for_mark expression_statement
     {
         insideLoop ++;
 
-        $$.index = quadruples.size();
-        $$.val = $3.val+ $4.val+1;
+		$$.len = $1.index + $2.val;
+        $$.index = $1.index;
+        $$.val = $1.val + $2.val + 1;
         quadruple temp;
         temp._operator = "ifF";
-        temp._arg1 = string($4.sval);
+        temp._arg1 = string($2.sval);
         temp._arg2 = "";
-        temp._result = "";
+        temp._result = "(loopend)";
         quadruples.push_back(temp);
 
 		level ++;
     }
     ;
 
+  for_mark
+	: FOR '(' expression_statement
+	{
+		$$.index = quadruples.size();
+		$$.val = $3.val;
+	}
+	;
+
   WHILEEXP
-    : WHILE '(' expression_cover ')' {
+    : while_mark expression_cover ')' {
 
         insideLoop ++;
 
-        $$.index = quadruples.size();
-        $$.val = $3.val+1;
+        $$.index = $1.index;
+        $$.val = $2.val+1;
         quadruple temp;
         temp._operator = "ifF";
-        temp._arg1 = string($3.sval);
+        temp._arg1 = string($2.sval);
         temp._arg2 = "";
-        temp._result = "";
+        temp._result = "(loopend)";
         quadruples.push_back(temp);
         level ++;
     }
 	;
 
+  while_mark
+	: WHILE '(' {
+		$$.index = quadruples.size();
+	}
 labeled_statement
 	: CASE_EXP statement
     {
@@ -1212,7 +1217,8 @@ assignment_expression
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location, cur_level);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
@@ -1233,7 +1239,7 @@ assignment_expression
                 $$.val = $3.val + 1;
                 $$.type = $3.type;
                 $$.sval = $3.sval;
-                quadruples.push_back(quadruple("=", string($3.sval), "", string($1.sval)));
+                quadruples.push_back(quadruple("=", string($3.sval), "", VarWithLevel($1.sval, cur_level)));
             }
         }
     }
@@ -1242,7 +1248,8 @@ assignment_expression
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location, cur_level);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
@@ -1293,7 +1300,7 @@ assignment_expression
                 $$.val = $2.val + $4.val + 1;
                 $$.type = $4.type;
                 $$.sval = $4.sval;
-                quadruples.push_back(quadruple("=", string($4.sval), "", string($1.sval) + "[" + string($2.sval) + "]"));
+                quadruples.push_back(quadruple("=", string($4.sval), "", VarWithLevel($1.sval, cur_level) + "[" + string($2.sval) + "]"));
             }
         }
     }
@@ -1434,7 +1441,8 @@ arithmetic_factor
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location, cur_level);
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
@@ -1450,11 +1458,11 @@ arithmetic_factor
         $$.sval = $1.sval;
         $$.val = 2;
 
-        string temp = get_next_temp();
+		string temp = get_next_temp();
         $$.sval = strdup(temp.c_str());
 
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
-        quadruples.push_back(quadruple("=", string($1.sval), "",  temp));
+        quadruples.push_back(quadruple("=", VarWithLevel($1.sval, cur_level), "",  temp));
     }
     | NUM
     {
@@ -1482,7 +1490,8 @@ arithmetic_factor
 		string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location, cur_level);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
@@ -1552,13 +1561,14 @@ id_arr
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location, cur_level);
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
             $$.index = quadruples.size();
             $$.val = 1;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "1", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1568,7 +1578,8 @@ id_arr
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location, cur_level);
         if (!isExists) {
 			varDatatype[string($1.sval)] = string($3.type);
 			
@@ -1576,8 +1587,8 @@ id_arr
             $$.index = quadruples.size();
             $$.val = 2 + $3.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "1", $1.sval));
-            quadruples.push_back(quadruple("=", $3.sval, "", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "1", VarWithLevel($1.sval, level)));
+            quadruples.push_back(quadruple("=", $3.sval, "", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1587,14 +1598,15 @@ id_arr
     	string datatype;
 		int dimension;
 		int location;
+		int cur_level;
         vector<string> dim = makedimlist($2.sval);
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location, cur_level);
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", true, dim, active_func_name, level);
             $$.index = quadruples.size();
             $$.val = 1 + $2.val;
             $$.sval = $1.sval;
-            quadruples.push_back(quadruple("assign", "(type)", "arraydim", $1.sval));
+            quadruples.push_back(quadruple("assign", "(type)", "arraydim", VarWithLevel($1.sval, level)));
             ab_symtab.insertintosymtab(newVar, $$.index);
             // cout << "Inserted into symtab : " << string($1.sval) << " ";
         }
@@ -1807,9 +1819,10 @@ bool isVariableInSymtab(string varname) {
 // If flag = true : check for case like  ----- a = 3;
 // Return false if error
 // else return true
-bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dim, int &location) {
+bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dim, int &location, int &cur_level) {
 
 	dim = 0;
+	cur_level = 0;
 	location = -1;
     if (!flag) {
         function_record *r;
@@ -1819,10 +1832,12 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
         int cur_level_of_var;
 		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
         if (location != -1) {
+			cur_level = cur_level_of_var;
             if (cur_level_of_var == cur_level) {
                 varExists = true;
 				dim = ab_symtab.tab[location].dimension.size();
                 errorLine("Variable '" + Variable(string(var_name)) + "' is already declared in same scope.");
+				cur_level = cur_level_of_var;
                 return varExists;
             }
         }
@@ -1834,6 +1849,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
                     varExists = true;
                     errorLine("Redeclaration of parameter '" + Variable(string(var_name)) + "' as variable" );
 					dim = 0;
+					cur_level = 1;
                     return varExists;
                 }
             }
@@ -1847,6 +1863,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
 
 		dim = 0;
         function_record *r;
+		cur_level = 0;
         bool varExists = false;
         bool found = false;
 
@@ -1855,6 +1872,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
 		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
 		
         if (location != -1) {
+			cur_level = cur_level_of_var;
             found = true;
 			dim = ab_symtab.tab[location].dimension.size();
             if (cur_level_of_var == cur_level) {
@@ -1876,6 +1894,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             if ( symtab.search_function(active_func, func) ) {
                 if(func->search_param(var_name, r)) {
                     varExists = true;
+					cur_level = 1;
                     // "Declared as parameter"
                     datatype = r->type;
 					dim = 0;
@@ -1908,8 +1927,13 @@ bool isCompatible(string type1, string type2) {
         return true;
     return false;
 }
+
 string Variable(string str) {
     if (str == "")
         return "";
     return str.substr(1);
+}
+
+string VarWithLevel(char * str, int level){
+	return string(str) + "_" + to_string(level);
 }
