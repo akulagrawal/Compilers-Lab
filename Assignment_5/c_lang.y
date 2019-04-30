@@ -367,7 +367,7 @@
     extern void reset_active_function();
     extern void errorLine(string errorMsg);
     extern bool isVariableInSymtab(string varname);
-    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dimension, int &location);
+    extern bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dimension, int &location, int &cur_level);
     extern void delete_var_list(string function_name, int level);
     extern bool isCompatible(string type1, string type2);
     extern string Variable(string str);
@@ -1217,7 +1217,8 @@ assignment_expression
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location, cur_level);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
@@ -1238,7 +1239,7 @@ assignment_expression
                 $$.val = $3.val + 1;
                 $$.type = $3.type;
                 $$.sval = $3.sval;
-                quadruples.push_back(quadruple("=", string($3.sval), "", VarWithLevel($1.sval, level)));
+                quadruples.push_back(quadruple("=", string($3.sval), "", VarWithLevel($1.sval, cur_level)));
             }
         }
     }
@@ -1247,7 +1248,8 @@ assignment_expression
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location, cur_level);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
@@ -1298,7 +1300,7 @@ assignment_expression
                 $$.val = $2.val + $4.val + 1;
                 $$.type = $4.type;
                 $$.sval = $4.sval;
-                quadruples.push_back(quadruple("=", string($4.sval), "", VarWithLevel($1.sval, level) + "[" + string($2.sval) + "]"));
+                quadruples.push_back(quadruple("=", string($4.sval), "", VarWithLevel($1.sval, cur_level) + "[" + string($2.sval) + "]"));
             }
         }
     }
@@ -1439,7 +1441,8 @@ arithmetic_factor
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location, cur_level);
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
             $$.type = setErrorType();
@@ -1459,7 +1462,7 @@ arithmetic_factor
         $$.sval = strdup(temp.c_str());
 
         quadruples.push_back(quadruple("assign", $$.type, "1",  temp));
-        quadruples.push_back(quadruple("=", VarWithLevel($1.sval, level), "",  temp));
+        quadruples.push_back(quadruple("=", VarWithLevel($1.sval, cur_level), "",  temp));
     }
     | NUM
     {
@@ -1487,7 +1490,8 @@ arithmetic_factor
 		string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, true, dimension, location, cur_level);
 
         if (!isExists) {
             errorLine("Variable '" + Variable(string($1.sval)) + "' is not declared");
@@ -1557,7 +1561,8 @@ id_arr
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location, cur_level);
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", false, dummy, active_func_name, level);
             $$.index = quadruples.size();
@@ -1573,7 +1578,8 @@ id_arr
         string datatype;
 		int dimension;
 		int location;
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
+		int cur_level;
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location, cur_level);
         if (!isExists) {
 			varDatatype[string($1.sval)] = string($3.type);
 			
@@ -1592,8 +1598,9 @@ id_arr
     	string datatype;
 		int dimension;
 		int location;
+		int cur_level;
         vector<string> dim = makedimlist($2.sval);
-        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location);
+        bool isExists = checkForVariable($1.sval, datatype, active_func_name, level, false, dimension, location, cur_level);
         if (!isExists) {
             variable newVar($1.sval, datatype, "0", true, dim, active_func_name, level);
             $$.index = quadruples.size();
@@ -1812,9 +1819,10 @@ bool isVariableInSymtab(string varname) {
 // If flag = true : check for case like  ----- a = 3;
 // Return false if error
 // else return true
-bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dim, int &location) {
+bool checkForVariable(string var_name, string &datatype, string active_func, int cur_level, bool flag, int &dim, int &location, int &cur_level) {
 
 	dim = 0;
+	cur_level = 0;
 	location = -1;
     if (!flag) {
         function_record *r;
@@ -1824,10 +1832,12 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
         int cur_level_of_var;
 		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
         if (location != -1) {
+			cur_level = cur_level_of_var;
             if (cur_level_of_var == cur_level) {
                 varExists = true;
 				dim = ab_symtab.tab[location].dimension.size();
                 errorLine("Variable '" + Variable(string(var_name)) + "' is already declared in same scope.");
+				cur_level = cur_level_of_var;
                 return varExists;
             }
         }
@@ -1839,6 +1849,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
                     varExists = true;
                     errorLine("Redeclaration of parameter '" + Variable(string(var_name)) + "' as variable" );
 					dim = 0;
+					cur_level = 1;
                     return varExists;
                 }
             }
@@ -1852,6 +1863,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
 
 		dim = 0;
         function_record *r;
+		cur_level = 0;
         bool varExists = false;
         bool found = false;
 
@@ -1860,6 +1872,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
 		location = ab_symtab.search_var(var_name, cur_level_of_var, active_func, datatype);
 		
         if (location != -1) {
+			cur_level = cur_level_of_var;
             found = true;
 			dim = ab_symtab.tab[location].dimension.size();
             if (cur_level_of_var == cur_level) {
@@ -1881,6 +1894,7 @@ bool checkForVariable(string var_name, string &datatype, string active_func, int
             if ( symtab.search_function(active_func, func) ) {
                 if(func->search_param(var_name, r)) {
                     varExists = true;
+					cur_level = 1;
                     // "Declared as parameter"
                     datatype = r->type;
 					dim = 0;
