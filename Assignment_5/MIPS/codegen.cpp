@@ -548,6 +548,11 @@ int main(int argc, char **argv)
 }
 /* To display $t0
 move $a0, $t0
-li $v0, 1 (2 for float)
+li $v0, 1
+syscall
+*/
+/* To display $f0
+mov.s $f12, $f0
+li $v0, 2
 syscall
 */
