@@ -22,6 +22,7 @@ int isfull[MAX];
 map<string, char> type;
 map<string, int> mapmem;
 map<string, int> funcArgs;
+map<string, int> isArray;
 
 int getmem(string s, char ch = 'i') {
 	if(mapmem[s])
@@ -116,6 +117,7 @@ int main(int argc, char **argv)
 		if(isLabel[idx])
 			v.push_back("Label" + to_string(isLabel[idx]) + ":");
 		temp = quadlist[i];
+		int nsize = 3000;
 		if(temp.opcode == "assign") {
 			if(isdigit(temp.op2[0])) {
 				int x = getmem(temp.res, temp.op1[0]);
@@ -129,49 +131,91 @@ int main(int argc, char **argv)
 				}
 			}
 			else {
-				int n = mapmem[temp.op2];
-				for(int i=0;i<n;i++){
+				for(int i=0;i<nsize;i++){
 					int x = getmem(temp.res + "[" + to_string(i) + "]", temp.op1[0]);
-					if(temp.op1 == "int"){
-						v.push_back("li $t0, 0");
-						v.push_back("sw $t0, " + to_hex(x) + "($0)");
-					}
-					else{
-						v.push_back("li.s $f0, 0.0");
-						v.push_back("s.s $f0, " + to_hex(x) + "($0)");
-					}
 				}
+				isArray[temp.res] = 1;
+				type[temp.res] = temp.op1[0];
 			}
 		}
 		if(temp.opcode == "=") {
 			
-			
+			if(temp.res[temp.res.size() - 1] == ']'){
+				string sname, soffset;
+				int l;
+				for(l=0;l<temp.res.size();l++){
+					if(temp.res[l] == '[')
+						break;
+					sname = sname + temp.res[l];
+				}
+				l++;
+				while(l<temp.res.size()){
+					if(temp.res[l] == ']')
+						break;
+					soffset = soffset + temp.res[l];
+					l++;
+				}
+				v.push_back("li $t3, " + to_string(OFFSET + 1 + mapmem[temp.res + "[0]"]));
+				v.push_back("lw $t4, " + to_hex(mapmem[soffset]) + "($0)");
+				v.push_back("sll $t4, $t4, 2");
+				v.push_back("add $t5, $t3, $t4");
+				//v.push_back("lw $t6, 0($t5)");
+				if(type[sname] == 'i'){
+					if(isdigit(temp.op1[0]))
+						v.push_back("li $t0, " + temp.op1);
+					else
+						v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+					v.push_back("sw $t0, 0($t5)");
+				}
+				else{
+					if(isdigit(temp.op1[0]))
+						v.push_back("li.s $f0, " + temp.op1);
+					else
+						v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+					v.push_back("s.s $f0, 0($t5)");
+				}
+			}
+			else{
+				int x = getmem(temp.res);
+				if(type[temp.res] == 'i'){
+					if(isdigit(temp.op1[0]))
+						v.push_back("li $t0, " + temp.op1);
+					else
+						v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+					v.push_back("sw $t0, " + to_hex(x) + "($0)");
+				}
+				else{
+					if(isdigit(temp.op1[0]))
+						v.push_back("li.s $f0, " + temp.op1);
+					else
+						v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+					v.push_back("s.s $f0, " + to_hex(x) + "($0)");
+				}
+			}
+		}
+		if(temp.opcode == "+") {
 			int x = getmem(temp.res);
 			if(type[temp.res] == 'i'){
 				if(isdigit(temp.op1[0]))
 					v.push_back("li $t0, " + temp.op1);
 				else
 					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("sw $t0, " + to_hex(x) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				v.push_back("add $v0, $t0, $t1");
+				v.push_back("sw $v0, " + to_hex(x) + "($0)");
 			}
 			else{
 				if(isdigit(temp.op1[0]))
 					v.push_back("li.s $f0, " + temp.op1);
 				else
 					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("s.s $f0, " + to_hex(x) + "($0)");
-			}
-		}
-		if(temp.opcode == "+") {
-			int x = getmem(temp.res);
-			if(type[temp.res] == 'i'){
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
-				v.push_back("add $v0, $t0, $t1");
-				v.push_back("sw $v0, " + to_hex(x) + "($0)");
-			}
-			else{
-				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("add.s $f3, $f0, $f1");
 				v.push_back("s.s $f3, " + to_hex(x) + "($0)");
@@ -180,14 +224,26 @@ int main(int argc, char **argv)
 		if(temp.opcode == "-") {
 			int x = getmem(temp.res);
 			if(type[temp.res] == 'i'){
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("sub $v0, $t0, $t1");
 				v.push_back("sw $v0, " + to_hex(x) + "($0)");
 			}
 			else{
-				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("sub.s $f3, $f0, $f1");
 				v.push_back("s.s $f3, " + to_hex(x) + "($0)");
 			}
@@ -195,15 +251,27 @@ int main(int argc, char **argv)
 		if(temp.opcode == "*") {
 			int x = getmem(temp.res);
 			if(type[temp.res] == 'i'){
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("mult $t0, $t1");
 				v.push_back("mflo $v0");
 				v.push_back("sw $v0, " + to_hex(x) + "($0)");
 			}
 			else{
-				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("mul.s $f3, $f0, $f1");
 				v.push_back("s.s $f3, " + to_hex(x) + "($0)");
 			}
@@ -211,15 +279,27 @@ int main(int argc, char **argv)
 		if(temp.opcode == "/") {
 			int x = getmem(temp.res);
 			if(type[temp.res] == 'i'){
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("div $t0, $t1");
 				v.push_back("mflo $v0");
 				v.push_back("sw $v0, " + to_hex(x) + "($0)");
 			}
 			else{
-				v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("div.s $f3, $f0, $f1");
 				v.push_back("s.s $f3, " + to_hex(x) + "($0)");
 			}
@@ -251,8 +331,14 @@ int main(int argc, char **argv)
 		if(temp.opcode == "<") {
 			if(type[temp.op1] == 'i'){
 				v.push_back("li $t2, 1");
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("blt $t0, $t1, Label" + to_string(labelidx));
 				v.push_back("li $t2, 0");
 				v.push_back("Label" + to_string(labelidx) + ":");
@@ -260,8 +346,14 @@ int main(int argc, char **argv)
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.lt.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
@@ -273,8 +365,14 @@ int main(int argc, char **argv)
 		if(temp.opcode == ">") {
 			if(type[temp.op1] == 'i'){
 				v.push_back("li $t2, 1");
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("bgt $t0, $t1, Label" + to_string(labelidx));
 				v.push_back("li $t2, 0");
 				v.push_back("Label" + to_string(labelidx) + ":");
@@ -282,8 +380,14 @@ int main(int argc, char **argv)
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.lt.s $f2, $f1");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
@@ -295,8 +399,14 @@ int main(int argc, char **argv)
 		if(temp.opcode == "<=") {
 			if(type[temp.op1] == 'i'){
 				v.push_back("li $t2, 1");
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("ble $t0, $t1, Label" + to_string(labelidx));
 				v.push_back("li $t2, 0");
 				v.push_back("Label" + to_string(labelidx) + ":");
@@ -304,8 +414,14 @@ int main(int argc, char **argv)
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.le.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
@@ -317,8 +433,14 @@ int main(int argc, char **argv)
 		if(temp.opcode == ">=") {
 			if(type[temp.op1] == 'i'){
 				v.push_back("li $t2, 1");
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("bge $t0, $t1, Label" + to_string(labelidx));
 				v.push_back("li $t2, 0");
 				v.push_back("Label" + to_string(labelidx) + ":");
@@ -326,8 +448,14 @@ int main(int argc, char **argv)
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.le.s $f2, $f1");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
@@ -339,8 +467,14 @@ int main(int argc, char **argv)
 		if(temp.opcode == "==") {
 			if(type[temp.op1] == 'i'){
 				v.push_back("li $t2, 1");
-				v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li $t0, " + temp.op1);
+				else
+					v.push_back("lw $t0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li $t1, " + temp.op2);
+				else
+					v.push_back("lw $t1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("beq $t0, $t1, Label" + to_string(labelidx));
 				v.push_back("li $t2, 0");
 				v.push_back("Label" + to_string(labelidx) + ":");
@@ -348,8 +482,14 @@ int main(int argc, char **argv)
 			}
 			else{
 				v.push_back("li.s $f0, 1.0");
-				v.push_back("l.s $f1, " + to_hex(mapmem[temp.op1]) + "($0)");
-				v.push_back("l.s $f2, " + to_hex(mapmem[temp.op2]) + "($0)");
+				if(isdigit(temp.op1[0]))
+					v.push_back("li.s $f0, " + temp.op1);
+				else
+					v.push_back("l.s $f0, " + to_hex(mapmem[temp.op1]) + "($0)");
+				if(isdigit(temp.op2[0]))
+					v.push_back("li.s $f1, " + temp.op2);
+				else
+					v.push_back("l.s $f1, " + to_hex(mapmem[temp.op2]) + "($0)");
 				v.push_back("c.eq.s $f1, $f2");
 				v.push_back("bc1t Label" + to_string(labelidx));
 				v.push_back("li.s $f0, 0.0");
@@ -402,8 +542,6 @@ int main(int argc, char **argv)
 	for(int i=0;i<v.size();i++){
 		cout<<v[i]<<endl;
 	}
-	cout<<to_hex(mapmem["t2"])<<endl;
-	cout<<to_hex(mapmem["t3"])<<endl;
 
     return 0;
 }
