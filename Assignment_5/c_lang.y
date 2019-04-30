@@ -633,7 +633,7 @@ param_list_declaration
 param_declaration
     : TYPE IDENTIFIER           { 
         $$.type = $1.sval; $$.sval = $2.sval; 
-        $$.val = 1;
+        $$.val = 0;
         // string temp = get_next_temp();
         quadruples.push_back(quadruple("assign", $1.sval, "1", VarWithLevel($2.sval, level)));
     }
