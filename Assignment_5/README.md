@@ -1,4 +1,11 @@
-### To Run
+### Installation on Ubuntu
+
+```bash
+$sudo apt-get install <software_name>
+```
+where software_name = {lex/flex/bison/spim}
+
+### Run
 
 - To display the output on terminal
 ```bash
@@ -15,4 +22,8 @@ $make intermediate INPUT=<PATH>/<FILENAME>
 
 ### Debug
 
-Use -v flag with bison command and open c_lang.output file
+Use -v flag with bison command:
+```bash
+$bison -v c_lang.y
+```
+and analyze c_lang.output file
